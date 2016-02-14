@@ -135,4 +135,15 @@ W/W        |        0         | W/B          | 1                 | 0
 
 ## 2H1
 
+I think we want to first determine the relative probability of species A vs Species B given first birth of twins, and the calculate the probabilty of twins in the second birth given that information.
+
+Pr(A|twins) = Pr(twins|A) * Pr(A) / Pr(twins)
+
+Pr(A|twins) = 0.1 * 0.5 / sum(0.1*0.5, 0.2*0.5) = `r  0.1 * 0.5 / sum(0.1*0.5, 0.2*0.5) `
+
+Pr(B|twins) = 1 - Pr(A|twins) = `r 2/3`
+
+So now we can sum the probability of twins if A or B
+
+Pr(twins2) = Pr(A,twins) + Pr(twins) = 0.1*1/3 + 0.2*2/3 = `r 0.1*1/3 + 0.2*2/3`
 
