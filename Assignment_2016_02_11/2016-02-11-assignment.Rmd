@@ -1,3 +1,8 @@
+---
+output: 
+  html_document: 
+    keep_md: yes
+---
 # Statistical Rethinking Chapter 2, sections 2.1 - 2.3
 
 Name: __Julin Maloof__
@@ -147,3 +152,30 @@ So now we can sum the probability of twins if A or B
 
 Pr(twins2) = Pr(A,twins) + Pr(twins) = 0.1*1/3 + 0.2*2/3 = `r 0.1*1/3 + 0.2*2/3`
 
+## 2H2
+
+I already calculated this for the above.  Maybe that means I could have done 2H1 easier
+
+Pr(A|twins) = 0.1 * 0.5 / sum(0.1*0.5, 0.2*0.5) = `r  0.1 * 0.5 / sum(0.1*0.5, 0.2*0.5)`
+
+## 2H3
+
+Probability that Panda A given twins 1st and no twins.  Use prior information for A vs B from above.
+
+Pr(A|no_twins) = Pr(no_twins|A) * Pr(A) / Pr(no_twins)
+
+Pr(A|no_twins) = 0.9 * 1/3 / sum(0.9*1/3, 0.8*2/3) = `r  0.9 * 1/3 / sum(0.9*1/3, 0.8*2/3)`
+
+## 2H4
+
+Pr(A|test) = Pr(test|A) * Pr(A) / Pr(test)
+
+For average likelihood we are summing up the probability of observing A for a Panda A or B
+
+using only the test info:
+
+Pr(A|test) = 0.8 * 0.5 / sum(.8*.5, .35 * .5) = `r 0.8 * 0.5 / sum(.8*.5, .35 * .5)`
+
+using our prior info on the likelihood of A and B from 2H3
+
+Pr(A|test) = 0.8 * 0.36 / sum(.8*.36, .35 * .64) = `r 0.8 * 0.36 / sum(.8*.36, .35 * .64)`
