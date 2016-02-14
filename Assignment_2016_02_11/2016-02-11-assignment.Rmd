@@ -97,4 +97,42 @@ B/W
 
 Two of these three ways will give B on the second side.
 
+## 2M5
+
+As before, we start by thinking about all pulls that could have given black up and what is on the other side of those cards
+
+B1a/B1b
+B1b/B1a
+B2a/B2b
+B2b/B2a
+B/W
+
+4 of the 5 ways will give black, so the probability is 4/5
+
+## 2M6
+
+Now the prior probability for B/B is 1, for B/W is 2, and for W/W is 3
+
+We can ignore the W/W becuase we didn't see it
+
+We multiply the number of ways to get B/B or B/W by this prior
+
+B/B * 1
+B/B * 1
+B/W * 2
+
+So now 50/50
+
+## 2M7 
+
+Like 2M4 but we pull a second card that is white
+
+First Card |Ways to see black |  Second Card | Ways to see white | Ways to see black then white 
+-----------|------------------|--------------|-------------------|--------
+B/W        |        1         | W/W          | 2                 | 2
+B/B        |        2         | W/B or W/W   | 3                 | 6
+W/W        |        0         | W/B          | 1                 | 0
+
+## 2H1
+
 
