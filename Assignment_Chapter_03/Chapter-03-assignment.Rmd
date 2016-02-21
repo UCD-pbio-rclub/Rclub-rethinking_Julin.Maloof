@@ -1,24 +1,82 @@
 # Statistical Rethinking Chapter 3 problems
 
-__Name:__
+__Name:__ _Julin Maloof_
+
+## Set up
+
+```{r set up}
+p_grid <- seq( from=0 , to=1 , length.out=1000 )
+prior <- rep( 1 , 1000 )
+likelihood <- dbinom( 6 , size=9 , prob=p_grid )
+posterior <- likelihood * prior
+posterior <- posterior / sum(posterior)
+set.seed(100)
+samples <- sample( p_grid , prob=posterior , size=1e4 , replace=TRUE )
+library(rethinking)
+```
 
 ## 3E1
+How much posterior probability lies below _p_ = 0.2?  
+For this we count the number of samples with _p_ < 0.2 and compare that to the total number of samples
+```{r }
+sum(samples < 0.2) / length(samples)
+```
 
 ## 3E2
+How much posterior probability lies above _p_ = 0.8?
+```{r}
+sum(samples > 0.8) / length(samples)
+```
 
 ## 3E3
+How much posterior probability lies between 0.2 and 0.8?
+```{r}
+sum(samples > 0.2 & samples < 0.8) / length(samples)
+```
 
 ## 3E4
+20% of the posterior probability lies below which value of p?
+```{r}
+quantile(samples,.2)
+```
 
 ## 3E5
+20% of the posterior probability lies above which value of p?
+```{r}
+quantile(samples,.8)
+```
 
 ## 3E6
+Which values of _p_ contain the narrowest interval equal to 66% of the posterior probability?
+```{r}
+HPDI(samples,0.66)
+```
 
 ## 3E7
+Which calues of p contain 66% of the posterior probability, assuming equal posterior probabilities both below and above the interval?
+```{r}
+PI(samples,0.66)
+```
 
 ## 3M1
 
+```{r}
+p_grid <- seq(0,1,length.out=10000)
+prior <- rep(1,length(p_grid))
+unstd.posterior <- dbinom(8,15,p_grid) * prior
+posterior <- unstd.posterior / sum(unstd.posterior)
+plot(p_grid,posterior,type="l")
+```
+
 ## 3M2
+
+```{r}
+samples <- sample(p_grid,size=10000,prob=posterior,replace=TRUE)
+library(ggplot2)
+qplot(samples,geom="density") + xlab("p")
+HPDI(samples,p=0.9)
+```
+
 
 _STOP AFTER 3M2 FOR 02/25 ASSIGNMENT_
 
