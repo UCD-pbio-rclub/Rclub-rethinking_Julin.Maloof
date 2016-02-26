@@ -82,8 +82,6 @@ qplot(samples,geom="density") + xlab("p")
 HPDI(samples,p=0.9)
 ```
 
-## Demo a change for git
-
 _STOP AFTER 3M2 FOR 02/25 ASSIGNMENT_
 
 ## 3M3
