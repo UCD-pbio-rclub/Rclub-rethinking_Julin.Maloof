@@ -117,12 +117,12 @@ now use a prior with 0 below p = 0.5 and constant above
 p_grid <- seq(0,1,length.out=10000)
 prior <- ifelse(p_grid < 0.5 , 0, 1)
 unstd.posterior <- dbinom(8,15,p_grid) * prior
-posterior <- unstd.posterior / sum(unstd.posterior)
-plot(p_grid,posterior,type="l")
-samples2 <- sample(p_grid,size=10000,prob=posterior,replace=TRUE)
+posterior2 <- unstd.posterior / sum(unstd.posterior)
+plot(p_grid,posterior2,type="l")
+samples2 <- sample(p_grid,size=10000,prob=posterior2,replace=TRUE)
 library(ggplot2)
-qplot(samples,geom="density") + xlab("p")
-HPDI(samples,p=0.9)
+qplot(samples2,geom="density") + xlab("p")
+HPDI(samples2,p=0.9)
 ```
 
 ```{r}
@@ -137,9 +137,14 @@ sum(water_simulation2==6) / length(water_simulation2)
 simplehist(water_simulation2)
 ```
 
+But should I be looking directly at the posterior?
 ```{r}
 median(samples)
+chainmode(samples,adj=0.1)
+p_grid[which.max(posterior)]
 median(samples2)
+chainmode(samples2,adj=0.1)
+p_grid[which.max(posterior2)]
 ```
 
 

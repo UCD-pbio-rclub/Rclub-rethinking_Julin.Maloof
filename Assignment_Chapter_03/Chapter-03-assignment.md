@@ -218,27 +218,27 @@ now use a prior with 0 below p = 0.5 and constant above
 p_grid <- seq(0,1,length.out=10000)
 prior <- ifelse(p_grid < 0.5 , 0, 1)
 unstd.posterior <- dbinom(8,15,p_grid) * prior
-posterior <- unstd.posterior / sum(unstd.posterior)
-plot(p_grid,posterior,type="l")
+posterior2 <- unstd.posterior / sum(unstd.posterior)
+plot(p_grid,posterior2,type="l")
 ```
 
 ![](Chapter-03-assignment_files/figure-html/unnamed-chunk-13-1.png)
 
 ```r
-samples2 <- sample(p_grid,size=10000,prob=posterior,replace=TRUE)
+samples2 <- sample(p_grid,size=10000,prob=posterior2,replace=TRUE)
 library(ggplot2)
-qplot(samples,geom="density") + xlab("p")
+qplot(samples2,geom="density") + xlab("p")
 ```
 
 ![](Chapter-03-assignment_files/figure-html/unnamed-chunk-13-2.png)
 
 ```r
-HPDI(samples,p=0.9)
+HPDI(samples2,p=0.9)
 ```
 
 ```
 ##      |0.9      0.9| 
-## 0.3345335 0.7229723
+## 0.5000500 0.7150715
 ```
 
 
@@ -273,6 +273,7 @@ simplehist(water_simulation2)
 
 ![](Chapter-03-assignment_files/figure-html/unnamed-chunk-15-1.png)
 
+But should I be looking directly at the posterior?
 
 ```r
 median(samples)
@@ -283,11 +284,43 @@ median(samples)
 ```
 
 ```r
+chainmode(samples,adj=0.1)
+```
+
+```
+## [1] 0.5571749
+```
+
+```r
+p_grid[which.max(posterior)]
+```
+
+```
+## [1] 0.5333533
+```
+
+```r
 median(samples2)
 ```
 
 ```
 ## [1] 0.5964096
+```
+
+```r
+chainmode(samples2,adj=0.1)
+```
+
+```
+## [1] 0.5415704
+```
+
+```r
+p_grid[which.max(posterior2)]
+```
+
+```
+## [1] 0.5333533
 ```
 
 
