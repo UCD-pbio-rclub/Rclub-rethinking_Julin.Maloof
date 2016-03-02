@@ -157,14 +157,139 @@ HPDI(samples,p=0.9)
 ## 0.3345335 0.7229723
 ```
 
-
-_STOP AFTER 3M2 FOR 02/25 ASSIGNMENT_
-
 ## 3M3
+
+Construct a posterior predictive check for the model and data in 3M1 and 3M2.
+
+We have sampled from the posterior distribution.  We can use these samples to weight the probabilities in rbinom
+
+```r
+water_simulation <- rbinom(1e5,size=15,prob=samples)
+head(water_simulation) #number of water in 15 tosses
+```
+
+```
+## [1] 11  6  5 10  8  8
+```
+
+To calculate the probability of 8 waters in 15 tosses we can just ask what proportion of the samples have a value of 8.
+
+
+```r
+sum(water_simulation==8) / length(water_simulation)
+```
+
+```
+## [1] 0.14538
+```
+
+```r
+simplehist(water_simulation)
+```
+
+![](Chapter-03-assignment_files/figure-html/unnamed-chunk-11-1.png)
 
 ## 3M4
 
+Using the new posterior distribution (3M1) calculate the probability of 6 waters in 9 tosses.
+
+
+```r
+water_simulation2 <- rbinom(1e5, size = 9, prob = samples)
+sum(water_simulation2==6) / length(water_simulation2)
+```
+
+```
+## [1] 0.176
+```
+
+```r
+simplehist(water_simulation2)
+```
+
+![](Chapter-03-assignment_files/figure-html/unnamed-chunk-12-1.png)
+
 ## 3M5
+
+now use a prior with 0 below p = 0.5 and constant above
+
+
+```r
+p_grid <- seq(0,1,length.out=10000)
+prior <- ifelse(p_grid < 0.5 , 0, 1)
+unstd.posterior <- dbinom(8,15,p_grid) * prior
+posterior <- unstd.posterior / sum(unstd.posterior)
+plot(p_grid,posterior,type="l")
+```
+
+![](Chapter-03-assignment_files/figure-html/unnamed-chunk-13-1.png)
+
+```r
+samples2 <- sample(p_grid,size=10000,prob=posterior,replace=TRUE)
+library(ggplot2)
+qplot(samples,geom="density") + xlab("p")
+```
+
+![](Chapter-03-assignment_files/figure-html/unnamed-chunk-13-2.png)
+
+```r
+HPDI(samples,p=0.9)
+```
+
+```
+##      |0.9      0.9| 
+## 0.3345335 0.7229723
+```
+
+
+```r
+water_simulation <- rbinom(1e5,size=15,prob=samples2)
+sum(water_simulation==8) / length(water_simulation)
+```
+
+```
+## [1] 0.15586
+```
+
+```r
+simplehist(water_simulation)
+```
+
+![](Chapter-03-assignment_files/figure-html/unnamed-chunk-14-1.png)
+
+
+```r
+water_simulation2 <- rbinom(1e5, size = 9, prob = samples2)
+sum(water_simulation2==6) / length(water_simulation2)
+```
+
+```
+## [1] 0.23283
+```
+
+```r
+simplehist(water_simulation2)
+```
+
+![](Chapter-03-assignment_files/figure-html/unnamed-chunk-15-1.png)
+
+
+```r
+median(samples)
+```
+
+```
+## [1] 0.5329533
+```
+
+```r
+median(samples2)
+```
+
+```
+## [1] 0.5964096
+```
+
 
 ## 3H1
 

@@ -82,13 +82,66 @@ qplot(samples,geom="density") + xlab("p")
 HPDI(samples,p=0.9)
 ```
 
-_STOP AFTER 3M2 FOR 02/25 ASSIGNMENT_
-
 ## 3M3
+
+Construct a posterior predictive check for the model and data in 3M1 and 3M2.
+
+We have sampled from the posterior distribution.  We can use these samples to weight the probabilities in rbinom
+```{r}
+water_simulation <- rbinom(1e5,size=15,prob=samples)
+head(water_simulation) #number of water in 15 tosses
+```
+
+To calculate the probability of 8 waters in 15 tosses we can just ask what proportion of the samples have a value of 8.
+
+```{r}
+sum(water_simulation==8) / length(water_simulation)
+simplehist(water_simulation)
+```
 
 ## 3M4
 
+Using the new posterior distribution (3M1) calculate the probability of 6 waters in 9 tosses.
+
+```{r}
+water_simulation2 <- rbinom(1e5, size = 9, prob = samples)
+sum(water_simulation2==6) / length(water_simulation2)
+simplehist(water_simulation2)
+```
+
 ## 3M5
+
+now use a prior with 0 below p = 0.5 and constant above
+
+```{r}
+p_grid <- seq(0,1,length.out=10000)
+prior <- ifelse(p_grid < 0.5 , 0, 1)
+unstd.posterior <- dbinom(8,15,p_grid) * prior
+posterior <- unstd.posterior / sum(unstd.posterior)
+plot(p_grid,posterior,type="l")
+samples2 <- sample(p_grid,size=10000,prob=posterior,replace=TRUE)
+library(ggplot2)
+qplot(samples,geom="density") + xlab("p")
+HPDI(samples,p=0.9)
+```
+
+```{r}
+water_simulation <- rbinom(1e5,size=15,prob=samples2)
+sum(water_simulation==8) / length(water_simulation)
+simplehist(water_simulation)
+```
+
+```{r}
+water_simulation2 <- rbinom(1e5, size = 9, prob = samples2)
+sum(water_simulation2==6) / length(water_simulation2)
+simplehist(water_simulation2)
+```
+
+```{r}
+median(samples)
+median(samples2)
+```
+
 
 ## 3H1
 
