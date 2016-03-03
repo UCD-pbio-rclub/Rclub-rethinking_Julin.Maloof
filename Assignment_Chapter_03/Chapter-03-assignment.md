@@ -323,13 +323,135 @@ p_grid[which.max(posterior2)]
 ## [1] 0.5333533
 ```
 
+# H problems
+
+Set up
+
+```r
+library(rethinking)
+data(homeworkch3)
+```
 
 ## 3H1
+use grid approximation to compute the posterior distrubition for the probability of a birth being a boy
+
+```r
+p_grid <- seq(0,1,length.out = 10000)
+prior <- rep(1,length(p_grid))
+likelihood <- dbinom(sum(birth1,birth2),
+                     size = length(c(birth1,birth2)),
+                     prob = p_grid)
+unstd.posterior <- prior * likelihood
+posterior <- unstd.posterior/sum(unstd.posterior)
+plot(p_grid,posterior,type="l")
+```
+
+![](Chapter-03-assignment_files/figure-html/unnamed-chunk-18-1.png)
+
+```r
+print("The posterior probability is maximized at p = ",p_grid[which.max(posterior)])
+```
+
+```
+## [1] "The posterior probability is maximized at p = "
+```
 
 ## 3H2
 
+
+```r
+samples <- sample(p_grid,size = 1e4,prob=posterior,replace=TRUE)
+HPDI(samples,c(.5,.89,.97))
+```
+
+```
+##     |0.97     |0.89      |0.5      0.5|     0.89|     0.97| 
+## 0.4804480 0.4983498 0.5293529 0.5763576 0.6099610 0.6312631
+```
+
 ## 3H3
+
+
+```r
+boys.predicted <- rbinom(1e4,size = 200,prob=samples)
+head(boys.predicted)
+```
+
+```
+## [1]  90 113 112 111  96 114
+```
+
+```r
+dens(boys.predicted,show.HPDI = .95)
+abline(v=111)
+```
+
+![](Chapter-03-assignment_files/figure-html/unnamed-chunk-20-1.png)
+The model fits the data well
 
 ## 3H4
 
+I am not entirely sure what is being asked here.  I think the idea is that we the current model to predict first borns.  The assumption is that the proportion of boys should be the same in first borns and second borns.
+
+
+```r
+firstborn.boys.predicted <- rbinom(1e4,size = 100,prob=samples)
+dens(firstborn.boys.predicted,show.HPDI = .95,adj=1)
+# how many boys are in first born?
+sum(birth1)
+```
+
+```
+## [1] 51
+```
+
+```r
+abline(v=51)
+```
+
+![](Chapter-03-assignment_files/figure-html/unnamed-chunk-21-1.png)
+Not so good!  There are many fewer first born boys than the model predicts
+
 ## 3H5
+
+Number of firstborn girls
+
+```r
+first.girls <- length(birth1) - sum(birth1)
+first.girls
+```
+
+```
+## [1] 49
+```
+
+number of firstborn girls followed by boys
+
+```r
+boys.follow.girls <- sum(birth1==0 & birth2==1)
+boys.follow.girls
+```
+
+```
+## [1] 39
+```
+
+predicted boys in a sample of 49
+
+
+```r
+boys.follow.girls.prediction <- rbinom(1e4,size=49,prob=samples)
+median(boys.follow.girls.prediction)
+```
+
+```
+## [1] 27
+```
+
+```r
+dens(boys.follow.girls.prediction,show.HPDI = .95,adj=1)
+abline(v=boys.follow.girls)
+```
+
+![](Chapter-03-assignment_files/figure-html/unnamed-chunk-24-1.png)
+The model does very poorly.  Famlies that have girls first are more likely to have boys second.  Why?  See [this paper](http://www.bmj.com/content/338/bmj.b1211)
