@@ -113,7 +113,7 @@ HPDI(samples,0.66)
 ```
 
 ## 3E7
-Which calues of p contain 66% of the posterior probability, assuming equal posterior probabilities both below and above the interval?
+Which values of p contain 66% of the posterior probability, assuming equal posterior probabilities both below and above the interval?
 
 ```r
 PI(samples,0.66)
@@ -333,7 +333,7 @@ data(homeworkch3)
 ```
 
 ## 3H1
-use grid approximation to compute the posterior distrubition for the probability of a birth being a boy
+use grid approximation to compute the posterior distribution for the probability of a birth being a boy
 
 ```r
 p_grid <- seq(0,1,length.out = 10000)
@@ -349,11 +349,11 @@ plot(p_grid,posterior,type="l")
 ![](Chapter-03-assignment_files/figure-html/unnamed-chunk-18-1.png)
 
 ```r
-print("The posterior probability is maximized at p = ",p_grid[which.max(posterior)])
+print(paste("The posterior probability is maximized at p = ",round(p_grid[which.max(posterior)],3)))
 ```
 
 ```
-## [1] "The posterior probability is maximized at p = "
+## [1] "The posterior probability is maximized at p =  0.555"
 ```
 
 ## 3H2
@@ -454,4 +454,4 @@ abline(v=boys.follow.girls)
 ```
 
 ![](Chapter-03-assignment_files/figure-html/unnamed-chunk-24-1.png)
-The model does very poorly.  Famlies that have girls first are more likely to have boys second.  Why?  See [this paper](http://www.bmj.com/content/338/bmj.b1211)
+The model does very poorly.  Families that have girls first are more likely to have boys second.  Why?  See [this paper](http://www.bmj.com/content/338/bmj.b1211)
