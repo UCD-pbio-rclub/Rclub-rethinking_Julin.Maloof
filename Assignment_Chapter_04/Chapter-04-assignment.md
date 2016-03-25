@@ -1,8 +1,3 @@
----
-output: 
-  html_document: 
-    keep_md: yes
----
 # Statistical Rethinking Chapter 4 problems
 
 __Name:__ Julin Maloof
@@ -24,9 +19,35 @@ y~i~ ~ Normal(mu, sigma)
 
 Simulate heights from the prior
 
-```{r}
+
+```r
 library(ggplot2)
 library(rethinking)
+```
+
+```
+## Loading required package: rstan
+```
+
+```
+## rstan (Version 2.9.0-3, packaged: 2016-02-11 15:54:41 UTC, GitRev: 05c3d0058b6a)
+```
+
+```
+## For execution on a local, multicore CPU with excess RAM we recommend calling
+## rstan_options(auto_write = TRUE)
+## options(mc.cores = parallel::detectCores())
+```
+
+```
+## Loading required package: parallel
+```
+
+```
+## rethinking (Version 1.58)
+```
+
+```r
 sim.heights <- rnorm(1e4,
                      mean = rnorm(1e4, mean=0, sd = 10),
                      sd = runif(1e4, min = 0, max=10)
@@ -34,10 +55,13 @@ sim.heights <- rnorm(1e4,
 qplot(sim.heights,geom="density")
 ```
 
+![](Chapter-04-assignment_files/figure-html/unnamed-chunk-1-1.png)
+
 
 ## 4M2
 
-```{r}
+
+```r
 flist <- alist(
   y ~ dnorm(mu, sigma),
   mu ~ dnorm(0,10),
