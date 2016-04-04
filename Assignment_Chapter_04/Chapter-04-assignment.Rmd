@@ -29,6 +29,7 @@ Simulate heights from the prior
 ```{r}
 library(ggplot2)
 library(rethinking)
+library(knitr)
 sim.heights <- rnorm(1e4,
                      mean = rnorm(1e4, mean=0, sd = 10),
                      sd = runif(1e4, min = 0, max=10)
@@ -103,6 +104,133 @@ Variance of 64 means a standard deviation of 8.  So I would change sigma to be U
 
 ## 4H1
 
+Basically we can follow along what was done in section 4.5.  I will use the quadratic fit.
+
+First we make a model for the data, then we use the sim() function.  The expected height is probably best calculated from the link() function
+
+```{r}
+library(rethinking)
+data(Howell1)
+d <- Howell1
+#standardize weight:
+d$weight.s <- (d$weight - mean(d$weight)) / sd(d$weight)
+
+d$weight.s2 <- d$weight.s^2
+m4.5 <- map(
+  alist(
+    height ~ dnorm( mu , sigma ) ,
+    mu <- a + b1*weight.s + b2*weight.s2 ,
+    a ~ dnorm( 178 , 100 ) ,
+    b1 ~ dnorm( 0 , 10 ) ,
+    b2 ~ dnorm( 0 , 10 ) ,
+    sigma ~ dunif( 0 , 50 )
+  ), data=d )
+
+precis( m4.5 )
+
+#standardize the weights using the scale used for the other observations
+weight.pred <- c(46.96,43.72,64.78,32.59,54.63)
+weight.pred.s <- (weight.pred - mean(d$weight)) / sd(d$weight)
+pred_dat <- list( weight.s=weight.pred.s , weight.s2=weight.pred.s^2 )
+mu <- link( m4.5 , data=pred_dat,n=1000 )
+mu.mean <- apply( mu , 2 , mean )
+sim.height <- sim( m4.5 , data=pred_dat,n=1000 )
+#height.mean <- apply(sim.height,2,mean)
+height.PI <- apply( sim.height , 2 , PI , prob=0.89 )
+kable(data.frame(individual=1:5,
+                 weight=weight.pred,
+                 expected_height=round(mu.mean,2),
+                 interval.89=apply(round(height.PI,1), 2, paste,collapse=" - ")),
+      col.names=c("Individual","weight","expected height","89% interval"),
+      align="c")
+```
+
+
 ## 4H2
 
+### a
+```{r}
+d2 <- Howell1[Howell1$age<18,]
+dim(d2)
+summary(d2)
+
+m.4h2 <- map (
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu <- a + b1*weight,
+    a ~ dnorm(80,40),
+    b1 ~ dnorm(5,3),
+    sigma ~ dunif(0,50)
+  ), data=d2)
+
+precis(m.4h2)
+```
+
+a is the predicted height when weight = 0 (!) 
+b1 is the increase in height per unit increase weight
+sigma reflects the sample variation around the mean
+
+### b
+```{r}
+#sample from the posterior distribution of mean values
+weight.pred <- seq(from=min(d2$weight),to=max(d2$weight),length.out=50)
+pred.data <- list(weight=weight.pred)
+mu <- link(fit = m.4h2, data = pred.data,n = 1000)
+dim(mu)
+mu.mean <- apply(mu, 2, mean)
+mu.PI <- apply(mu, 2, PI, prob=.89)
+sim.height <- sim(m.4h2,data = pred.data,n = 1000)
+height.PI <- apply(sim.height, 2, PI, prob=0.89)
+
+plot(d2$weight,d2$height,col="skyblue")
+lines(weight.pred,mu.mean)
+shade(mu.PI,pred.data$weight)
+shade(height.PI,pred.data$weight)
+```
+
+### c
+
+The model does not fit the tails very well at all.  It might have been a bad assumption that height varys linearly with respect to weight.
+
+
 ## 4H3
+
+### a
+```{r}
+d <- Howell1
+
+d$log.weight <- log(d$weight)
+
+m.4h3 <- map (
+  alist(
+    height ~ dnorm(mu, sigma),
+    mu <- a + b1*log.weight,
+    a ~ dnorm(178,100),
+    b1 ~ dnorm(0,100),
+    sigma ~ dunif(0,50)
+  ), data=d)
+
+precis(m.4h3)
+```
+
+### b
+
+```{r}
+#sample from the posterior distribution of mean values
+log.weight.pred <- seq(from=min(d$log.weight),to=max(d$log.weight),length.out=50)
+pred.data <- list(log.weight=log.weight.pred)
+mu <- link(fit = m.4h3, data = pred.data,n = 1000)
+dim(mu)
+mu.mean <- apply(mu, 2, mean)
+mu.PI <- apply(mu, 2, PI, prob=.97)
+sim.height <- sim(m.4h3,data = pred.data,n = 1000)
+height.PI <- apply(sim.height, 2, PI, prob=0.97)
+
+plot( height ~ weight , data=Howell1 ,col=col.alpha(rangi2,0.4) )
+lines(exp(log.weight.pred),mu.mean)
+shade(mu.PI,exp(pred.data$log.weight))
+shade(height.PI,exp(pred.data$log.weight))
+
+```
+
+__Nice!__
