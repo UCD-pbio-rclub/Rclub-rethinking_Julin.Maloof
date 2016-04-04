@@ -174,3 +174,136 @@ head(post)
 precis(post)
 precis(m4.1)
 plot(post,col=col.alpha(rangi2,.1))
+
+plot(d2$height~d2$weight)
+
+# load data again, since it's a long way back
+library(rethinking)
+data(Howell1)
+d <- Howell1
+d2 <- d[ d$age >= 18 , ]
+# fit model
+m4.3 <- map(
+  alist(
+    height ~ dnorm( mu , sigma ) ,
+    mu <- a + b*weight ,
+    a ~ dnorm( 156 , 100 ) ,
+    b ~ dnorm( 0 , 10 ) ,
+    sigma ~ dunif( 0 , 50 )
+  ), data=d2 )
+
+precis(m4.3)
+
+precis(m4.3,corr=TRUE)
+
+d2$weight.c <- d2$weight - mean(d2$weight)
+
+m4.4 <- map(
+  alist(
+    height ~ dnorm( mu , sigma ) ,
+    mu <- a + b*weight.c ,
+    a ~ dnorm( 178 , 100 ) ,
+    b ~ dnorm( 0 , 10 ) ,
+    sigma ~ dunif( 0 , 50 ) ),
+  data=d2 )
+
+precis( m4.4 , corr=TRUE )
+
+plot(height~weight, data=d2)
+abline( a=coef(m4.3)["a"] , b=coef(m4.3)["b"] )
+
+post <- extract.samples( m4.3 )
+post[1:5,]
+
+
+N <- 10
+dN <- d2[ 1:N , ]
+mN <- map(
+  alist(
+    height ~ dnorm( mu , sigma ) ,
+    mu <- a + b*weight ,
+    a ~ dnorm( 178 , 100 ) ,
+    b ~ dnorm( 0 , 10 ) ,
+    sigma ~ dunif( 0 , 50 )
+  ) , data=dN )
+
+# extract 20 samples from the posterior
+post <- extract.samples( mN , n=20 )
+# display raw data and sample size
+plot( dN$weight , dN$height ,
+      xlim=range(d2$weight) , ylim=range(d2$height) ,
+      col=rangi2 , xlab="weight" , ylab="height" )
+mtext(concat("N = ",N))
+# plot the lines, with transparency
+for ( i in 1:20 )
+  abline( a=post$a[i] , b=post$b[i] , col=col.alpha("black",0.3) )
+
+N <- 100
+dN <- d2[ 1:N , ]
+mN <- map(
+  alist(
+    height ~ dnorm( mu , sigma ) ,
+    mu <- a + b*weight ,
+    a ~ dnorm( 178 , 100 ) ,
+    b ~ dnorm( 0 , 10 ) ,
+    sigma ~ dunif( 0 , 50 )
+  ) , data=dN )
+
+# extract 20 samples from the posterior
+post <- extract.samples( mN , n=20 )
+# display raw data and sample size
+plot( dN$weight , dN$height ,
+      xlim=range(d2$weight) , ylim=range(d2$height) ,
+      col=rangi2 , xlab="weight" , ylab="height" )
+mtext(concat("N = ",N))
+# plot the lines, with transparency
+for ( i in 1:20 )
+  abline( a=post$a[i] , b=post$b[i] , col=col.alpha("black",0.3) )
+
+
+
+# define sequence of weights to compute predictions for
+# these values will be on the horizontal axis
+weight.seq <- seq( from=25 , to=70 , by=1 )
+# use link to compute mu
+# for each sample from posterior
+# and for each weight in weight.seq
+mu <- link( m4.3 , data=data.frame(weight=weight.seq) )
+str(mu)
+
+# use type="n" to hide raw data
+plot( height ~ weight , d2 , type="n" )
+
+
+for ( i in 1:100 )
+  points( weight.seq , mu[i,] , pch=16 , col=col.alpha(rangi2,0.1) )
+
+# summarize the distribution of mu
+mu.mean <- apply( mu , 2 , mean )
+mu.HPDI <- apply( mu , 2 , HPDI , prob=0.89 )
+
+head(mu.mean)
+head(mu.HPDI)
+
+# plot raw data
+# fading out points to make line and interval more visible
+plot( height ~ weight , data=d2 , col=col.alpha(rangi2,0.5) )
+# plot the MAP line, aka the mean mu for each weight
+lines( weight.seq , mu.mean )
+# plot a shaded region for 89% HPDI
+shade( mu.HPDI , weight.seq )
+
+
+sim.height <- sim( m4.3 , data=list(weight=weight.seq),n = 1e4 )
+str(sim.height)
+
+height.PI <- apply( sim.height , 2 , PI , prob=0.89 )
+
+# plot raw data
+plot( height ~ weight , d2 , col=col.alpha(rangi2,0.5) )
+# draw MAP line
+lines( weight.seq , mu.mean )
+# draw HPDI region for line
+shade( mu.HPDI , weight.seq )
+# draw PI region for simulated heights
+shade( height.PI , weight.seq )

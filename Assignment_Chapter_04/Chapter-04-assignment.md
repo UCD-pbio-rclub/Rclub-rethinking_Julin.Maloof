@@ -7,7 +7,7 @@ __Name:__ Julin Maloof
 
 ## 4E1
 
-y~i~ ~ Normal(mu, sigma) 
+$$ y_i~\tilde{}~Normal(\mu, \sigma) $$ 
 
 ## 4E2
 
@@ -75,9 +75,23 @@ flist <- alist(
 
 ## 4E4
 
+$$ \mu_i = \alpha + \beta x_i $$
+
 ## 4E5
 
+Three
+
 ## 4M3
+
+$$ 
+\begin{align} 
+y_i &\tilde ~~ Normal(\mu _i, \sigma) \\
+\mu _i &= \alpha + \beta * x_i \\
+\alpha &\tilde ~~ Normal(0,50) \\
+\beta &\tilde ~~ Uniform(0,10) \\
+\sigma &\tilde ~~ Uniform(0,50) \\
+\end{align}
+$$
 
 ## 4M4
 
