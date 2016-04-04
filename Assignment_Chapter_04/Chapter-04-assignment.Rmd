@@ -73,9 +73,31 @@ $$
 
 ## 4M4
 
+We don't know how old the students are.  I assume they are at least in 1st grade (years old).  A quick google suggests that the average height of a 6 year old is 107cm.
+
+The best prior would be one that is broad but does not got below 0, but we haven't learned those yet.  Since we really don't know how old these students are I will use a uniform prior.
+
+Rate of growth must be quite age dependent also and we don't know where we are.  But average growth from 6 to 18 must be around (177 - 42) / 12 = 11.25 cm per year.  So I use that as a normal distributed prior with relative wide standard deviaiton.
+
+Thinking about height variation, a sd of about 30 seems reasonable.
+
+$$ 
+\begin{align} 
+height_i &\tilde ~~ Normal(\mu _i, \sigma) \\
+\mu _i &= \alpha + \beta * year_i \\
+\alpha &\tilde ~~ Uniform(50,200) \\
+\beta &\tilde ~~ normal(11.25,5) \\
+\sigma &\tilde ~~ Uniform(0,30) \\
+\end{align}
+$$
+
 ## 4M5
 
+In this case I would change my alpha to be Normal(120,10)
+
 ## 4M6
+
+Variance of 64 means a standard deviation of 8.  So I would change sigma to be Uniform(0,8)
 
 # For 03/31/16
 
