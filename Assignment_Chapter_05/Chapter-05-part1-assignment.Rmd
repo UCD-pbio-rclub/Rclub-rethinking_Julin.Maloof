@@ -1,16 +1,109 @@
+---
+output: 
+  html_document: 
+    keep_md: yes
+---
 # Statistical Rethinking Chapter 4 problems
 
-__Name:__
+__Name:__ _Julin Maloof_
 
 
 # For 04/11/2016
 
 ## 5E1
 
+_Which of the linear models below are multiple linear regressions?_
+
+Two and Four
+
 ## 5E2
+
+_Write down a multiple regression to evaluate the claim: Animal diversity is linearly related to latitude, but only after controlling for plant diversity_
+
+I am not sure if we have full covered this, but:
+
+$$
+Diversity_i = \alpha + \beta_{lat}*lat_i + \beta_{plant}*plant_i
+$$
 
 ## 5M1
 
+_Invent your own example of a spurious correlation_
+
+Air density is a predictor of Julin's average speed on the bicycle
+
+Average miles ridden in the previous month is a predictor of Julin's speed on the bicycles
+
 ## 5M3
 
+_How might a high divorce rate cause a high marriage rate? Can you think of a way to evaluate this using multiple regression?_
+
+A high divorce rate could cause a high marriage rate because of there being more single people available for marriage
+
+To test for this using multiple regression one could include a factor for the proprtion of marriage that are second marriages.
+
 ## 5M4
+
+_Include %Mormons in the divorce rate model_
+
+LDS data from the [wikipedia page](https://en.wikipedia.org/wiki/The_Church_of_Jesus_Christ_of_Latter-day_Saints_membership_statistics_(United_States)#Table)
+
+
+```{r 5M4}
+library(rethinking)
+data(WaffleDivorce)
+d <- WaffleDivorce
+LDS <- read.csv("LDS.csv")
+head(LDS)
+summary(LDS)
+summary(d)
+d <- merge(d,LDS,by.x="Location",by.y="State")
+summary(d)
+```
+
+```{r}
+hist(d$Percent.LDS)
+hist(log10(d$Percent.LDS))
+d$Percent.LDS.s <- (d$Percent.LDS-mean(d$Percent.LDS)) / sd(d$Percent.LDS)
+d$Percent.LDS.log10 <- log10(d$Percent.LDS)
+d$Percent.LDS.log10.s <- (d$Percent.LDS.log10-mean(d$Percent.LDS.log10)) / sd(d$Percent.LDS.log10)
+d$Marriage.s <- (d$Marriage - mean(d$Marriage))/sd(d$Marriage)
+d$MedianAgeMarriage.s <- (d$MedianAgeMarriage - mean(d$MedianAgeMarriage)) / sd(d$MedianAgeMarriage)
+```
+
+```{r}
+plot(d$Divorce ~ d$Percent.LDS)
+plot(d$Divorce ~ d$Percent.LDS.s)
+plot(d$Divorce ~ d$Percent.LDS.log10)
+plot(d$Divorce ~ d$Percent.LDS.log10.s)
+```
+
+```{r}
+m5M4.1 <- map(alist(
+  Divorce ~ dnorm(mu, sigma),
+  mu <- a + bR*Marriage.s + bA*MedianAgeMarriage.s + bLDS*Percent.LDS.s,
+  a ~ dnorm(10,10),
+  bR ~ dnorm(0,1),
+  bA ~ dnorm(0,1),
+  bLDS ~ dnorm(0,1),
+  sigma ~ dunif(0,20)),
+  data=d)
+
+precis(m5M4.1)
+```
+
+```{r}
+m5M4.2 <- map(alist(
+  Divorce ~ dnorm(mu, sigma),
+  mu <- a + bR*Marriage.s + bA*MedianAgeMarriage.s + bLDS*Percent.LDS.log10.s,
+  a ~ dnorm(10,10),
+  bR ~ dnorm(0,1),
+  bA ~ dnorm(0,1),
+  bLDS ~ dnorm(0,1),
+  sigma ~ dunif(0,20)),
+  data=d)
+
+precis(m5M4.2)
+```
+
+#need plots, comments, and interpretation
