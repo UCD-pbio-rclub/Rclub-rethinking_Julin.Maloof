@@ -49,6 +49,9 @@ _Include %Mormons in the divorce rate model_
 LDS data from the [wikipedia page](https://en.wikipedia.org/wiki/The_Church_of_Jesus_Christ_of_Latter-day_Saints_membership_statistics_(United_States)#Table)
 
 
+First get the LDS data and combine it with the divorce data.  I cut and paste from chrome into excel and then did a little reformatting there before saving it as a .csv.
+
+The `merge()` function is quite useful...
 ```{r 5M4}
 library(rethinking)
 data(WaffleDivorce)
@@ -61,9 +64,16 @@ d <- merge(d,LDS,by.x="Location",by.y="State")
 summary(d)
 ```
 
+Take a look at the LDS data.
 ```{r}
 hist(d$Percent.LDS)
 hist(log10(d$Percent.LDS))
+```
+
+Very not normal...
+
+Do some tranformation and standardiztion anyway
+```{r}
 d$Percent.LDS.s <- (d$Percent.LDS-mean(d$Percent.LDS)) / sd(d$Percent.LDS)
 d$Percent.LDS.log10 <- log10(d$Percent.LDS)
 d$Percent.LDS.log10.s <- (d$Percent.LDS.log10-mean(d$Percent.LDS.log10)) / sd(d$Percent.LDS.log10)
@@ -71,12 +81,41 @@ d$Marriage.s <- (d$Marriage - mean(d$Marriage))/sd(d$Marriage)
 d$MedianAgeMarriage.s <- (d$MedianAgeMarriage - mean(d$MedianAgeMarriage)) / sd(d$MedianAgeMarriage)
 ```
 
+Plots to see relationship between Divorce and LDS data
 ```{r}
 plot(d$Divorce ~ d$Percent.LDS)
 plot(d$Divorce ~ d$Percent.LDS.s)
 plot(d$Divorce ~ d$Percent.LDS.log10)
 plot(d$Divorce ~ d$Percent.LDS.log10.s)
 ```
+
+None of this looks that great.
+
+An alternative is to look at the residuals from the Marriage Rate + Age model and ask how those relate to the LDS data.
+
+```{r}
+m5M4.0 <- map(alist(
+  Divorce ~ dnorm(mu, sigma),
+  mu <- a + bR*Marriage.s + bA*MedianAgeMarriage.s,
+  a ~ dnorm(10,10),
+  bR ~ dnorm(0,1),
+  bA ~ dnorm(0,1),
+  sigma ~ dunif(0,20)),
+  data=d)
+
+precis(m5M4.0)
+
+mu.m5M4.0 <- link(m5M4.0)
+mu.m5M4.0.mean <- apply(mu.m5M4.0,2,mean)
+
+mu.m5M4.0.resid <- d$Divorce - mu.m5M4.0.mean
+
+plot(d$Percent.LDS,mu.m5M4.0.resid)
+plot(d$Percent.LDS.log10,mu.m5M4.0.resid)
+```
+
+
+Neither are great; is there another transformation that would be better?  I can't really think of one.
 
 ```{r}
 m5M4.1 <- map(alist(
@@ -118,4 +157,4 @@ plot(d$Divorce, mu.m5M41.mean, xlab="Observed",ylab="predicted")
 abline(a=0,b=1)
 ```
 
-#need plots, comments, and interpretation
+Overall the untransformed LDS data is a bit better and it does seem to have an impact.

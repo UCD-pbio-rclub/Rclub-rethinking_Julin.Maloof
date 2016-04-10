@@ -44,6 +44,9 @@ _Include %Mormons in the divorce rate model_
 LDS data from the [wikipedia page](https://en.wikipedia.org/wiki/The_Church_of_Jesus_Christ_of_Latter-day_Saints_membership_statistics_(United_States)#Table)
 
 
+First get the LDS data and combine it with the divorce data.  I cut and paste from chrome into excel and then did a little reformatting there before saving it as a .csv.
+
+The `merge()` function is quite useful...
 
 ```r
 library(rethinking)
@@ -190,6 +193,7 @@ summary(d)
 ## 
 ```
 
+Take a look at the LDS data.
 
 ```r
 hist(d$Percent.LDS)
@@ -203,6 +207,10 @@ hist(log10(d$Percent.LDS))
 
 ![](Chapter-05-part1-assignment_files/figure-html/unnamed-chunk-1-2.png)
 
+Very not normal...
+
+Do some tranformation and standardiztion anyway
+
 ```r
 d$Percent.LDS.s <- (d$Percent.LDS-mean(d$Percent.LDS)) / sd(d$Percent.LDS)
 d$Percent.LDS.log10 <- log10(d$Percent.LDS)
@@ -211,30 +219,93 @@ d$Marriage.s <- (d$Marriage - mean(d$Marriage))/sd(d$Marriage)
 d$MedianAgeMarriage.s <- (d$MedianAgeMarriage - mean(d$MedianAgeMarriage)) / sd(d$MedianAgeMarriage)
 ```
 
+Plots to see relationship between Divorce and LDS data
 
 ```r
 plot(d$Divorce ~ d$Percent.LDS)
 ```
 
-![](Chapter-05-part1-assignment_files/figure-html/unnamed-chunk-2-1.png)
+![](Chapter-05-part1-assignment_files/figure-html/unnamed-chunk-3-1.png)
 
 ```r
 plot(d$Divorce ~ d$Percent.LDS.s)
 ```
 
-![](Chapter-05-part1-assignment_files/figure-html/unnamed-chunk-2-2.png)
+![](Chapter-05-part1-assignment_files/figure-html/unnamed-chunk-3-2.png)
 
 ```r
 plot(d$Divorce ~ d$Percent.LDS.log10)
 ```
 
-![](Chapter-05-part1-assignment_files/figure-html/unnamed-chunk-2-3.png)
+![](Chapter-05-part1-assignment_files/figure-html/unnamed-chunk-3-3.png)
 
 ```r
 plot(d$Divorce ~ d$Percent.LDS.log10.s)
 ```
 
-![](Chapter-05-part1-assignment_files/figure-html/unnamed-chunk-2-4.png)
+![](Chapter-05-part1-assignment_files/figure-html/unnamed-chunk-3-4.png)
+
+None of this looks that great.
+
+An alternative is to look at the residuals from the Marriage Rate + Age model and ask how those relate to the LDS data.
+
+
+```r
+m5M4.0 <- map(alist(
+  Divorce ~ dnorm(mu, sigma),
+  mu <- a + bR*Marriage.s + bA*MedianAgeMarriage.s,
+  a ~ dnorm(10,10),
+  bR ~ dnorm(0,1),
+  bA ~ dnorm(0,1),
+  sigma ~ dunif(0,20)),
+  data=d)
+
+precis(m5M4.0)
+```
+
+```
+##        Mean StdDev  5.5% 94.5%
+## a      9.69   0.20  9.36 10.01
+## bR    -0.13   0.28 -0.58  0.31
+## bA    -1.13   0.28 -1.58 -0.69
+## sigma  1.44   0.14  1.21  1.67
+```
+
+```r
+mu.m5M4.0 <- link(m5M4.0)
+```
+
+```
+## [ 100 / 1000 ]
+[ 200 / 1000 ]
+[ 300 / 1000 ]
+[ 400 / 1000 ]
+[ 500 / 1000 ]
+[ 600 / 1000 ]
+[ 700 / 1000 ]
+[ 800 / 1000 ]
+[ 900 / 1000 ]
+[ 1000 / 1000 ]
+```
+
+```r
+mu.m5M4.0.mean <- apply(mu.m5M4.0,2,mean)
+
+mu.m5M4.0.resid <- d$Divorce - mu.m5M4.0.mean
+
+plot(d$Percent.LDS,mu.m5M4.0.resid)
+```
+
+![](Chapter-05-part1-assignment_files/figure-html/unnamed-chunk-4-1.png)
+
+```r
+plot(d$Percent.LDS.log10,mu.m5M4.0.resid)
+```
+
+![](Chapter-05-part1-assignment_files/figure-html/unnamed-chunk-4-2.png)
+
+
+Neither are great; is there another transformation that would be better?  I can't really think of one.
 
 
 ```r
@@ -284,7 +355,7 @@ plot(d$Divorce, mu.m5M41.mean, xlab="Observed",ylab="predicted")
 abline(a=0,b=1)
 ```
 
-![](Chapter-05-part1-assignment_files/figure-html/unnamed-chunk-3-1.png)
+![](Chapter-05-part1-assignment_files/figure-html/unnamed-chunk-5-1.png)
 
 
 ```r
@@ -334,6 +405,6 @@ plot(d$Divorce, mu.m5M41.mean, xlab="Observed",ylab="predicted")
 abline(a=0,b=1)
 ```
 
-![](Chapter-05-part1-assignment_files/figure-html/unnamed-chunk-4-1.png)
+![](Chapter-05-part1-assignment_files/figure-html/unnamed-chunk-6-1.png)
 
-#need plots, comments, and interpretation
+Overall the untransformed LDS data is a bit better and it does seem to have an impact.
