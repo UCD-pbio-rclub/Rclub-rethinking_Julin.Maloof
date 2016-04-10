@@ -260,6 +260,32 @@ precis(m5M4.1)
 ## sigma  1.34   0.13  1.13  1.56
 ```
 
+```r
+mu.m5M4.1 <- link(m5M4.1)
+```
+
+```
+## [ 100 / 1000 ]
+[ 200 / 1000 ]
+[ 300 / 1000 ]
+[ 400 / 1000 ]
+[ 500 / 1000 ]
+[ 600 / 1000 ]
+[ 700 / 1000 ]
+[ 800 / 1000 ]
+[ 900 / 1000 ]
+[ 1000 / 1000 ]
+```
+
+```r
+mu.m5M41.mean <- apply(mu.m5M4.1,2,mean)
+mu.m5M41.PI <- apply(mu.m5M4.1,2,PI)
+plot(d$Divorce, mu.m5M41.mean, xlab="Observed",ylab="predicted")
+abline(a=0,b=1)
+```
+
+![](Chapter-05-part1-assignment_files/figure-html/unnamed-chunk-3-1.png)
+
 
 ```r
 m5M4.2 <- map(alist(
@@ -283,5 +309,31 @@ precis(m5M4.2)
 ## bLDS  -0.54   0.27 -0.98 -0.10
 ## sigma  1.38   0.14  1.16  1.60
 ```
+
+```r
+mu.m5M4.2 <- link(m5M4.2)
+```
+
+```
+## [ 100 / 1000 ]
+[ 200 / 1000 ]
+[ 300 / 1000 ]
+[ 400 / 1000 ]
+[ 500 / 1000 ]
+[ 600 / 1000 ]
+[ 700 / 1000 ]
+[ 800 / 1000 ]
+[ 900 / 1000 ]
+[ 1000 / 1000 ]
+```
+
+```r
+mu.m5M41.mean <- apply(mu.m5M4.2,2,mean)
+mu.m5M41.PI <- apply(mu.m5M4.2,2,PI)
+plot(d$Divorce, mu.m5M41.mean, xlab="Observed",ylab="predicted")
+abline(a=0,b=1)
+```
+
+![](Chapter-05-part1-assignment_files/figure-html/unnamed-chunk-4-1.png)
 
 #need plots, comments, and interpretation

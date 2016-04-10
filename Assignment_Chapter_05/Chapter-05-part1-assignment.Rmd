@@ -90,6 +90,12 @@ m5M4.1 <- map(alist(
   data=d)
 
 precis(m5M4.1)
+
+mu.m5M4.1 <- link(m5M4.1)
+mu.m5M41.mean <- apply(mu.m5M4.1,2,mean)
+mu.m5M41.PI <- apply(mu.m5M4.1,2,PI)
+plot(d$Divorce, mu.m5M41.mean, xlab="Observed",ylab="predicted")
+abline(a=0,b=1)
 ```
 
 ```{r}
@@ -104,6 +110,12 @@ m5M4.2 <- map(alist(
   data=d)
 
 precis(m5M4.2)
+
+mu.m5M4.2 <- link(m5M4.2)
+mu.m5M41.mean <- apply(mu.m5M4.2,2,mean)
+mu.m5M41.PI <- apply(mu.m5M4.2,2,PI)
+plot(d$Divorce, mu.m5M41.mean, xlab="Observed",ylab="predicted")
+abline(a=0,b=1)
 ```
 
 #need plots, comments, and interpretation
