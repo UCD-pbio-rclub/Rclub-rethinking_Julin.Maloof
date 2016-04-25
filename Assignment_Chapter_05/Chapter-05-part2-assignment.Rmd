@@ -6,15 +6,113 @@ output:
 ---
 # Statistical Rethinking Chapter 4 problems
 
-__Name:__
+__Name: Julin Maloof__
 
 
 # For 04/18/2016
 
 ## 5M2
 
+My example of a masked relationship is predicting energy usage (kW pulled from PG&E) for the Brady/Koch househould.  Because they have solar, this should be predictable by number pf sunny hours in the day.  However, long, sunny days also correlate with heat, and they have an air conditioner, which will affect energy use in the opposite way.
+
 ## 5H1
 
+```{r}
+library(rethinking)
+data(foxes)
+data <- foxes
+summary(data)
+head(data)
+
+m5h1.a <- map(
+  alist(
+    weight ~ dnorm(mu, sigma),
+    mu <- a + b.area*area,
+    a <- dnorm(4.5, 2),
+    b.area <- dnorm(0,5),
+    sigma <- dunif(0,10)),
+    data=data)
+
+precis(m5h1.a)
+plot(precis(m5h1.a))
+
+pred.data.5h1.a <- data.frame(area=seq(0,10,length.out=100))
+
+mu.5h1.a <- link(m5h1.a,pred.data.5h1.a,1e4)
+mu.5h1.a.mean <- apply(mu.5h1.a,2,mean)
+mu.5h1.a.PI <- apply(mu.5h1.a,2,PI)
+
+plot(weight~area,data=data)
+lines(pred.data.5h1.a$area,mu.5h1.a.mean)
+lines(pred.data.5h1.a$area,mu.5h1.a.PI[1,],lty=2)
+lines(pred.data.5h1.a$area,mu.5h1.a.PI[2,],lty=2)
+
+m5h1.b <- map(
+  alist(
+    weight ~ dnorm(mu, sigma),
+    mu <- a + b.groupsize*groupsize,
+    a <- dnorm(4.5, 2),
+    b.groupsize <- dnorm(0,5),
+    sigma <- dunif(0,10)),
+    data=data)
+
+precis(m5h1.b)
+plot(precis(m5h1.b))
+
+pred.data.5h1.b <- data.frame(groupsize=seq(0,10,length.out=100))
+
+mu.5h1.b <- link(m5h1.b,pred.data.5h1.b,1e4)
+mu.5h1.b.mean <- apply(mu.5h1.b,2,mean)
+mu.5h1.b.PI <- apply(mu.5h1.b,2,PI)
+
+plot(weight~groupsize,data=data)
+lines(pred.data.5h1.b$groupsize,mu.5h1.b.mean)
+lines(pred.data.5h1.b$groupsize,mu.5h1.b.PI[1,],lty=2)
+lines(pred.data.5h1.b$groupsize,mu.5h1.b.PI[2,],lty=2)
+```
+
+Neither variable is particularly important for predicting body weight
+
 ## 5H2
+```{r}
+m5h2 <- map(
+  alist(
+    weight ~ dnorm(mu, sigma),
+    mu <- a + b.area*area + b.groupsize*groupsize,
+    a <- dnorm(4.5, 2),
+    b.groupsize <- dnorm(0,5),
+    b.area <- dnorm(0,5),
+    sigma <- dunif(0,10)),
+    data=data)
+
+precis(m5h2)
+plot(precis(m5h2))
+
+pred.data.5h2.gs <- data.frame(groupsize=seq(0,10,length.out=100),
+                                      area=mean(data$area))
+
+mu.5h2.gs <- link(m5h2,pred.data.5h2.gs,1e4)
+mu.5h2.gs.mean <- apply(mu.5h2.gs,2,mean)
+mu.5h2.gs.PI <- apply(mu.5h2.gs,2,PI)
+
+plot(weight~groupsize,data=data,type="n")
+lines(pred.data.5h2.gs$groupsize,mu.5h2.gs.mean)
+lines(pred.data.5h2.gs$groupsize,mu.5h2.gs.PI[1,],lty=2)
+lines(pred.data.5h2.gs$groupsize,mu.5h2.gs.PI[2,],lty=2)
+
+pred.data.5h2.area <- data.frame(groupsize=mean(data$groupsize),
+                                      area=seq(0,10,length.out=100))
+
+mu.5h2.area <- link(m5h2,pred.data.5h2.area,1e4)
+mu.5h2.area.mean <- apply(mu.5h2.area,2,mean)
+mu.5h2.area.PI <- apply(mu.5h2.area,2,PI)
+
+plot(weight~area,data=data,type="n")
+lines(pred.data.5h2.area$area,mu.5h2.area.mean)
+lines(pred.data.5h2.area$area,mu.5h2.area.PI[1,],lty=2)
+lines(pred.data.5h2.area$area,mu.5h2.area.PI[2,],lty=2)
+
+plot(groupsize~area,data=data)
+```
 
 ## 5H3
