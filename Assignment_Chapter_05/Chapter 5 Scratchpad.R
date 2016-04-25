@@ -15,6 +15,8 @@ m5.1 <- map(
     sigma ~ dunif( 0 , 10 )
   ) , data = d )
 
+plot(d$MedianAgeMarriage.s,d$Divorce)
+
 # compute percentile interval of mean
 MAM.seq <- seq( from=-3 , to=3.5 , length.out=30 )
 mu <- link( m5.1 , data=data.frame(MedianAgeMarriage.s=MAM.seq) )
@@ -36,7 +38,19 @@ m5.2 <- map(
     sigma ~ dunif( 0 , 10 )
   ) , data = d )
 
+m5.2a <- map(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bR * Marriage ,
+    a ~ dnorm( 10 , 10 ) ,
+    bR ~ dnorm( 1 , 5 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ) , data = d )
 
+precis(m5.2a)
+
+plot(d$Marriage,d$Divorce)
+abline(m5.2a)
 
 m5.3 <- map(
   alist(
