@@ -4,7 +4,7 @@
 __Name: Julin Maloof__
 
 
-# For 04/18/2016
+# For <del>04/18/2016</del> 4/22/16
 
 ## 5M2
 
@@ -99,9 +99,9 @@ precis(m5h1.a)
 
 ```
 ##        Mean StdDev  5.5% 94.5%
-## a      4.45   0.38  3.84  5.06
+## a      4.45   0.38  3.84  5.07
 ## b.area 0.02   0.12 -0.16  0.21
-## sigma  1.18   0.08  1.05  1.30
+## sigma  1.18   0.08  1.06  1.30
 ```
 
 ```r
@@ -301,3 +301,196 @@ plot(groupsize~area,data=data)
 ![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-2-4.png)
 
 ## 5H3
+
+#### Avg Food and Group Size
+
+
+```r
+m5h3a <- map(
+  alist(
+    weight ~ dnorm(mu, sigma),
+    mu <- a + b.avgfood*avgfood + b.groupsize*groupsize,
+    a <- dnorm(4.5, 2),
+    b.groupsize <- dnorm(0,5),
+    b.avgfood <- dnorm(0,5),
+    sigma <- dunif(0,10)),
+    data=data)
+
+precis(m5h3a)
+```
+
+```
+##              Mean StdDev  5.5% 94.5%
+## a            4.19   0.42  3.52  4.86
+## b.groupsize -0.54   0.15 -0.79 -0.30
+## b.avgfood    3.58   1.17  1.72  5.45
+## sigma        1.12   0.07  1.00  1.23
+```
+
+```r
+plot(precis(m5h3a))
+```
+
+![](Chapter-05-part2-assignment_files/figure-html/5H3_part1-1.png)
+
+```r
+pred.data.5h3.gs <- data.frame(groupsize=seq(0,10,length.out=100),
+                                      avgfood=mean(data$avgfood))
+
+mu.5h3.gs <- link(m5h3a,pred.data.5h3.gs,1e4)
+```
+
+```
+## [ 1000 / 10000 ]
+[ 2000 / 10000 ]
+[ 3000 / 10000 ]
+[ 4000 / 10000 ]
+[ 5000 / 10000 ]
+[ 6000 / 10000 ]
+[ 7000 / 10000 ]
+[ 8000 / 10000 ]
+[ 9000 / 10000 ]
+[ 10000 / 10000 ]
+```
+
+```r
+mu.5h3.gs.mean <- apply(mu.5h3.gs,2,mean)
+mu.5h3.gs.PI <- apply(mu.5h3.gs,2,PI)
+
+plot(weight~groupsize,data=data,type="n")
+lines(pred.data.5h3.gs$groupsize,mu.5h3.gs.mean)
+lines(pred.data.5h3.gs$groupsize,mu.5h3.gs.PI[1,],lty=2)
+lines(pred.data.5h3.gs$groupsize,mu.5h3.gs.PI[2,],lty=2)
+```
+
+![](Chapter-05-part2-assignment_files/figure-html/5H3_part1-2.png)
+
+```r
+pred.data.5h3.avgfood <- data.frame(groupsize=mean(data$groupsize),
+                                      avgfood=seq(0,2,length.out=100))
+
+mu.5h3.avgfood <- link(m5h3a,pred.data.5h3.avgfood,1e4)
+```
+
+```
+## [ 1000 / 10000 ]
+[ 2000 / 10000 ]
+[ 3000 / 10000 ]
+[ 4000 / 10000 ]
+[ 5000 / 10000 ]
+[ 6000 / 10000 ]
+[ 7000 / 10000 ]
+[ 8000 / 10000 ]
+[ 9000 / 10000 ]
+[ 10000 / 10000 ]
+```
+
+```r
+mu.5h3.avgfood.mean <- apply(mu.5h3.avgfood,2,mean)
+mu.5h3.avgfood.PI <- apply(mu.5h3.avgfood,2,PI)
+
+plot(weight~avgfood,data=data,type="n")
+lines(pred.data.5h3.avgfood$avgfood,mu.5h3.avgfood.mean)
+lines(pred.data.5h3.avgfood$avgfood,mu.5h3.avgfood.PI[1,],lty=2)
+lines(pred.data.5h3.avgfood$avgfood,mu.5h3.avgfood.PI[2,],lty=2)
+```
+
+![](Chapter-05-part2-assignment_files/figure-html/5H3_part1-3.png)
+
+```r
+plot(groupsize~avgfood,data=data)
+```
+
+![](Chapter-05-part2-assignment_files/figure-html/5H3_part1-4.png)
+
+```r
+cor(data$groupsize,data$avgfood)
+```
+
+```
+## [1] 0.9014829
+```
+So Avgfood and GroupSize are correlated by have opposite effects on weight so they "mask" one another.  The model fits well when both are included.
+
+#### Average Food, GroupSize, Area
+
+```r
+m5h3b <- map(
+  alist(
+    weight ~ dnorm(mu, sigma),
+    mu <- a + b.avgfood*avgfood + b.groupsize*groupsize + b.area*area,
+    a <- dnorm(4.5, 2),
+    b.groupsize <- dnorm(0,5),
+    b.avgfood <- dnorm(0,5),
+    b.area <- dnorm(0.5),
+    sigma <- dunif(0,10)),
+    data=data)
+
+precis(m5h3b)
+```
+
+```
+##              Mean StdDev  5.5% 94.5%
+## a            4.11   0.42  3.45  4.77
+## b.groupsize -0.59   0.15 -0.84 -0.35
+## b.avgfood    2.26   1.38  0.06  4.46
+## b.area       0.41   0.23  0.04  0.77
+## sigma        1.10   0.07  0.99  1.22
+```
+
+```r
+plot(precis(m5h3b))
+```
+
+![](Chapter-05-part2-assignment_files/figure-html/5H3_part2-1.png)
+
+Now the coefficients for avgfood and area are both lower and could be 0
+
+Question: is average food or area a better predictor of weight?
+
+The three-predictor model isn't very helpful because the two predictors are corelated
+
+```r
+plot(area ~ avgfood, data=data)
+```
+
+![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-3-1.png)
+
+```r
+cor(data$area, data$avgfood)
+```
+
+```
+## [1] 0.8831038
+```
+
+One possiblity is to look at the sigma in the two-way models.  Lowed sigma would indicate a better fit)
+
+```r
+#avgfood and groupsize
+precis(m5h3a)
+```
+
+```
+##              Mean StdDev  5.5% 94.5%
+## a            4.19   0.42  3.52  4.86
+## b.groupsize -0.54   0.15 -0.79 -0.30
+## b.avgfood    3.58   1.17  1.72  5.45
+## sigma        1.12   0.07  1.00  1.23
+```
+
+```r
+#area and groupsize
+precis(m5h2)
+```
+
+```
+##              Mean StdDev  5.5% 94.5%
+## a            4.45   0.36  3.87  5.04
+## b.groupsize -0.43   0.12 -0.62 -0.24
+## b.area       0.62   0.20  0.30  0.93
+## sigma        1.12   0.07  1.00  1.24
+```
+
+They seem pretty similar to me; not sure how to ditinguish.
+
