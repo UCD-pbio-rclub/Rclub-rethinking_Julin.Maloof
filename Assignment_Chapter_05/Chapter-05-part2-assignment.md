@@ -12,6 +12,7 @@ My example of a masked relationship is predicting energy usage (kW pulled from P
 
 ## 5H1
 
+Are `area` or `groupsize` important predictors of body weight?
 
 ```r
 library(rethinking)
@@ -23,10 +24,6 @@ library(rethinking)
 
 ```
 ## Loading required package: ggplot2
-```
-
-```
-## Warning: package 'ggplot2' was built under R version 3.2.4
 ```
 
 ```
@@ -84,6 +81,8 @@ head(data)
 ## 6     3    0.49         2 2.12   3.25
 ```
 
+First fit a model with area as a predictor
+
 ```r
 m5h1.a <- map(
   alist(
@@ -108,7 +107,7 @@ precis(m5h1.a)
 plot(precis(m5h1.a))
 ```
 
-![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-1-1.png)
+![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-2-1.png)
 
 ```r
 pred.data.5h1.a <- data.frame(area=seq(0,10,length.out=100))
@@ -139,7 +138,10 @@ lines(pred.data.5h1.a$area,mu.5h1.a.PI[1,],lty=2)
 lines(pred.data.5h1.a$area,mu.5h1.a.PI[2,],lty=2)
 ```
 
-![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-1-2.png)
+![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-2-2.png)
+Not much of an effect
+
+Now fit a model with groupsize as a predictor
 
 ```r
 m5h1.b <- map(
@@ -165,7 +167,7 @@ precis(m5h1.b)
 plot(precis(m5h1.b))
 ```
 
-![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-1-3.png)
+![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-3-1.png)
 
 ```r
 pred.data.5h1.b <- data.frame(groupsize=seq(0,10,length.out=100))
@@ -196,11 +198,13 @@ lines(pred.data.5h1.b$groupsize,mu.5h1.b.PI[1,],lty=2)
 lines(pred.data.5h1.b$groupsize,mu.5h1.b.PI[2,],lty=2)
 ```
 
-![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-1-4.png)
+![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-3-2.png)
 
 Neither variable is particularly important for predicting body weight
 
 ## 5H2
+
+What about using both area and groupsize?
 
 ```r
 m5h2 <- map(
@@ -228,7 +232,7 @@ precis(m5h2)
 plot(precis(m5h2))
 ```
 
-![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-2-1.png)
+![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-4-1.png)
 
 ```r
 pred.data.5h2.gs <- data.frame(groupsize=seq(0,10,length.out=100),
@@ -260,7 +264,7 @@ lines(pred.data.5h2.gs$groupsize,mu.5h2.gs.PI[1,],lty=2)
 lines(pred.data.5h2.gs$groupsize,mu.5h2.gs.PI[2,],lty=2)
 ```
 
-![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-2-2.png)
+![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-4-2.png)
 
 ```r
 pred.data.5h2.area <- data.frame(groupsize=mean(data$groupsize),
@@ -292,15 +296,19 @@ lines(pred.data.5h2.area$area,mu.5h2.area.PI[1,],lty=2)
 lines(pred.data.5h2.area$area,mu.5h2.area.PI[2,],lty=2)
 ```
 
-![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-2-3.png)
+![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-4-3.png)
 
 ```r
 plot(groupsize~area,data=data)
 ```
 
-![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-2-4.png)
+![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-4-4.png)
+
+The fits much better.  Why? Because groupsize and area are both correlated but affect body weight in opposite ways.
 
 ## 5H3
+
+What about average food available in the territory?
 
 #### Avg Food and Group Size
 
@@ -433,7 +441,7 @@ precis(m5h3b)
 ##              Mean StdDev  5.5% 94.5%
 ## a            4.11   0.42  3.45  4.77
 ## b.groupsize -0.59   0.15 -0.84 -0.35
-## b.avgfood    2.26   1.38  0.06  4.46
+## b.avgfood    2.26   1.38  0.07  4.46
 ## b.area       0.41   0.23  0.04  0.77
 ## sigma        1.10   0.07  0.99  1.22
 ```
@@ -454,7 +462,7 @@ The three-predictor model isn't very helpful because the two predictors are core
 plot(area ~ avgfood, data=data)
 ```
 
-![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-3-1.png)
+![](Chapter-05-part2-assignment_files/figure-html/unnamed-chunk-5-1.png)
 
 ```r
 cor(data$area, data$avgfood)

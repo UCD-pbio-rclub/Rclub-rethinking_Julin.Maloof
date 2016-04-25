@@ -17,13 +17,17 @@ My example of a masked relationship is predicting energy usage (kW pulled from P
 
 ## 5H1
 
+Are `area` or `groupsize` important predictors of body weight?
 ```{r}
 library(rethinking)
 data(foxes)
 data <- foxes
 summary(data)
 head(data)
+```
 
+First fit a model with area as a predictor
+```{r}
 m5h1.a <- map(
   alist(
     weight ~ dnorm(mu, sigma),
@@ -46,7 +50,11 @@ plot(weight~area,data=data)
 lines(pred.data.5h1.a$area,mu.5h1.a.mean)
 lines(pred.data.5h1.a$area,mu.5h1.a.PI[1,],lty=2)
 lines(pred.data.5h1.a$area,mu.5h1.a.PI[2,],lty=2)
+```
+Not much of an effect
 
+Now fit a model with groupsize as a predictor
+```{r }
 m5h1.b <- map(
   alist(
     weight ~ dnorm(mu, sigma),
@@ -74,6 +82,8 @@ lines(pred.data.5h1.b$groupsize,mu.5h1.b.PI[2,],lty=2)
 Neither variable is particularly important for predicting body weight
 
 ## 5H2
+
+What about using both area and groupsize?
 ```{r}
 m5h2 <- map(
   alist(
@@ -115,7 +125,11 @@ lines(pred.data.5h2.area$area,mu.5h2.area.PI[2,],lty=2)
 plot(groupsize~area,data=data)
 ```
 
+The fits much better.  Why? Because groupsize and area are both correlated but affect body weight in opposite ways.
+
 ## 5H3
+
+What about average food available in the territory?
 
 #### Avg Food and Group Size
 
