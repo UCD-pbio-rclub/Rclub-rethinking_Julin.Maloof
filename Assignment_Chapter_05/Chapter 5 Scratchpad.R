@@ -134,3 +134,183 @@ for ( i in 1:nrow(d) ) {
   points( d$Divorce[j]-c(divorce.PI[1,j],divorce.PI[2,j]) , rep(i,2),
           pch=3 , cex=0.6 , col="gray" )
 }
+
+
+## Section 5.2
+
+library(rethinking)
+data(milk)
+d <- milk
+str(d)
+
+
+m5.5 <- map(
+  alist(
+    kcal.per.g ~ dnorm( mu , sigma ) ,
+    mu <- a + bn*neocortex.perc ,
+    a ~ dnorm( 0 , 100 ) ,
+    bn ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 1 ) ),
+  data=d )
+
+dcc <- d[ complete.cases(d) , ]
+
+m5.5 <- map(
+  alist(
+    kcal.per.g ~ dnorm( mu , sigma ) ,
+    mu <- a + bn*neocortex.perc ,
+    a ~ dnorm( 0 , 100 ) ,
+    bn ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 1 ) ),
+  data=dcc )
+
+precis( m5.5 , digits=3 )
+
+np.seq <- 0:100
+pred.data <- data.frame( neocortex.perc=np.seq )
+mu <- link( m5.5 , data=pred.data , n=1e4 )
+mu.mean <- apply( mu , 2 , mean )
+mu.PI <- apply( mu , 2 , PI )
+plot( kcal.per.g ~ neocortex.perc , data=dcc , col=rangi2 )
+lines( np.seq , mu.mean )
+lines( np.seq , mu.PI[1,] , lty=2 )
+lines( np.seq , mu.PI[2,] , lty=2 )
+
+dcc$log.mass <- log(dcc$mass)
+
+m5.6 <- map(
+  alist(
+    kcal.per.g ~ dnorm( mu , sigma ) ,
+    mu <- a + bm*log.mass ,
+    a ~ dnorm( 0 , 100 ) ,
+    bm ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 1 ) ),
+  data=dcc )
+precis(m5.6)
+
+summary(dcc)
+log.mass.seq <- seq(-2.2,4.5,length.out=100)
+pred.data <- data.frame( log.mass=log.mass.seq )
+mu <- link( m5.6 , data=pred.data , n=1e4 )
+mu.mean <- apply( mu , 2 , mean )
+mu.PI <- apply( mu , 2 , PI )
+plot( kcal.per.g ~ log.mass , data=dcc , col=rangi2 )
+lines( log.mass.seq , mu.mean )
+lines( log.mass.seq , mu.PI[1,] , lty=2 )
+lines( log.mass.seq , mu.PI[2,] , lty=2 )
+
+
+m5.7 <- map(
+  alist(
+    kcal.per.g ~ dnorm( mu , sigma ) ,
+    mu <- a + bn*neocortex.perc + bm*log.mass ,
+    a ~ dnorm( 0 , 100 ) ,
+    bn ~ dnorm( 0 , 1 ) ,
+    bm ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 1 )
+  ),
+  data=dcc )
+precis(m5.7)
+
+
+mean.log.mass <- mean( log(dcc$mass) )
+np.seq <- 0:100
+pred.data <- data.frame(
+  neocortex.perc=np.seq,
+  log.mass=mean.log.mass
+)
+mu <- link( m5.7 , data=pred.data , n=1e4 )
+mu.mean <- apply( mu , 2 , mean )
+mu.PI <- apply( mu , 2 , PI )
+plot( kcal.per.g ~ neocortex.perc , data=dcc , type="n" )
+lines( np.seq , mu.mean )
+lines( np.seq , mu.PI[1,] , lty=2 )
+lines( np.seq , mu.PI[2,] , lty=2 )
+
+log.mass.seq <- seq(-2.2,4.5,length.out=100)
+mean.np <- mean(dcc$neocortex.perc) 
+pred.data <- data.frame(
+  neocortex.perc=mean.np,
+  log.mass=log.mass.seq
+)
+mu <- link( m5.7 , data=pred.data , n=1e4 )
+mu.mean <- apply( mu , 2 , mean )
+mu.PI <- apply( mu , 2 , PI )
+plot( kcal.per.g ~ log.mass , data=dcc , type="n" )
+lines( log.mass.seq , mu.mean )
+lines( log.mass.seq , mu.PI[1,] , lty=2 )
+lines( log.mass.seq , mu.PI[2,] , lty=2 )
+
+
+## 5.3
+
+N <- 100
+height <- rnorm(N,10,2)
+leg_prop <- runif(N,0.4,0.5)
+leg_left <- leg_prop*height +
+  rnorm( N , 0 , 0.02 )
+leg_right <- leg_prop*height +
+  rnorm( N , 0 , 0.02 )
+d <- data.frame(height,leg_left,leg_right)
+
+
+m5.8 <- map(
+  alist(
+    height ~ dnorm( mu , sigma ) ,
+    mu <- a + bl*leg_left + br*leg_right ,
+    a ~ dnorm( 10 , 100 ) ,
+    bl ~ dnorm( 2 , 10 ) ,
+    br ~ dnorm( 2 , 10 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ),
+  data=d )
+precis(m5.8)
+
+plot(precis(m5.8))
+
+post <- extract.samples(m5.8)
+plot( bl ~ br , post , col=col.alpha(rangi2,0.1) , pch=16 )
+
+
+library(rethinking)
+data(milk)
+d <- milk
+# kcal.per.g regressed on perc.fat
+m5.10 <- map(
+  alist(
+    kcal.per.g ~ dnorm( mu , sigma ) ,
+    mu <- a + bf*perc.fat ,
+    a ~ dnorm( 0.6 , 10 ) ,
+    bf ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ),
+  data=d )
+# kcal.per.g regressed on perc.lactose
+m5.11 <- map(
+  alist(
+    kcal.per.g ~ dnorm( mu , sigma ) ,
+    mu <- a + bl*perc.lactose ,
+    a ~ dnorm( 0.6 , 10 ) ,
+    bl ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ), data=d )
+precis( m5.10 , digits=3 )
+precis( m5.11 , digits=3 )
+
+m5.12 <- map(
+  alist(
+    kcal.per.g ~ dnorm( mu , sigma ) ,
+    mu <- a + bf*perc.fat + bl*perc.lactose ,
+    a ~ dnorm( 0.6 , 10 ) ,
+    bf ~ dnorm( 0 , 1 ) ,
+    bl ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ),
+  data=d )
+precis( m5.12 , digits=3 )
+
+
+pairs( ~ kcal.per.g + perc.fat + perc.lactose ,
+       data=d , col=rangi2 )
+
+cor( d$perc.fat , d$perc.lactose )
