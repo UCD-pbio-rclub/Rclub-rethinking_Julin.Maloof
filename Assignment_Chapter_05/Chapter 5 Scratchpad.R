@@ -328,3 +328,24 @@ pairs( ~ kcal.per.g + perc.fat + perc.lactose ,
        data=d , col=rangi2 )
 
 cor( d$perc.fat , d$perc.lactose )
+
+# Section 5.4
+
+data(Howell1)
+d <- Howell1
+str(d)
+
+m5.15 <- map(
+  alist(
+    height ~ dnorm( mu , sigma ) ,
+    mu <- a + bm*male ,
+    a ~ dnorm( 178 , 100 ) ,
+    bm ~ dnorm( 0 , 10 ) ,
+    sigma ~ dunif( 0 , 50 ) ),
+  data=d )
+precis(m5.15)
+
+post <- extract.samples(m5.15)
+mu.male <- post$a + post$bm
+PI(mu.male)
+
