@@ -348,4 +348,48 @@ precis(m5.15)
 post <- extract.samples(m5.15)
 mu.male <- post$a + post$bm
 PI(mu.male)
+mu.female <- post$a
+mean(mu.female)
+PI(mu.female)
+mean(link.results[,2])
+PI(link.results[,2])
 
+link.results <- link(m5.15)
+
+dim(link.results)
+
+data(milk)
+d <- milk
+unique(d$clade)
+
+d$clade.NWM <- ifelse( d$clade=="New World Monkey" , 1 , 0 ) 
+
+d$clade
+
+d$clade_id <- coerce_index(d$clade)
+
+
+
+m5.16_alt <- map(
+  alist(
+    kcal.per.g ~ dnorm( mu , sigma ) ,
+    mu <- a[clade_id] ,
+    a[clade_id] ~ dnorm( 0.6 , 10 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ),
+  data=d )
+
+precis( m5.16_alt , depth=2 )
+
+
+
+data(cars)
+
+m.cars <- map(alist(
+  dist ~ dnorm( mu , sigma ),
+  mu <- Intercept +
+    b_speed*speed,
+  Intercept ~ dnorm(0,10),
+  b_speed ~ dnorm(0,10),
+  sigma ~ dcauchy(0,2)
+),data=cars)
