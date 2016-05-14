@@ -97,3 +97,79 @@ for ( i in kseq ) {
   lines( c(i,i) , pts_in , col=rangi2 )
   lines( c(i,i)+0.1 , pts_out )
 }
+
+## Rcode 6.15 6.20
+
+#fit the model
+library(rethinking)
+data(cars)
+
+?cars
+m <- map(
+  alist(
+    dist ~ dnorm(mu,sigma),
+    mu <- a + b*speed,
+    a ~ dnorm(0,100),
+    b ~ dnorm(0,10),
+    sigma ~ dunif(0,30)
+  ) , data=cars )
+
+post <- extract.samples(m,n=1000)
+head(post) # posterior distribution of model paramters
+
+now compute log likelihood of each observation across posterior distribution
+
+n_samples <- 1000
+ll <- sapply( 1:n_samples ,
+              function(s) {
+                mu <- post$a[s] + post$b[s]*cars$speed
+                dnorm( cars$dist , mu , post$sigma[s] , log=TRUE )
+              })
+
+dim(ll)
+ll[1:10,1:10]
+
+?log_sum_exp
+log_sum_exp
+
+test <- seq(0.0001,0.001,0.0001)
+test
+ltest <- log(test)
+ltest
+sum(test)
+log(sum(test))
+log(sum(exp(ltest)))
+log_sum_exp(ltest)
+
+#but if these were really small
+ltest <- c(-1000,-800,-700,-600)
+exp(ltest)
+log_sum_exp(ltest)
+log(sum(exp(ltest)))
+
+n_cases <- nrow(cars)
+lppd <- sapply( 1:n_cases , function(i) log_sum_exp(ll[i,]) - log(n_samples) )
+
+#why not
+lppd.jm <- apply(ll,1, function(x) log_sum_exp(x) - log(n_samples))
+
+all(lppd.jm==lppd)
+
+# in any case we now have the average likelihood of each sample (averaged across the posterior)
+
+pWAIC <- sapply( 1:n_cases , function(i) var(ll[i,]) )
+
+#or
+
+pWAIC.jm <- apply(ll,1,var)
+
+all(pWAIC.jm==pWAIC)
+
+-2*(sum(lppd) - sum(pWAIC))
+
+-2*sum(lppd-pWAIC)
+
+WAIC(m)
+
+waic_vec <- -2*( lppd - pWAIC )
+sqrt( n_cases*var(waic_vec) )
