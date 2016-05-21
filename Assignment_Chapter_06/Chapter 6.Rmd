@@ -252,3 +252,18 @@ M1 does a poor job fitting the actual data throughout its range.
 M2 is better through much of the data but does poorly at both ends.  
 M3 does well, but perhaps a bit too much of a dip at older ages and quickly goes off range as soon as age increases beyond the observations
 M4 - M6 all fit the observations nicely.  M4 has the added bonus of being stable for a bit longer after age extends beyond our observations.
+
+## 6H3
+
+```{r}
+
+height.ensemble <- ensemble(M1,M2,M3,M4,M5,M6,data = pred.df)
+str(height.ensemble)
+mu <- apply(height.ensemble$link,2,mean)    
+mu.PI <- apply(height.ensemble$link,2,PI)
+plot(d1$height~d1$age,xlim=range(pred.df$age),ylim=range(c(d1$height,mu)),col=rangi2)
+lines(mu ~ pred.df$age)
+shade(mu.PI,pred.df$age)
+```
+
+So the nice thing about this is that the predictions do not go haywire once we are out of the observed range.
