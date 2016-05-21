@@ -54,6 +54,11 @@ WAIC is negative 2 times (the sum of the log average posterior likelihood of eac
 
 WAIC is most general, then DIC, then AIC.  DIC assumes that the posterior likelihood is multivariate Gaussian; AIC assumes this and the priors are uninformative.
 
+## 6M2
+
+Model selection is where you try to use information criteria to pick the one best model.  In model averaging you take the information across all the models, weighting it by the model's probability.  Model selection loses information about other possilbe outcomes.  I am not sure what is loss under model averaging.
+
+
 ## 6M3
 
 _When comparing models with IC why must the same number of samples be used?_
@@ -149,3 +154,101 @@ _provide an informal explanation of why overly informative priors may cause unde
 Because they coefficients are too constrained and may not adequately fit the data.
 
 
+## 6H1
+
+```{r }
+library(rethinking)
+data(Howell1)
+d <- Howell1
+d$age <- (d$age - mean(d$age))/sd(d$age)
+head(d)
+set.seed( 1000 )
+i <- sample(1:nrow(d),size=nrow(d)/2)
+d1 <- d[ i , ]
+d2 <- d[ -i , ]
+
+M1 <- map(alist(
+  height ~ dnorm(mu, sigma),
+  mu <- a + b1*age,
+  a ~ dnorm(mean(height),50),
+  b1 ~ dnorm(0,10),
+  sigma ~ dunif(0,50)),
+  data=d1)
+precis(M1)
+
+M2 <- map(alist(
+  height ~ dnorm(mu, sigma),
+  mu <- a + b1*age +b2*age^2,
+  a ~ dnorm(mean(height),50),
+  c(b1, b2) ~ dnorm(0,10),
+  sigma ~ dunif(0,50)),
+  data=d1)
+precis(M2)
+
+M3 <- map(alist(
+  height ~ dnorm(mu, sigma),
+  mu <- a + b1*age + b2*age^2 +b3*age^3,
+  a ~ dnorm(mean(height),50),
+  c(b1,b2,b3) ~ dnorm(0,10),
+  sigma ~ dunif(0,50)),
+  data=d1)
+precis(M3)
+
+M4 <- map(alist(
+  height ~ dnorm(mu, sigma),
+  mu <- a + b1*age + b2*age^2 + b3*age^3 + b4*age^4,
+  a ~ dnorm(mean(height),50),
+  c(b1,b2,b3,b4) ~ dnorm(0,10),
+  sigma ~ dunif(0,50)),
+  data=d1)
+precis(M4)
+
+M5 <- map(alist(
+  height ~ dnorm(mu, sigma),
+  mu <- a + b1*age + b2*age^2 + b3*age^3 + b4*age^4 + b5*age^5,
+  a ~ dnorm(mean(height),50),
+  c(b1,b2,b3,b4,b5) ~ dnorm(0,10),
+  sigma ~ dunif(0,50)),
+  data=d1)
+precis(M5)
+
+M6 <- map(alist(
+  height ~ dnorm(mu, sigma),
+  mu <- a + b1*age + b2*age^2 + b3*age^3 + b4*age^4 + b5*age^5 + b6*age^6,
+  a ~ dnorm(mean(height),50),
+  c(b1,b2,b3,b4,b5,b6) ~ dnorm(0,10),
+  sigma ~ dunif(0,50)),
+  data=d1)
+precis(M6)
+
+(model.comp <- compare(M1,M2,M3,M4,M5,M6))
+
+plot(model.comp)
+```
+  
+The 4, 5, and 6 factor models perform similarly by WAIC and each carry a substatial proportion of the weight.  The simpler models perform much less well.
+
+## 6H2
+
+```{r}
+
+range(d1$age)
+
+pred.df <- data.frame(age=seq(-2,3.5,length.out=50))
+
+for(model in ls(pattern="^M[1-6]$")) {
+  pred.M <- link(get(model),data=pred.df)
+  mu <- apply(pred.M,2,mean)
+  mu.PI <- apply(pred.M,2,PI,prob=0.97)
+  print(plot(d1$height~d1$age,xlim=range(pred.df$age),ylim=range(c(mu,d1$height)),main=model,col=rangi2))
+  print(lines(mu ~ pred.df$age))
+  print(lines(mu.PI[1,] ~ pred.df$age,lty=2))
+  print(lines(mu.PI[2,] ~ pred.df$age,lty=2))
+}
+
+```
+
+M1 does a poor job fitting the actual data throughout its range.  
+M2 is better through much of the data but does poorly at both ends.  
+M3 does well, but perhaps a bit too much of a dip at older ages and quickly goes off range as soon as age increases beyond the observations
+M4 - M6 all fit the observations nicely.  M4 has the added bonus of being stable for a bit longer after age extends beyond our observations.
