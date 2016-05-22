@@ -8,7 +8,7 @@ output:
 _Julin Maloof_
 
 ```{r}
-knitr::opts_chunk$set(cache=TRUE)
+knitr::opts_chunk$set(cache=TRUE,autodep = TRUE)
 ```
 
 
@@ -176,7 +176,7 @@ M1 <- map(alist(
   height ~ dnorm(mu, sigma),
   mu <- a + b1*age,
   a ~ dnorm(mean(height),50),
-  b1 ~ dnorm(0,10),
+  b1 ~ dnorm(0,20),
   sigma ~ dunif(0,50)),
   data=d1)
 precis(M1)
@@ -185,7 +185,7 @@ M2 <- map(alist(
   height ~ dnorm(mu, sigma),
   mu <- a + b1*age +b2*age^2,
   a ~ dnorm(mean(height),50),
-  c(b1, b2) ~ dnorm(0,10),
+  c(b1, b2) ~ dnorm(0,20),
   sigma ~ dunif(0,50)),
   data=d1)
 precis(M2)
@@ -194,7 +194,7 @@ M3 <- map(alist(
   height ~ dnorm(mu, sigma),
   mu <- a + b1*age + b2*age^2 +b3*age^3,
   a ~ dnorm(mean(height),50),
-  c(b1,b2,b3) ~ dnorm(0,10),
+  c(b1,b2,b3) ~ dnorm(0,20),
   sigma ~ dunif(0,50)),
   data=d1)
 precis(M3)
@@ -203,7 +203,7 @@ M4 <- map(alist(
   height ~ dnorm(mu, sigma),
   mu <- a + b1*age + b2*age^2 + b3*age^3 + b4*age^4,
   a ~ dnorm(mean(height),50),
-  c(b1,b2,b3,b4) ~ dnorm(0,10),
+  c(b1,b2,b3,b4) ~ dnorm(0,20),
   sigma ~ dunif(0,50)),
   data=d1)
 precis(M4)
@@ -212,7 +212,7 @@ M5 <- map(alist(
   height ~ dnorm(mu, sigma),
   mu <- a + b1*age + b2*age^2 + b3*age^3 + b4*age^4 + b5*age^5,
   a ~ dnorm(mean(height),50),
-  c(b1,b2,b3,b4,b5) ~ dnorm(0,10),
+  c(b1,b2,b3,b4,b5) ~ dnorm(0,20),
   sigma ~ dunif(0,50)),
   data=d1)
 precis(M5)
@@ -221,7 +221,7 @@ M6 <- map(alist(
   height ~ dnorm(mu, sigma),
   mu <- a + b1*age + b2*age^2 + b3*age^3 + b4*age^4 + b5*age^5 + b6*age^6,
   a ~ dnorm(mean(height),50),
-  c(b1,b2,b3,b4,b5,b6) ~ dnorm(0,10),
+  c(b1,b2,b3,b4,b5,b6) ~ dnorm(0,20),
   sigma ~ dunif(0,50)),
   data=d1)
 precis(M6)
@@ -297,9 +297,55 @@ model.WAIC <- sapply(models,function(m) {
 
 model.WAIC
 
-test.dev-min(test.dev)
-model.WAIC-min(model.WAIC)
+knitr::kable(rbind("Test Deviance"=test.dev-min(test.dev),"WAIC"=model.WAIC-min(model.WAIC)),digits=2)
 ```
-Overall the WAIC does a good job of estimating the test deviance, especially for the purpose of model comparisoins.  In both cases M4,5,and 6 have similar scores; WAIC penalizes the more complex models (M5 and M6) whereas this does not show up in the test deviance, but the differences are trivial.  Test deviance is also relatively greater for the simpler models M1, M2 and M3, but again in terms of choosing a model we would get similar results from these two methods.
 
+Overall the WAIC does a good job of estimating the test deviance, especially for the purpose of model comparisoins.  In both cases M4,5,and 6 have similar scores.  Test deviance is relatively greater for the simpler models M1, M2 and M3, but  in terms of choosing a model we would get similar results from these two methods.
 
+## 6H7
+
+Fit the model
+```{r}
+M7 <- map(alist(
+  height ~ dnorm(mu, sigma),
+  mu <- a + b1*age + b2*age^2 + b3*age^3 + b4*age^4 + b5*age^5 + b6*age^6,
+  a ~ dnorm(mean(height),50),
+  c(b1,b2,b3,b4,b5,b6) ~ dnorm(0,5),
+  sigma ~ dunif(0,50)),
+  data=d1)
+```
+
+plot predictions
+```{r}
+pred.df <- data.frame(age=seq(-2,3.5,length.out=50))
+pred.M7 <- link(M7,pred.df)
+mu <- apply(pred.M7,2,mean)
+mu.PI <- apply(pred.M7,2,PI)
+plot(d1$height~d1$age,xlim=range(pred.df$age),ylim=range(c(mu,d1$height)),main="M7",col=rangi2)
+lines(mu ~ pred.df$age)
+lines(mu.PI[1,] ~ pred.df$age,lty=2)
+lines(mu.PI[2,] ~ pred.df$age,lty=2)
+```
+
+Similar to M6 but does not diverge as much at off-scale age
+
+Compare to the model with more relaxed priors (M6)
+```{r}
+coeftab(M6,M7)
+plot(coeftab(M6,M7))
+```
+
+We see that the b5 and b6 coefficients are closer to 0 in the model with more regularizing priors.
+
+compute test deviance
+```{r}
+input <- as.list(coef(M7))
+input$age <- d2$age
+equation <- M7@links[[1]][[2]]
+mu <- eval(parse(text=equation),envir = input)
+dev <- -2*sum(dnorm(d2$height,mu,input$sigma,log=T))
+dev
+test.dev
+```
+
+This model does slightly better than the best WAIC model with less informative priors.

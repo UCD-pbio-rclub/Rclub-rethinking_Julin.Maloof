@@ -4,7 +4,7 @@ _Julin Maloof_
 
 
 ```r
-knitr::opts_chunk$set(cache=TRUE)
+knitr::opts_chunk$set(cache=TRUE,autodep = TRUE)
 ```
 
 
@@ -132,9 +132,9 @@ DIC(m)
 ```
 
 ```
-## [1] 419.4048
+## [1] 419.1978
 ## attr(,"pD")
-## [1] 3.123728
+## [1] 3.020238
 ```
 
 ```r
@@ -159,13 +159,13 @@ WAIC(m)
 ```
 
 ```
-## [1] 420.9763
+## [1] 420.4034
 ## attr(,"lppd")
-## [1] -206.4806
+## [1] -206.4979
 ## attr(,"pWAIC")
-## [1] 4.007587
+## [1] 3.703807
 ## attr(,"se")
-## [1] 14.26299
+## [1] 13.86629
 ```
 
 ```r
@@ -183,9 +183,9 @@ DIC(m.small)
 ```
 
 ```
-## [1] 216.3693
+## [1] 212.4884
 ## attr(,"pD")
-## [1] 3.089107
+## [1] 3.326845
 ```
 
 ```r
@@ -210,13 +210,13 @@ WAIC(m.small)
 ```
 
 ```
-## [1] 218.3087
+## [1] 214.4959
 ## attr(,"lppd")
-## [1] -105.132
+## [1] -102.8871
 ## attr(,"pWAIC")
-## [1] 4.022302
+## [1] 4.36085
 ## attr(,"se")
-## [1] 10.64524
+## [1] 13.07232
 ```
 
 Yes, reducing sample size reduced DIC and WAIC
@@ -242,7 +242,7 @@ attr(DIC(m),"pD")
 ```
 
 ```
-## [1] 3.034697
+## [1] 3.08813
 ```
 
 ```r
@@ -250,7 +250,7 @@ attr(DIC(m.narrow),"pD")
 ```
 
 ```
-## [1] 2.598366
+## [1] 2.766978
 ```
 
 ```r
@@ -275,7 +275,7 @@ attr(WAIC(m),"pWAIC")
 ```
 
 ```
-## [1] 3.927035
+## [1] 3.848396
 ```
 
 ```r
@@ -300,7 +300,7 @@ attr(WAIC(m.narrow),"pWAIC")
 ```
 
 ```
-## [1] 3.547529
+## [1] 3.813057
 ```
 
 does it matter what the mean of the priors is?
@@ -319,7 +319,7 @@ attr(DIC(m),"pD")
 ```
 
 ```
-## [1] 3.155912
+## [1] 3.153473
 ```
 
 ```r
@@ -327,7 +327,7 @@ attr(DIC(m.narrow),"pD")
 ```
 
 ```
-## [1] 2.847621
+## [1] 2.873543
 ```
 
 ```r
@@ -335,7 +335,7 @@ attr(DIC(m.narrow1),"pD")
 ```
 
 ```
-## [1] 2.662935
+## [1] 2.482848
 ```
 
 ```r
@@ -360,7 +360,7 @@ attr(WAIC(m),"pWAIC")
 ```
 
 ```
-## [1] 3.745118
+## [1] 4.350523
 ```
 
 ```r
@@ -385,7 +385,7 @@ attr(WAIC(m.narrow),"pWAIC")
 ```
 
 ```
-## [1] 3.592136
+## [1] 3.925328
 ```
 
 ```r
@@ -410,7 +410,7 @@ attr(WAIC(m.narrow1),"pWAIC")
 ```
 
 ```
-## [1] 3.442198
+## [1] 3.738695
 ```
 
 not so much
@@ -459,7 +459,7 @@ M1 <- map(alist(
   height ~ dnorm(mu, sigma),
   mu <- a + b1*age,
   a ~ dnorm(mean(height),50),
-  b1 ~ dnorm(0,10),
+  b1 ~ dnorm(0,20),
   sigma ~ dunif(0,50)),
   data=d1)
 precis(M1)
@@ -467,8 +467,8 @@ precis(M1)
 
 ```
 ##         Mean StdDev   5.5%  94.5%
-## a     138.44   1.18 136.55 140.34
-## b1     18.39   1.19  16.49  20.29
+## a     138.45   1.18 136.55 140.34
+## b1     18.59   1.19  16.68  20.49
 ## sigma  19.54   0.84  18.20  20.88
 ```
 
@@ -477,7 +477,7 @@ M2 <- map(alist(
   height ~ dnorm(mu, sigma),
   mu <- a + b1*age +b2*age^2,
   a ~ dnorm(mean(height),50),
-  c(b1, b2) ~ dnorm(0,10),
+  c(b1, b2) ~ dnorm(0,20),
   sigma ~ dunif(0,50)),
   data=d1)
 precis(M2)
@@ -485,9 +485,9 @@ precis(M2)
 
 ```
 ##         Mean StdDev   5.5%  94.5%
-## a     152.25   1.02 150.62 153.88
-## b1     25.58   0.83  24.25  26.91
-## b2    -13.98   0.70 -15.09 -12.86
+## a     152.35   1.02 150.72 153.98
+## b1     25.74   0.84  24.40  27.07
+## b2    -14.08   0.70 -15.19 -12.96
 ## sigma  12.38   0.53  11.53  13.23
 ```
 
@@ -496,7 +496,7 @@ M3 <- map(alist(
   height ~ dnorm(mu, sigma),
   mu <- a + b1*age + b2*age^2 +b3*age^3,
   a ~ dnorm(mean(height),50),
-  c(b1,b2,b3) ~ dnorm(0,10),
+  c(b1,b2,b3) ~ dnorm(0,20),
   sigma ~ dunif(0,50)),
   data=d1)
 precis(M3)
@@ -504,10 +504,10 @@ precis(M3)
 
 ```
 ##         Mean StdDev   5.5%  94.5%
-## a     158.01   0.78 156.76 159.26
-## b1     11.36   1.02   9.74  12.99
-## b2    -23.99   0.76 -25.20 -22.78
-## b3      8.04   0.47   7.29   8.79
+## a     158.09   0.78 156.83 159.34
+## b1     11.36   1.02   9.73  12.99
+## b2    -24.08   0.76 -25.29 -22.87
+## b3      8.07   0.47   7.31   8.82
 ## sigma   8.59   0.37   8.00   9.18
 ```
 
@@ -516,7 +516,7 @@ M4 <- map(alist(
   height ~ dnorm(mu, sigma),
   mu <- a + b1*age + b2*age^2 + b3*age^3 + b4*age^4,
   a ~ dnorm(mean(height),50),
-  c(b1,b2,b3,b4) ~ dnorm(0,10),
+  c(b1,b2,b3,b4) ~ dnorm(0,20),
   sigma ~ dunif(0,50)),
   data=d1)
 precis(M4)
@@ -524,11 +524,11 @@ precis(M4)
 
 ```
 ##         Mean StdDev   5.5%  94.5%
-## a     156.58   0.79 155.32 157.84
-## b1      5.90   1.38   3.69   8.10
-## b2    -19.06   1.14 -20.89 -17.24
-## b3     12.39   0.90  10.95  13.83
-## b4     -2.36   0.42  -3.04  -1.68
+## a     156.66   0.79 155.40 157.93
+## b1      5.94   1.39   3.72   8.17
+## b2    -19.23   1.15 -21.06 -17.39
+## b3     12.36   0.91  10.91  13.81
+## b4     -2.32   0.43  -3.00  -1.64
 ## sigma   8.17   0.35   7.61   8.73
 ```
 
@@ -537,7 +537,7 @@ M5 <- map(alist(
   height ~ dnorm(mu, sigma),
   mu <- a + b1*age + b2*age^2 + b3*age^3 + b4*age^4 + b5*age^5,
   a ~ dnorm(mean(height),50),
-  c(b1,b2,b3,b4,b5) ~ dnorm(0,10),
+  c(b1,b2,b3,b4,b5) ~ dnorm(0,20),
   sigma ~ dunif(0,50)),
   data=d1)
 precis(M5)
@@ -545,12 +545,12 @@ precis(M5)
 
 ```
 ##         Mean StdDev   5.5%  94.5%
-## a     156.65   0.91 155.20 158.11
-## b1      5.82   1.45   3.50   8.14
-## b2    -19.39   2.29 -23.06 -15.73
-## b3     12.53   1.23  10.57  14.49
-## b4     -2.20   1.08  -3.92  -0.47
-## b5     -0.07   0.41  -0.71   0.58
+## a     156.90   0.92 155.43 158.37
+## b1      5.71   1.47   3.36   8.06
+## b2    -20.26   2.35 -24.02 -16.50
+## b3     12.79   1.25  10.79  14.78
+## b4     -1.81   1.10  -3.57  -0.05
+## b5     -0.21   0.41  -0.87   0.45
 ## sigma   8.16   0.35   7.60   8.72
 ```
 
@@ -559,7 +559,7 @@ M6 <- map(alist(
   height ~ dnorm(mu, sigma),
   mu <- a + b1*age + b2*age^2 + b3*age^3 + b4*age^4 + b5*age^5 + b6*age^6,
   a ~ dnorm(mean(height),50),
-  c(b1,b2,b3,b4,b5,b6) ~ dnorm(0,10),
+  c(b1,b2,b3,b4,b5,b6) ~ dnorm(0,20),
   sigma ~ dunif(0,50)),
   data=d1)
 precis(M6)
@@ -567,14 +567,14 @@ precis(M6)
 
 ```
 ##         Mean StdDev   5.5%  94.5%
-## a     156.64   0.91 155.19 158.09
-## b1      4.41   2.13   1.00   7.81
-## b2    -19.16   2.30 -22.84 -15.48
-## b3     15.28   3.28  10.03  20.54
-## b4     -2.82   1.28  -4.86  -0.78
-## b5     -1.11   1.22  -3.07   0.84
-## b6      0.35   0.39  -0.27   0.97
-## sigma   8.14   0.35   7.58   8.70
+## a     156.89   0.92 155.43 158.36
+## b1      3.71   2.25   0.11   7.31
+## b2    -19.96   2.36 -23.73 -16.19
+## b3     16.60   3.50  11.01  22.19
+## b4     -2.65   1.32  -4.75  -0.55
+## b5     -1.64   1.29  -3.71   0.43
+## b6      0.48   0.41  -0.18   1.13
+## sigma   8.14   0.35   7.58   8.69
 ```
 
 ```r
@@ -583,12 +583,12 @@ precis(M6)
 
 ```
 ##      WAIC pWAIC dWAIC weight    SE   dSE
-## M4 1926.0   5.6   0.0   0.57 25.44    NA
-## M5 1927.5   6.3   1.5   0.27 25.38  0.37
-## M6 1928.5   7.4   2.5   0.16 25.19  1.67
-## M3 1952.3   5.4  26.3   0.00 24.20 11.00
-## M2 2150.1   5.2 224.1   0.00 22.76 26.74
-## M1 2395.4   3.4 469.4   0.00 23.14 31.04
+## M4 1926.0   5.6   0.0   0.56 25.45    NA
+## M5 1927.4   6.4   1.4   0.28 25.33  0.92
+## M6 1928.5   7.7   2.5   0.16 25.08  2.53
+## M3 1952.3   5.4  26.3   0.00 24.19 10.85
+## M2 2150.0   5.3 224.0   0.00 22.64 26.70
+## M1 2395.4   3.4 469.4   0.00 23.00 31.04
 ```
 
 ```r
@@ -673,7 +673,7 @@ test.dev
 
 ```
 ##       M1       M2       M3       M4       M5       M6 
-## 2422.307 2138.064 1932.348 1876.231 1876.587 1875.823
+## 2422.144 2137.620 1932.263 1876.463 1877.858 1877.040
 ```
 
 ## 6H5
@@ -792,26 +792,116 @@ model.WAIC
 
 ```
 ##       M1       M2       M3       M4       M5       M6 
-## 2395.567 2150.110 1952.286 1925.984 1927.639 1927.898
+## 2395.662 2150.271 1953.023 1926.019 1927.787 1928.279
 ```
 
 ```r
-test.dev-min(test.dev)
+knitr::kable(rbind("Test Deviance"=test.dev-min(test.dev),"WAIC"=model.WAIC-min(model.WAIC)),digits=2)
+```
+
+                     M1       M2     M3   M4     M5     M6
+--------------  -------  -------  -----  ---  -----  -----
+Test Deviance    545.68   261.16   55.8    0   1.39   0.58
+WAIC             469.64   224.25   27.0    0   1.77   2.26
+
+Overall the WAIC does a good job of estimating the test deviance, especially for the purpose of model comparisoins.  In both cases M4,5,and 6 have similar scores.  Test deviance is relatively greater for the simpler models M1, M2 and M3, but  in terms of choosing a model we would get similar results from these two methods.
+
+## 6H7
+
+Fit the model
+
+```r
+M7 <- map(alist(
+  height ~ dnorm(mu, sigma),
+  mu <- a + b1*age + b2*age^2 + b3*age^3 + b4*age^4 + b5*age^5 + b6*age^6,
+  a ~ dnorm(mean(height),50),
+  c(b1,b2,b3,b4,b5,b6) ~ dnorm(0,5),
+  sigma ~ dunif(0,50)),
+  data=d1)
+```
+
+plot predictions
+
+```r
+pred.df <- data.frame(age=seq(-2,3.5,length.out=50))
+pred.M7 <- link(M7,pred.df)
 ```
 
 ```
-##          M1          M2          M3          M4          M5          M6 
-## 546.4837386 262.2402828  56.5246997   0.4081016   0.7634164   0.0000000
+## [ 100 / 1000 ]
+[ 200 / 1000 ]
+[ 300 / 1000 ]
+[ 400 / 1000 ]
+[ 500 / 1000 ]
+[ 600 / 1000 ]
+[ 700 / 1000 ]
+[ 800 / 1000 ]
+[ 900 / 1000 ]
+[ 1000 / 1000 ]
 ```
 
 ```r
-model.WAIC-min(model.WAIC)
+mu <- apply(pred.M7,2,mean)
+mu.PI <- apply(pred.M7,2,PI)
+plot(d1$height~d1$age,xlim=range(pred.df$age),ylim=range(c(mu,d1$height)),main="M7",col=rangi2)
+lines(mu ~ pred.df$age)
+lines(mu.PI[1,] ~ pred.df$age,lty=2)
+lines(mu.PI[2,] ~ pred.df$age,lty=2)
+```
+
+![](Chapter_6_files/figure-html/unnamed-chunk-14-1.png)
+
+Similar to M6 but does not diverge as much at off-scale age
+
+Compare to the model with more relaxed priors (M6)
+
+```r
+coeftab(M6,M7)
 ```
 
 ```
-##         M1         M2         M3         M4         M5         M6 
-## 469.582510 224.125152  26.301570   0.000000   1.654824   1.913563
+##       M6      M7     
+## a      156.89  155.85
+## b1       3.71    5.97
+## b2     -19.96  -16.59
+## b3      16.60   12.09
+## b4      -2.65   -3.51
+## b5      -1.64    0.23
+## b6       0.48    0.05
+## sigma    8.14    8.20
+## nobs      272     272
 ```
-Overall the WAIC does a good job of estimating the test deviance, especially for the purpose of model comparisoins.  In both cases M4,5,and 6 have similar scores; WAIC penalizes the more complex models (M5 and M6) whereas this does not show up in the test deviance, but the differences are trivial.  Test deviance is also relatively greater for the simpler models M1, M2 and M3, but again in terms of choosing a model we would get similar results from these two methods.
 
+```r
+plot(coeftab(M6,M7))
+```
 
+![](Chapter_6_files/figure-html/unnamed-chunk-15-1.png)
+
+We see that the b5 and b6 coefficients are closer to 0 in the model with more regularizing priors.
+
+compute test deviance
+
+```r
+input <- as.list(coef(M7))
+input$age <- d2$age
+equation <- M7@links[[1]][[2]]
+mu <- eval(parse(text=equation),envir = input)
+dev <- -2*sum(dnorm(d2$height,mu,input$sigma,log=T))
+dev
+```
+
+```
+## [1] 1875.45
+```
+
+```r
+test.dev
+```
+
+```
+##       M1       M2       M3       M4       M5       M6 
+## 2422.144 2137.620 1932.263 1876.463 1877.858 1877.040
+```
+
+This model does slightly better than the best WAIC model with less informative priors.
