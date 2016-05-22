@@ -267,3 +267,20 @@ shade(mu.PI,pred.df$age)
 ```
 
 So the nice thing about this is that the predictions do not go haywire once we are out of the observed range.
+
+## 6H4
+
+```{r}
+models <- ls(pattern="^M[1-6]$")
+sapply(models,function(m) {
+  model <- get(m)
+  input <- as.list(coef(model))
+  input$age <- d2$age
+  equation <- model@links[[1]][[2]]
+  mu <- eval(parse(text=equation),envir = input)
+  dev <- -2*sum(dnorm(d2$height,mu,input$sigma,log=T))
+  dev
+})
+
+```
+
