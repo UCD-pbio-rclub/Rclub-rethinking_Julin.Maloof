@@ -7,6 +7,11 @@ output:
 
 _Julin Maloof_
 
+```{r}
+knitr::opts_chunk$set(cache=TRUE)
+```
+
+
 ## 6E1
 
 The three motivating criteria for information entropy are:
@@ -230,7 +235,7 @@ The 4, 5, and 6 factor models perform similarly by WAIC and each carry a substat
 
 ## 6H2
 
-```{r}
+```{r results='hide'}
 
 range(d1$age)
 
@@ -255,10 +260,9 @@ M4 - M6 all fit the observations nicely.  M4 has the added bonus of being stable
 
 ## 6H3
 
-```{r}
+```{r results='hide'}
 
 height.ensemble <- ensemble(M1,M2,M3,M4,M5,M6,data = pred.df)
-str(height.ensemble)
 mu <- apply(height.ensemble$link,2,mean)    
 mu.PI <- apply(height.ensemble$link,2,PI)
 plot(d1$height~d1$age,xlim=range(pred.df$age),ylim=range(c(d1$height,mu)),col=rangi2)
@@ -272,7 +276,7 @@ So the nice thing about this is that the predictions do not go haywire once we a
 
 ```{r}
 models <- ls(pattern="^M[1-6]$")
-sapply(models,function(m) {
+test.dev <- sapply(models,function(m) {
   model <- get(m)
   input <- as.list(coef(model))
   input$age <- d2$age
@@ -282,5 +286,20 @@ sapply(models,function(m) {
   dev
 })
 
+test.dev
 ```
+
+## 6H5
+```{r}
+model.WAIC <- sapply(models,function(m) {
+  WAIC(get(m))
+})
+
+model.WAIC
+
+test.dev-min(test.dev)
+model.WAIC-min(model.WAIC)
+```
+Overall the WAIC does a good job of estimating the test deviance, especially for the purpose of model comparisoins.  In both cases M4,5,and 6 have similar scores; WAIC penalizes the more complex models (M5 and M6) whereas this does not show up in the test deviance, but the differences are trivial.  Test deviance is also relatively greater for the simpler models M1, M2 and M3, but again in terms of choosing a model we would get similar results from these two methods.
+
 

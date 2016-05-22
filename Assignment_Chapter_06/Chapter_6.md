@@ -2,6 +2,12 @@
 
 _Julin Maloof_
 
+
+```r
+knitr::opts_chunk$set(cache=TRUE)
+```
+
+
 ## 6E1
 
 The three motivating criteria for information entropy are:
@@ -126,9 +132,9 @@ DIC(m)
 ```
 
 ```
-## [1] 419.0382
+## [1] 419.4048
 ## attr(,"pD")
-## [1] 2.940279
+## [1] 3.123728
 ```
 
 ```r
@@ -153,13 +159,13 @@ WAIC(m)
 ```
 
 ```
-## [1] 421.0564
+## [1] 420.9763
 ## attr(,"lppd")
-## [1] -206.48
+## [1] -206.4806
 ## attr(,"pWAIC")
-## [1] 4.048152
+## [1] 4.007587
 ## attr(,"se")
-## [1] 14.29656
+## [1] 14.26299
 ```
 
 ```r
@@ -177,9 +183,9 @@ DIC(m.small)
 ```
 
 ```
-## [1] 194.5674
+## [1] 216.3693
 ## attr(,"pD")
-## [1] 3.377029
+## [1] 3.089107
 ```
 
 ```r
@@ -204,13 +210,13 @@ WAIC(m.small)
 ```
 
 ```
-## [1] 195.2194
+## [1] 218.3087
 ## attr(,"lppd")
-## [1] -93.99989
+## [1] -105.132
 ## attr(,"pWAIC")
-## [1] 3.609833
+## [1] 4.022302
 ## attr(,"se")
-## [1] 8.597101
+## [1] 10.64524
 ```
 
 Yes, reducing sample size reduced DIC and WAIC
@@ -236,7 +242,7 @@ attr(DIC(m),"pD")
 ```
 
 ```
-## [1] 3.272274
+## [1] 3.034697
 ```
 
 ```r
@@ -244,7 +250,7 @@ attr(DIC(m.narrow),"pD")
 ```
 
 ```
-## [1] 2.743143
+## [1] 2.598366
 ```
 
 ```r
@@ -269,7 +275,7 @@ attr(WAIC(m),"pWAIC")
 ```
 
 ```
-## [1] 3.843336
+## [1] 3.927035
 ```
 
 ```r
@@ -294,7 +300,7 @@ attr(WAIC(m.narrow),"pWAIC")
 ```
 
 ```
-## [1] 3.95098
+## [1] 3.547529
 ```
 
 does it matter what the mean of the priors is?
@@ -313,7 +319,7 @@ attr(DIC(m),"pD")
 ```
 
 ```
-## [1] 3.138907
+## [1] 3.155912
 ```
 
 ```r
@@ -321,7 +327,7 @@ attr(DIC(m.narrow),"pD")
 ```
 
 ```
-## [1] 2.838966
+## [1] 2.847621
 ```
 
 ```r
@@ -329,7 +335,7 @@ attr(DIC(m.narrow1),"pD")
 ```
 
 ```
-## [1] 2.715964
+## [1] 2.662935
 ```
 
 ```r
@@ -354,7 +360,7 @@ attr(WAIC(m),"pWAIC")
 ```
 
 ```
-## [1] 4.06807
+## [1] 3.745118
 ```
 
 ```r
@@ -379,7 +385,7 @@ attr(WAIC(m.narrow),"pWAIC")
 ```
 
 ```
-## [1] 3.945525
+## [1] 3.592136
 ```
 
 ```r
@@ -404,7 +410,7 @@ attr(WAIC(m.narrow1),"pWAIC")
 ```
 
 ```
-## [1] 3.659229
+## [1] 3.442198
 ```
 
 not so much
@@ -589,7 +595,7 @@ precis(M6)
 plot(model.comp)
 ```
 
-![](Chapter_6_files/figure-html/unnamed-chunk-7-1.png)
+![](Chapter_6_files/figure-html/unnamed-chunk-8-1.png)
   
 The 4, 5, and 6 factor models perform similarly by WAIC and each carry a substatial proportion of the weight.  The simpler models perform much less well.
 
@@ -598,13 +604,7 @@ The 4, 5, and 6 factor models perform similarly by WAIC and each carry a substat
 
 ```r
 range(d1$age)
-```
 
-```
-## [1] -1.41440  2.60548
-```
-
-```r
 pred.df <- data.frame(age=seq(-2,3.5,length.out=50))
 
 for(model in ls(pattern="^M[1-6]$")) {
@@ -618,122 +618,7 @@ for(model in ls(pattern="^M[1-6]$")) {
 }
 ```
 
-```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-![](Chapter_6_files/figure-html/unnamed-chunk-8-1.png)
-
-```
-## NULL
-## NULL
-## NULL
-## NULL
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-![](Chapter_6_files/figure-html/unnamed-chunk-8-2.png)
-
-```
-## NULL
-## NULL
-## NULL
-## NULL
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-![](Chapter_6_files/figure-html/unnamed-chunk-8-3.png)
-
-```
-## NULL
-## NULL
-## NULL
-## NULL
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-![](Chapter_6_files/figure-html/unnamed-chunk-8-4.png)
-
-```
-## NULL
-## NULL
-## NULL
-## NULL
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-![](Chapter_6_files/figure-html/unnamed-chunk-8-5.png)
-
-```
-## NULL
-## NULL
-## NULL
-## NULL
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-![](Chapter_6_files/figure-html/unnamed-chunk-8-6.png)
-
-```
-## NULL
-## NULL
-## NULL
-## NULL
-```
+![](Chapter_6_files/figure-html/unnamed-chunk-9-1.png)![](Chapter_6_files/figure-html/unnamed-chunk-9-2.png)![](Chapter_6_files/figure-html/unnamed-chunk-9-3.png)![](Chapter_6_files/figure-html/unnamed-chunk-9-4.png)![](Chapter_6_files/figure-html/unnamed-chunk-9-5.png)![](Chapter_6_files/figure-html/unnamed-chunk-9-6.png)
 
 M1 does a poor job fitting the actual data throughout its range.  
 M2 is better through much of the data but does poorly at both ends.  
@@ -749,126 +634,11 @@ height.ensemble <- ensemble(M1,M2,M3,M4,M5,M6,data = pred.df)
 
 ```
 ## Constructing posterior predictions
-```
-
-```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-```
 ## Constructing posterior predictions
-```
-
-```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-```
 ## Constructing posterior predictions
-```
-
-```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-```
 ## Constructing posterior predictions
-```
-
-```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-```
 ## Constructing posterior predictions
-```
-
-```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-```
 ## Constructing posterior predictions
-```
-
-```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-```r
-str(height.ensemble)
-```
-
-```
-## List of 2
-##  $ link: num [1:1000, 1:50] -44.2 -79.5 -69.9 -68.1 -69.9 ...
-##  $ sim : num [1:1000, 1:50] -65.7 -59.7 -64.3 -37.3 -97.8 ...
-##  - attr(*, "weights")= Named num [1:6] 6.90e-103 1.08e-49 1.14e-06 5.00e-01 2.78e-01 ...
-##   ..- attr(*, "names")= chr [1:6] "M1" "M2" "M3" "M4" ...
-##  - attr(*, "indices")= num [1:6, 1:2] 1 1 1 1 501 779 0 0 0 500 ...
-##   ..- attr(*, "dimnames")=List of 2
-##   .. ..$ : chr [1:6] "M1" "M2" "M3" "M4" ...
-##   .. ..$ : chr [1:2] "idx_start" "idx_end"
-##  - attr(*, "ictab")=Formal class 'compareIC' [package "rethinking"] with 2 slots
-##   .. ..@ output:'data.frame':	6 obs. of  3 variables:
-##   .. .. ..$ IC    : num [1:6] 2395 2150 1952 1926 1927 ...
-##   .. .. ..$ dIC   : num [1:6] 469.08 224.11 25.98 0 1.17 ...
-##   .. .. ..$ weight: num [1:6] 6.90e-103 1.08e-49 1.14e-06 5.00e-01 2.78e-01 ...
-##   .. ..@ dSE   : logi [1:6, 1:6] NA NA NA NA NA NA ...
 ```
 
 ```r
@@ -879,6 +649,169 @@ lines(mu ~ pred.df$age)
 shade(mu.PI,pred.df$age)
 ```
 
-![](Chapter_6_files/figure-html/unnamed-chunk-9-1.png)
+![](Chapter_6_files/figure-html/unnamed-chunk-10-1.png)
 
 So the nice thing about this is that the predictions do not go haywire once we are out of the observed range.
+
+## 6H4
+
+
+```r
+models <- ls(pattern="^M[1-6]$")
+test.dev <- sapply(models,function(m) {
+  model <- get(m)
+  input <- as.list(coef(model))
+  input$age <- d2$age
+  equation <- model@links[[1]][[2]]
+  mu <- eval(parse(text=equation),envir = input)
+  dev <- -2*sum(dnorm(d2$height,mu,input$sigma,log=T))
+  dev
+})
+
+test.dev
+```
+
+```
+##       M1       M2       M3       M4       M5       M6 
+## 2422.307 2138.064 1932.348 1876.231 1876.587 1875.823
+```
+
+## 6H5
+
+```r
+model.WAIC <- sapply(models,function(m) {
+  WAIC(get(m))
+})
+```
+
+```
+## Constructing posterior predictions
+```
+
+```
+## [ 100 / 1000 ]
+[ 200 / 1000 ]
+[ 300 / 1000 ]
+[ 400 / 1000 ]
+[ 500 / 1000 ]
+[ 600 / 1000 ]
+[ 700 / 1000 ]
+[ 800 / 1000 ]
+[ 900 / 1000 ]
+[ 1000 / 1000 ]
+```
+
+```
+## Constructing posterior predictions
+```
+
+```
+## [ 100 / 1000 ]
+[ 200 / 1000 ]
+[ 300 / 1000 ]
+[ 400 / 1000 ]
+[ 500 / 1000 ]
+[ 600 / 1000 ]
+[ 700 / 1000 ]
+[ 800 / 1000 ]
+[ 900 / 1000 ]
+[ 1000 / 1000 ]
+```
+
+```
+## Constructing posterior predictions
+```
+
+```
+## [ 100 / 1000 ]
+[ 200 / 1000 ]
+[ 300 / 1000 ]
+[ 400 / 1000 ]
+[ 500 / 1000 ]
+[ 600 / 1000 ]
+[ 700 / 1000 ]
+[ 800 / 1000 ]
+[ 900 / 1000 ]
+[ 1000 / 1000 ]
+```
+
+```
+## Constructing posterior predictions
+```
+
+```
+## [ 100 / 1000 ]
+[ 200 / 1000 ]
+[ 300 / 1000 ]
+[ 400 / 1000 ]
+[ 500 / 1000 ]
+[ 600 / 1000 ]
+[ 700 / 1000 ]
+[ 800 / 1000 ]
+[ 900 / 1000 ]
+[ 1000 / 1000 ]
+```
+
+```
+## Constructing posterior predictions
+```
+
+```
+## [ 100 / 1000 ]
+[ 200 / 1000 ]
+[ 300 / 1000 ]
+[ 400 / 1000 ]
+[ 500 / 1000 ]
+[ 600 / 1000 ]
+[ 700 / 1000 ]
+[ 800 / 1000 ]
+[ 900 / 1000 ]
+[ 1000 / 1000 ]
+```
+
+```
+## Constructing posterior predictions
+```
+
+```
+## [ 100 / 1000 ]
+[ 200 / 1000 ]
+[ 300 / 1000 ]
+[ 400 / 1000 ]
+[ 500 / 1000 ]
+[ 600 / 1000 ]
+[ 700 / 1000 ]
+[ 800 / 1000 ]
+[ 900 / 1000 ]
+[ 1000 / 1000 ]
+```
+
+```r
+model.WAIC
+```
+
+```
+##       M1       M2       M3       M4       M5       M6 
+## 2395.567 2150.110 1952.286 1925.984 1927.639 1927.898
+```
+
+```r
+test.dev-min(test.dev)
+```
+
+```
+##          M1          M2          M3          M4          M5          M6 
+## 546.4837386 262.2402828  56.5246997   0.4081016   0.7634164   0.0000000
+```
+
+```r
+model.WAIC-min(model.WAIC)
+```
+
+```
+##         M1         M2         M3         M4         M5         M6 
+## 469.582510 224.125152  26.301570   0.000000   1.654824   1.913563
+```
+Overall the WAIC does a good job of estimating the test deviance, especially for the purpose of model comparisoins.  In both cases M4,5,and 6 have similar scores; WAIC penalizes the more complex models (M5 and M6) whereas this does not show up in the test deviance, but the differences are trivial.  Test deviance is also relatively greater for the simpler models M1, M2 and M3, but again in terms of choosing a model we would get similar results from these two methods.
+
+
