@@ -145,6 +145,7 @@ log_sum_exp(ltest)
 ltest <- c(-1000,-800,-700,-600)
 exp(ltest)
 log_sum_exp(ltest)
+
 log(sum(exp(ltest)))
 
 n_cases <- nrow(cars)
