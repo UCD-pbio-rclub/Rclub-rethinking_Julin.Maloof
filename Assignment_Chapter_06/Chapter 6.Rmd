@@ -1,0 +1,351 @@
+---
+title: "Chapter 6 part 1"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+_Julin Maloof_
+
+```{r}
+knitr::opts_chunk$set(cache=TRUE,autodep = TRUE)
+```
+
+
+## 6E1
+
+The three motivating criteria for information entropy are:
+
+1. The scale should be continuous such that small changes in probability don't result in jumps in our measure of uncertainty.
+2. Uncertainty should increase as the number of possible outcome increases.  This makes sense because if there are more choices it is of course less certain which one will happen.
+3. Uncertainty should be additive.  If there are different combinations of outcomes the uncertainty associated with their combinations should be the sum of the uncertainty of each outcome.
+
+## 6E2
+
+_What is the entropy of a coin that is 70% Heads?_
+
+```{r}
+probs <- c(.7,.3)
+-sum(probs*log(probs))
+```
+
+## 6E3
+
+_A four sided die with probs 20%, 25%, 25%, 30%.  What is the entropy?_
+
+```{r}
+probs <- c(.2,.25,.25,.3)
+-sum(probs*log(probs))
+```
+
+## 6E4
+
+_What is the enrtopy of a four-sided die where the fourth side never shows and the other three are equal_
+
+```{r}
+probs <- rep(1/3,3)
+-sum(probs*log(probs))
+```
+
+## 6M1
+
+_Write down and compare the defintions of AIC, DIC, and WAIC.  Which one is most general?  Which assumptions are required to transform a more general criteria into a less general one?_
+
+AIC is the training training deviance + 2 * the number of parameters in the model
+
+DIC is average training Deviance across the posterior + the difference between the average training deviance and the deviance calculate using the posterior mean.
+
+WAIC is negative 2 times (the sum of the log average posterior likelihood of each observation minus the sum of the variance of average posterior likelihoods).
+
+WAIC is most general, then DIC, then AIC.  DIC assumes that the posterior likelihood is multivariate Gaussian; AIC assumes this and the priors are uninformative.
+
+## 6M2
+
+Model selection is where you try to use information criteria to pick the one best model.  In model averaging you take the information across all the models, weighting it by the model's probability.  Model selection loses information about other possilbe outcomes.  I am not sure what is loss under model averaging.
+
+
+## 6M3
+
+_When comparing models with IC why must the same number of samples be used?_
+
+Because these criteria all in some way sum likelihoods across samples.  So more samples means more deviance even for the same model.
+
+### test it
+
+```{r}
+library(rethinking)
+data(cars)
+m <- map(
+  alist(
+    dist ~ dnorm(mu,sigma),
+    mu <- a + b*speed,
+    a ~ dnorm(0,100),
+    b ~ dnorm(0,10),
+    sigma ~ dunif(0,30)
+  ) , data=cars )
+DIC(m)
+WAIC(m)
+
+cars.small <- cars[sample(1:nrow(cars),25,replace=FALSE),]
+
+m.small <- map(
+  alist(
+    dist ~ dnorm(mu,sigma),
+    mu <- a + b*speed,
+    a ~ dnorm(0,100),
+    b ~ dnorm(0,10),
+    sigma ~ dunif(0,30)
+  ) , data=cars.small )
+DIC(m.small)
+WAIC(m.small)
+```
+
+Yes, reducing sample size reduced DIC and WAIC
+
+## 6M4 
+
+_What happens to the effective number of parameters in WAIC and DIC as the prior becomes more concentrated?_ 
+
+The effective number of parameters will decrease
+
+test it
+```{r}
+m.narrow <- map(
+  alist(
+    dist ~ dnorm(mu,sigma),
+    mu <- a + b*speed,
+    a ~ dnorm(0,10),
+    b ~ dnorm(0,1),
+    sigma ~ dunif(0,30)
+  ) , data=cars )
+attr(DIC(m),"pD")
+attr(DIC(m.narrow),"pD")
+attr(WAIC(m),"pWAIC")
+attr(WAIC(m.narrow),"pWAIC")
+```
+
+does it matter what the mean of the priors is?
+
+```{r}
+m.narrow1 <- map(
+  alist(
+    dist ~ dnorm(mu,sigma),
+    mu <- a + b*speed,
+    a ~ dnorm(-17,10),
+    b ~ dnorm(4,1),
+    sigma ~ dunif(0,30)
+  ) , data=cars )
+attr(DIC(m),"pD")
+attr(DIC(m.narrow),"pD")
+attr(DIC(m.narrow1),"pD")
+attr(WAIC(m),"pWAIC")
+attr(WAIC(m.narrow),"pWAIC")
+attr(WAIC(m.narrow1),"pWAIC")
+
+```
+
+not so much
+
+## 6M5
+
+_provide an informal explanation of why informative priors reduce overfitting_
+
+Because they are less likely to be influenced by the particulars of the training set.
+
+## 6M6
+
+_provide an informal explanation of why overly informative priors may cause underfitting_
+
+Because they coefficients are too constrained and may not adequately fit the data.
+
+
+## 6H1
+
+```{r }
+library(rethinking)
+data(Howell1)
+d <- Howell1
+d$age <- (d$age - mean(d$age))/sd(d$age)
+head(d)
+set.seed( 1000 )
+i <- sample(1:nrow(d),size=nrow(d)/2)
+d1 <- d[ i , ]
+d2 <- d[ -i , ]
+
+M1 <- map(alist(
+  height ~ dnorm(mu, sigma),
+  mu <- a + b1*age,
+  a ~ dnorm(mean(height),50),
+  b1 ~ dnorm(0,20),
+  sigma ~ dunif(0,50)),
+  data=d1)
+precis(M1)
+
+M2 <- map(alist(
+  height ~ dnorm(mu, sigma),
+  mu <- a + b1*age +b2*age^2,
+  a ~ dnorm(mean(height),50),
+  c(b1, b2) ~ dnorm(0,20),
+  sigma ~ dunif(0,50)),
+  data=d1)
+precis(M2)
+
+M3 <- map(alist(
+  height ~ dnorm(mu, sigma),
+  mu <- a + b1*age + b2*age^2 +b3*age^3,
+  a ~ dnorm(mean(height),50),
+  c(b1,b2,b3) ~ dnorm(0,20),
+  sigma ~ dunif(0,50)),
+  data=d1)
+precis(M3)
+
+M4 <- map(alist(
+  height ~ dnorm(mu, sigma),
+  mu <- a + b1*age + b2*age^2 + b3*age^3 + b4*age^4,
+  a ~ dnorm(mean(height),50),
+  c(b1,b2,b3,b4) ~ dnorm(0,20),
+  sigma ~ dunif(0,50)),
+  data=d1)
+precis(M4)
+
+M5 <- map(alist(
+  height ~ dnorm(mu, sigma),
+  mu <- a + b1*age + b2*age^2 + b3*age^3 + b4*age^4 + b5*age^5,
+  a ~ dnorm(mean(height),50),
+  c(b1,b2,b3,b4,b5) ~ dnorm(0,20),
+  sigma ~ dunif(0,50)),
+  data=d1)
+precis(M5)
+
+M6 <- map(alist(
+  height ~ dnorm(mu, sigma),
+  mu <- a + b1*age + b2*age^2 + b3*age^3 + b4*age^4 + b5*age^5 + b6*age^6,
+  a ~ dnorm(mean(height),50),
+  c(b1,b2,b3,b4,b5,b6) ~ dnorm(0,20),
+  sigma ~ dunif(0,50)),
+  data=d1)
+precis(M6)
+
+(model.comp <- compare(M1,M2,M3,M4,M5,M6))
+
+plot(model.comp)
+```
+  
+The 4, 5, and 6 factor models perform similarly by WAIC and each carry a substatial proportion of the weight.  The simpler models perform much less well.
+
+## 6H2
+
+```{r results='hide'}
+
+range(d1$age)
+
+pred.df <- data.frame(age=seq(-2,3.5,length.out=50))
+
+for(model in ls(pattern="^M[1-6]$")) {
+  pred.M <- link(get(model),data=pred.df)
+  mu <- apply(pred.M,2,mean)
+  mu.PI <- apply(pred.M,2,PI,prob=0.97)
+  print(plot(d1$height~d1$age,xlim=range(pred.df$age),ylim=range(c(mu,d1$height)),main=model,col=rangi2))
+  print(lines(mu ~ pred.df$age))
+  print(lines(mu.PI[1,] ~ pred.df$age,lty=2))
+  print(lines(mu.PI[2,] ~ pred.df$age,lty=2))
+}
+
+```
+
+M1 does a poor job fitting the actual data throughout its range.  
+M2 is better through much of the data but does poorly at both ends.  
+M3 does well, but perhaps a bit too much of a dip at older ages and quickly goes off range as soon as age increases beyond the observations
+M4 - M6 all fit the observations nicely.  M4 has the added bonus of being stable for a bit longer after age extends beyond our observations.
+
+## 6H3
+
+```{r results='hide'}
+
+height.ensemble <- ensemble(M1,M2,M3,M4,M5,M6,data = pred.df)
+mu <- apply(height.ensemble$link,2,mean)    
+mu.PI <- apply(height.ensemble$link,2,PI)
+plot(d1$height~d1$age,xlim=range(pred.df$age),ylim=range(c(d1$height,mu)),col=rangi2)
+lines(mu ~ pred.df$age)
+shade(mu.PI,pred.df$age)
+```
+
+So the nice thing about this is that the predictions do not go haywire once we are out of the observed range.
+
+## 6H4
+
+```{r}
+models <- ls(pattern="^M[1-6]$")
+test.dev <- sapply(models,function(m) {
+  model <- get(m)
+  input <- as.list(coef(model))
+  input$age <- d2$age
+  equation <- model@links[[1]][[2]]
+  mu <- eval(parse(text=equation),envir = input)
+  dev <- -2*sum(dnorm(d2$height,mu,input$sigma,log=T))
+  dev
+})
+
+test.dev
+```
+
+## 6H5
+```{r}
+model.WAIC <- sapply(models,function(m) {
+  WAIC(get(m))
+})
+
+model.WAIC
+
+knitr::kable(rbind("Test Deviance"=test.dev-min(test.dev),"WAIC"=model.WAIC-min(model.WAIC)),digits=2)
+```
+
+Overall the WAIC does a good job of estimating the test deviance, especially for the purpose of model comparisoins.  In both cases M4,5,and 6 have similar scores.  Test deviance is relatively greater for the simpler models M1, M2 and M3, but  in terms of choosing a model we would get similar results from these two methods.
+
+## 6H7
+
+Fit the model
+```{r}
+M7 <- map(alist(
+  height ~ dnorm(mu, sigma),
+  mu <- a + b1*age + b2*age^2 + b3*age^3 + b4*age^4 + b5*age^5 + b6*age^6,
+  a ~ dnorm(mean(height),50),
+  c(b1,b2,b3,b4,b5,b6) ~ dnorm(0,5),
+  sigma ~ dunif(0,50)),
+  data=d1)
+```
+
+plot predictions
+```{r}
+pred.df <- data.frame(age=seq(-2,3.5,length.out=50))
+pred.M7 <- link(M7,pred.df)
+mu <- apply(pred.M7,2,mean)
+mu.PI <- apply(pred.M7,2,PI)
+plot(d1$height~d1$age,xlim=range(pred.df$age),ylim=range(c(mu,d1$height)),main="M7",col=rangi2)
+lines(mu ~ pred.df$age)
+lines(mu.PI[1,] ~ pred.df$age,lty=2)
+lines(mu.PI[2,] ~ pred.df$age,lty=2)
+```
+
+Similar to M6 but does not diverge as much at off-scale age
+
+Compare to the model with more relaxed priors (M6)
+```{r}
+coeftab(M6,M7)
+plot(coeftab(M6,M7))
+```
+
+We see that the b5 and b6 coefficients are closer to 0 in the model with more regularizing priors.
+
+compute test deviance
+```{r}
+input <- as.list(coef(M7))
+input$age <- d2$age
+equation <- M7@links[[1]][[2]]
+mu <- eval(parse(text=equation),envir = input)
+dev <- -2*sum(dnorm(d2$height,mu,input$sigma,log=T))
+dev
+test.dev
+```
+
+This model does slightly better than the best WAIC model with less informative priors.
