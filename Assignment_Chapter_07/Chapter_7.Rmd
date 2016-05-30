@@ -1,0 +1,69 @@
+---
+title: "Chapter_7"
+output: html_document
+  keep_md: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 7E1
+_For each of the causal relationships below, name a hypothetical third variable that would lead to an interaction effect._
+
+(1) _Bread Dough rises because of yeast._  
+Interaction: the amount of salt in the dough (because salt inhibits yeast activity).
+
+(2) _Education leads to higher income._  
+Possible interactions: country, ethnicity, field of study
+
+(3) _Gasline makes a car go._  
+Interactions: Battery; whether or not car is started.
+
+## 7E2
+_Which of the following explanations invokes an interaction_
+
+(1) _Carmelizing onions requires cooking over low heat and making sure the onions do not dry out._  
+interaction between heat and moisture content.  low heat only works if they are also moist, and vice versa.
+
+(2) _A car will go faster when it has more cylinders or when it has a bettor fuel injector_
+Can't decide.  Maybe these are additive?  But the or implies, not; more cylinders won't matter if it already ahs a fuel injector?
+
+(3) _Most people aquire their political beliefs from their parents, unless they get them instead from their friends._  
+No interaction implied
+
+(4) _Intelligent animal species tend to be either highly social or have manipulative appendages._
+Like (2) I am really not sure here.  
+
+## 7E3
+_Write a linear model that expresses the relationsihps for each explantion in 7E2_
+
+(1) Carmelization ~ Intercept + heat + moisture + heat:moisture
+
+(2) Speed ~ intercept + cylinders + innjectors + cylinders:injectors
+
+(3) Beliefs ~ source
+
+(4) Intelligence ~ intercept + appendages + social + appendages:social
+
+## 7M1
+_No tulips bloom at high temperature.  Explain._
+Temperature inhibits blooming at all water and shade conditions
+
+## 7M2
+_Invent a regression equation for above_
+
+blooms ~ Intercept + water * shade * cool
+
+where cool=1 in cool temperatures and 0 at warm temps.  Intercept would have to be zero (Take it away?)
+
+## 7M3
+_In some parts of North America, ravens depends on wolves for food.  Species interaction.  invent a hypothetical set of data.  Linear?  why or why not_
+
+Hmmm... I don't see the interaction here.  From the information given isn't it just Ravens ~ wolves?  But I guess not becuase "in some parts of the country"  Still not sure what to do here.  Model is something like
+
+Ravens ~ Intercept + wolves + region + wolves:region
+
+
+
+
