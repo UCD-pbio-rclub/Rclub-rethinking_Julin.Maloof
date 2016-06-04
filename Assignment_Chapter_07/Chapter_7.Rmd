@@ -227,7 +227,217 @@ plot(compare(m7h3small,m7h3small.R,m7h3small.R.A))
 ```
 The interaction model is still the best, but not by as much
 
+## 7H4
+
+_Evaluate the relationship between language diversity and food security_
+```{r}
+data(nettle)
+nettle$lang.per.cap <- nettle$num.lang / nettle$k.pop
+nettle$log.lang.per.cap <- log(nettle$lang.per.cap)
+```
+
+**(A)** _length of growing season_
+
+Look at some plots of the data
+```{r}
+library(ggplot2)
+plot(log.lang.per.cap ~ mean.growing.season, data=nettle) #looks like positive association
+plot(log.lang.per.cap ~ log(area), data=nettle) #looks like no association
+plot(mean.growing.season ~ log(area), data=nettle) # negative assocaition?
+```
+
+Fit a model with `mean.growing.season` as a predictor
+
+```{r}
+m.grow <- map(
+  alist(log.lang.per.cap ~ dnorm(mu, sigma),
+        mu <- a + bG*mean.growing.season,
+        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+        bG ~ dnorm(0,5),
+        sigma ~ dunif(0,50)),
+        data=nettle)
+
+precis(m.grow)
+grow.seq <- seq(-1,13,length.out = 50)
+pred.df <- data.frame(mean.growing.season=grow.seq)
+
+mu.m.grow <- link(m.grow,data = pred.df)
+pred.df$log.lang.per.cap <- apply(mu.m.grow,2,mean)
+pred.df <- cbind(pred.df,t(apply(mu.m.grow,2,PI)))
+colnames(pred.df) <- make.names(colnames(pred.df))
+head(pred.df)
+
+pl <- ggplot(data=NULL,aes(x=mean.growing.season,y=log.lang.per.cap))
+pl <- pl + geom_ribbon(data=pred.df,aes(ymin=X5.,ymax=X94.),fill="gray80")
+pl <- pl + geom_point(data=nettle,color="skyblue")
+pl <- pl + geom_line(data=pred.df)
+pl + ggtitle("mu <- a + bG*mean.growing.season")
+```
+
+This first model does a pretty nice job of fitting the data (although misses a bit at the high end).  At the 89% confidence intervals the coefficient for mean.growing.season is above 0.
+
+Now fit a model that includes `log(area)` as a covariate
+
+```{r}
+nettle$log.area <- log(nettle$area)
+m.grow.area <- map(
+  alist(log.lang.per.cap ~ dnorm(mu, sigma),
+        mu <- a + bG*mean.growing.season + bA*log.area,
+        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+        bG ~ dnorm(0,5),
+        bA ~ dnorm(0,5),
+        sigma ~ dunif(0,50)),
+        data=nettle)
+
+precis(m.grow.area)
+grow.seq <- seq(-1,13,length.out = 50)
+pred.df <- data.frame(mean.growing.season=grow.seq,
+                      log.area=mean(nettle$log.area))
+
+mu.m.grow.area <- link(m.grow.area,data = pred.df)
+pred.df$log.lang.per.cap <- apply(mu.m.grow.area,2,mean)
+pred.df <- cbind(pred.df,t(apply(mu.m.grow.area,2,PI)))
+colnames(pred.df) <- make.names(colnames(pred.df))
+
+pl <- ggplot(data=NULL,aes(x=mean.growing.season,y=log.lang.per.cap))
+pl <- pl + geom_ribbon(data=pred.df,aes(ymin=X5.,ymax=X94.),fill="gray80")
+pl <- pl + geom_point(data=nettle,color="skyblue")
+pl <- pl + geom_line(data=pred.df)
+pl + ggtitle("mu <- a + bG*mean.growing.season + bA*log.area")
+```
+
+The fits look pretty similar.  The 89% confidence intervals just barely have the log.area coefficient < 0.  The estimate for the coefficient on growth are almost exactly the same in both models.
+
+Next, compare modely using WAIC
+
+```{r}
+(compare.out <- compare(m.grow,m.grow.area))
+plot(compare.out)
+coeftab(m.grow,m.grow.area)
+plot(coeftab(m.grow,m.grow.area))
+```
+
+The coefficients in these models are similar except for the intercept, which is closer to 0 and more variable when log.area is included.  I'd be inclined to stick wtih the simpler model, although goes against the philosophy that McElreath advocates.
+
+**(B)** _Now consider sd as a predictor_
+
+```{r}
+qplot(x=sd.growing.season,y=log.lang.per.cap,data=nettle) # possible negative correlation.
+
+m.sd <- map(
+  alist(log.lang.per.cap ~ dnorm(mu, sigma),
+        mu <- a + bS*sd.growing.season,
+        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+        bS ~ dnorm(0,5),
+        sigma ~ dunif(0,50)),
+        data=nettle)
+
+precis(m.sd)
+sd.seq <- seq(0,6.5,length.out = 50)
+pred.df <- data.frame(sd.growing.season=sd.seq)
+
+mu.m.sd <- link(m.sd,data = pred.df)
+pred.df$log.lang.per.cap <- apply(mu.m.sd,2,mean)
+pred.df <- cbind(pred.df,t(apply(mu.m.sd,2,PI)))
+colnames(pred.df) <- make.names(colnames(pred.df))
+
+pl <- ggplot(data=NULL,aes(x=sd.growing.season,y=log.lang.per.cap))
+pl <- pl + geom_ribbon(data=pred.df,aes(ymin=X5.,ymax=X94.),fill="gray80")
+pl <- pl + geom_point(data=nettle,color="skyblue")
+pl <- pl + geom_line(data=pred.df)
+pl + ggtitle("mu <- a + bS*sd.growing.season")
+```
+
+This  model does a pretty nice job of fitting the data (although there are pretty large residuals).  At the 89% confidence intervals the coefficient for sd.growing.season is below 0.
+
+Now fit a model that includes `log(area)` as a covariate
+
+```{r}
+nettle$log.area <- log(nettle$area)
+m.sd.area <- map(
+  alist(log.lang.per.cap ~ dnorm(mu, sigma),
+        mu <- a + bS*sd.growing.season + bA*log.area,
+        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+        bS ~ dnorm(0,5),
+        bA ~ dnorm(0,5),
+        sigma ~ dunif(0,50)),
+        data=nettle)
+
+precis(m.sd.area)
+pred.df <- data.frame(sd.growing.season=sd.seq,
+                      log.area=mean(nettle$log.area))
+
+mu.m.sd.area <- link(m.sd.area,data = pred.df)
+pred.df$log.lang.per.cap <- apply(mu.m.sd.area,2,mean)
+pred.df <- cbind(pred.df,t(apply(mu.m.sd.area,2,PI)))
+colnames(pred.df) <- make.names(colnames(pred.df))
+
+pl <- ggplot(data=NULL,aes(x=sd.growing.season,y=log.lang.per.cap))
+pl <- pl + geom_ribbon(data=pred.df,aes(ymin=X5.,ymax=X94.),fill="gray80")
+pl <- pl + geom_point(data=nettle,color="skyblue")
+pl <- pl + geom_line(data=pred.df)
+pl + ggtitle("mu <- a + bS*sd.growing.season + bA*log.area")
+```
+
+Here the bS predictor is somewhat closer to 0 and the 89% confidence interval is very close to 0.  the 89% CI on the bA predictor includes zero.
+
+Next, compare models using WAIC
+
+```{r}
+(compare.out <- compare(m.sd,m.sd.area))
+plot(compare.out)
+coeftab(m.sd,m.sd.area)
+plot(coeftab(m.sd,m.sd.area))
+```
+
+The coefficients in these models are similar except for the intercept, which is closer to 0 and more variable when log.area is included.  I'd be inclined to stick wtih the simpler model, although that goes against the philosophy that McElreath advocates.
+
+**(C)** Consider the interaction model
+
+```{r}
+
+# probably should center first?
+
+m.sd.grow <- map(
+  alist(log.lang.per.cap ~ dnorm(mu, sigma),
+        mu <- a + 
+          bS*sd.growing.season + 
+          bG*mean.growing.season + 
+          bSbG*mean.growing.season*sd.growing.season,
+        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+        c(bS,bG,bSbG) ~ dnorm(0,5),
+        sigma ~ dunif(0,50)),
+        data=nettle)
+
+precis(m.sd.grow)
 
 
+```
 
+Now fit a model that includes `log(area)` as a covariate
 
+```{r}
+m.sd.grow.area <- map(
+  alist(log.lang.per.cap ~ dnorm(mu, sigma),
+        mu <- a + 
+          bS*sd.growing.season + 
+          bG*mean.growing.season + 
+          bSbG*mean.growing.season*sd.growing.season +
+          bA*log.area,
+        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+        c(bS,bG,bSbG,bA) ~ dnorm(0,5),
+        sigma ~ dunif(0,50)),
+        data=nettle)
+
+precis(m.sd.grow.area)
+
+```
+
+Next, compare models using WAIC
+
+```{r}
+(compare.out <- compare(m.grow,m.grow.area,m.sd,m.sd.area,m.sd.grow,m.sd.grow.area))
+plot(compare.out)
+coeftab(m.grow,m.grow.area,m.sd,m.sd.area,m.sd.grow,m.sd.grow.area)
+plot(coeftab(m.grow,m.grow.area,m.sd,m.sd.area,m.sd.grow,m.sd.grow.area))
+```
