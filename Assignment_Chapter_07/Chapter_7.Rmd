@@ -1,7 +1,7 @@
 ---
 title: "Chapter_7"
 output: html_document
-  keep_md: true
+keep_md: true
 ---
 
 ```{r setup, include=FALSE}
@@ -63,6 +63,170 @@ _In some parts of North America, ravens depends on wolves for food.  Species int
 Hmmm... I don't see the interaction here.  From the information given isn't it just Ravens ~ wolves?  But I guess not becuase "in some parts of the country"  Still not sure what to do here.  Model is something like
 
 Ravens ~ Intercept + wolves + region + wolves:region
+
+## 7H1
+
+```{r}
+library(rethinking)
+data("tulips")
+head(tulips)
+tulips$bed_id <- coerce_index(tulips$bed)
+
+tulips$shade.c <- tulips$shade - mean(tulips$shade)
+tulips$water.c <- tulips$water - mean(tulips$water)
+
+m7h1 <- map(
+  alist(
+    blooms ~ dnorm(mu, sigma),
+    mu <- a[bed_id] + bW*water.c + bS*shade.c + bWS*water.c*shade.c,
+    a[bed_id] ~ dnorm(mean(tulips$bloom),50),
+    c(bW,bS,bWS) ~ dnorm(0,100),
+    sigma ~ dunif(0,100)),
+  data=tulips,
+  control=list(maxit=1000)
+)
+
+```
+
+```{r}
+m7h2 <- map(
+  alist(
+    blooms ~ dnorm(mu, sigma),
+    mu <- a + bW*water.c + bS*shade.c + bWS*water.c*shade.c,
+    a ~ dnorm(mean(tulips$bloom),sd(tulips$blooms)),
+    c(bW,bS,bWS) ~ dnorm(0,100),
+    sigma ~ dunif(0,100)),
+  data=tulips,
+  #start=list(a=100,bW=0,bS=0,bWS=0,sigma=sd(tulips$blooms)),
+  control=list(maxit=1000)
+)
+
+precis(m7h1,depth=2)
+precis(m7h2)
+compare(m7h1,m7h2)
+```
+The model with the bed information has the lower WAIC, although not by much.  But it makes since because the mean of each bed is pretty different.  We also see that sigma is lower in the first model.
+
+## 7H3
+
+```{r}
+data(rugged)
+rugged$log_gdp <- log(rugged$rgdppc_2000)
+
+dd <- rugged[ complete.cases(rugged$rgdppc_2000) , ]
+
+m7h3full <- map(
+    alist(
+        log_gdp ~ dnorm( mu , sigma ) ,
+        mu <- a + bR*rugged + bAR*rugged*cont_africa + bA*cont_africa,
+        a ~ dnorm( 8 , 100 ) ,
+        bA ~ dnorm( 0 , 1 ) ,
+        bR ~ dnorm( 0 , 1 ) ,
+        bAR ~ dnorm( 0 , 1 ) ,
+        sigma ~ dunif( 0 , 10 )
+), data=dd )
+
+dd.small <- dd[dd$country!="Seychelles",]
+
+m7h3small <- map(
+    alist(
+        log_gdp ~ dnorm( mu , sigma ) ,
+        mu <- a + bR*rugged + bAR*rugged*cont_africa + bA*cont_africa,
+        a ~ dnorm( 8 , 100 ) ,
+        bA ~ dnorm( 0 , 1 ) ,
+        bR ~ dnorm( 0 , 1 ) ,
+        bAR ~ dnorm( 0 , 1 ) ,
+        sigma ~ dunif( 0 , 10 )
+), data=dd.small )
+precis(m7h3full)
+precis(m7h3small)
+```
+Without Seychelles the interaction effect is smaller but it is still positive and the 89% confidence intervals are above 0.
+
+**B** 
+
+Plot predictons, full model
+```{r}
+rugged.seq <- seq(from=-1,to=8,by=0.25)
+mu.Africa <- link( m7h3full , data=data.frame(cont_africa=1,rugged=rugged.seq) )
+mu.Africa.mean <- apply( mu.Africa , 2 , mean )
+mu.Africa.PI <- apply( mu.Africa , 2 , PI , prob=0.97 )
+mu.NotAfrica <- link( m7h3full , data=data.frame(cont_africa=0,rugged=rugged.seq) )
+mu.NotAfrica.mean <- apply( mu.NotAfrica , 2 , mean )
+mu.NotAfrica.PI <- apply( mu.NotAfrica , 2 , PI , prob=0.97 )
+
+# plot African nations with regression
+d.A1 <- dd[dd$cont_africa==1,]
+plot( log(rgdppc_2000) ~ rugged , data=d.A1 ,
+      col=rangi2 , ylab="log GDP year 2000" ,
+      xlab="Terrain Ruggedness Index" )
+mtext( "African nations All Data" , 3 )
+lines( rugged.seq , mu.Africa.mean , col=rangi2 )
+shade( mu.Africa.PI , rugged.seq , col=col.alpha(rangi2,0.3) )
+# plot non-African nations with regression
+d.A0 <- dd[dd$cont_africa==0,]
+plot( log(rgdppc_2000) ~ rugged , data=d.A0 ,
+      col="black" , ylab="log GDP year 2000" ,
+      xlab="Terrain Ruggedness Index" )
+mtext( "Non-African nations All Data" , 3 )
+lines( rugged.seq , mu.NotAfrica.mean )
+shade( mu.NotAfrica.PI , rugged.seq )
+```
+
+now plot from smaller model
+```{r}
+rugged.seq <- seq(from=-1,to=8,by=0.25)
+mu.Africa <- link( m7h3small , data=data.frame(cont_africa=1,rugged=rugged.seq) )
+mu.Africa.mean <- apply( mu.Africa , 2 , mean )
+mu.Africa.PI <- apply( mu.Africa , 2 , PI , prob=0.97 )
+mu.NotAfrica <- link( m7h3small , data=data.frame(cont_africa=0,rugged=rugged.seq) )
+mu.NotAfrica.mean <- apply( mu.NotAfrica , 2 , mean )
+mu.NotAfrica.PI <- apply( mu.NotAfrica , 2 , PI , prob=0.97 )
+
+# plot African nations with regression
+d.A1.small <- dd.small[dd.small$cont_africa==1,]
+plot( log(rgdppc_2000) ~ rugged , data=d.A1.small ,
+      col=rangi2 , ylab="log GDP year 2000" ,
+      xlab="Terrain Ruggedness Index" )
+mtext( "African nations no Seychelles" , 3 )
+lines( rugged.seq , mu.Africa.mean , col=rangi2 )
+shade( mu.Africa.PI , rugged.seq , col=col.alpha(rangi2,0.3) )
+# plot non-African nations with regression
+d.A0.small <- dd.small[dd.small$cont_africa==0,]
+plot( log(rgdppc_2000) ~ rugged , data=d.A0.small ,
+      col="black" , ylab="log GDP year 2000" ,
+      xlab="Terrain Ruggedness Index" )
+mtext( "Non-African nations no Seychelles" , 3 )
+lines( rugged.seq , mu.NotAfrica.mean )
+shade( mu.NotAfrica.PI , rugged.seq )
+```
+
+**(C)**
+```{r}
+m7h3small.R <- map(
+    alist(
+        log_gdp ~ dnorm( mu , sigma ) ,
+        mu <- a + bR*rugged,
+        a ~ dnorm( 8 , 100 ) ,
+        bR ~ dnorm( 0 , 1 ) ,
+        sigma ~ dunif( 0 , 10 )
+), data=dd.small )
+
+m7h3small.R.A <- map(
+    alist(
+        log_gdp ~ dnorm( mu , sigma ) ,
+        mu <- a + bR*rugged + bA*cont_africa,
+        a ~ dnorm( 8 , 100 ) ,
+        bA ~ dnorm( 0 , 1 ) ,
+        bR ~ dnorm( 0 , 1 ) ,
+        sigma ~ dunif( 0 , 10 )
+), data=dd.small )
+
+compare(m7h3small,m7h3small.R,m7h3small.R.A)
+plot(compare(m7h3small,m7h3small.R,m7h3small.R.A))
+```
+The interaction model is still the best, but not by as much
+
 
 
 
