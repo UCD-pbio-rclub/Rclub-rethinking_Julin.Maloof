@@ -21,12 +21,12 @@ _Which of the following explanations invokes an interaction_
 interaction between heat and moisture content.  low heat only works if they are also moist, and vice versa.
 
 (2) _A car will go faster when it has more cylinders or when it has a bettor fuel injector_
-Can't decide.  Maybe these are additive?  But the or implies, not; more cylinders won't matter if it already ahs a fuel injector?
+Can't decide.  Maybe these are additive?  But the or implies, not; more cylinders won't matter if it already has a fuel injector?
 
 (3) _Most people aquire their political beliefs from their parents, unless they get them instead from their friends._  
 No interaction implied
 
-(4) _Intelligent animal species tend to be either highly social or have manipulative appendages._
+(4) _Intelligent animal species tend to be either highly social or have manipulative appendages._  
 Like (2) I am really not sure here.  
 
 ## 7E3
@@ -42,6 +42,7 @@ _Write a linear model that expresses the relationsihps for each explantion in 7E
 
 ## 7M1
 _No tulips bloom at high temperature.  Explain._
+
 Temperature inhibits blooming at all water and shade conditions
 
 ## 7M2
@@ -59,6 +60,7 @@ Hmmm... I don't see the interaction here.  From the information given isn't it j
 Ravens ~ Intercept + wolves + region + wolves:region
 
 ## 7H1
+_Return to the tulip data set and include `bed` as a variable in the modle_
 
 
 ```r
@@ -112,9 +114,10 @@ tulips$bed_id <- coerce_index(tulips$bed)
 tulips$shade.c <- tulips$shade - mean(tulips$shade)
 tulips$water.c <- tulips$water - mean(tulips$water)
 
+#I set up a loop to allow the map() call to be made repeatedly until a fit is made.  Needed because randomly chosen start values may not allow model convergence.
 m7h1 <- NULL
 while(is.null(m7h1) | class(m7h1)=="try-error") {
-  m7h1 <- try(
+  m7h1 <- try( #catch the error if fit doesn't work
     map(
       alist(
         blooms ~ dnorm(mu, sigma),
@@ -128,6 +131,10 @@ while(is.null(m7h1) | class(m7h1)=="try-error") {
   )
 }
 ```
+
+
+## 7H2
+_Compare tulip bloom models with and without bed.  Is the WAIC result consistent with the posterior distribution of coefficients?_
 
 
 ```r
@@ -154,12 +161,12 @@ precis(m7h1,depth=2)
 
 ```
 ##         Mean StdDev   5.5%  94.5%
-## a[1]   99.16  12.66  78.93 119.39
+## a[1]   99.16  12.66  78.94 119.39
 ## a[2]  141.71  12.65 121.50 161.93
 ## a[3]  146.11  12.65 125.89 166.32
 ## bW     75.16   9.20  60.45  89.87
-## bS    -41.25   9.20 -55.96 -26.54
-## bWS   -52.18  11.25 -70.16 -34.21
+## bS    -41.25   9.20 -55.96 -26.55
+## bWS   -52.18  11.25 -70.15 -34.20
 ## sigma  39.21   5.34  30.67  47.75
 ```
 
@@ -169,11 +176,11 @@ precis(m7h2)
 
 ```
 ##         Mean StdDev   5.5%  94.5%
-## a     128.96   8.67 115.10 142.81
-## bW     74.94  10.61  57.99  91.89
-## bS    -41.13  10.61 -58.08 -24.18
-## bWS   -51.94  12.95 -72.64 -31.24
-## sigma  45.25   6.16  35.40  55.09
+## a     128.95   8.67 115.09 142.81
+## bW     74.95  10.61  57.99  91.90
+## bS    -41.13  10.61 -58.09 -24.18
+## bWS   -51.89  12.96 -72.59 -31.18
+## sigma  45.25   6.16  35.40  55.10
 ```
 
 ```r
@@ -182,12 +189,16 @@ compare(m7h1,m7h2)
 
 ```
 ##       WAIC pWAIC dWAIC weight    SE  dSE
-## m7h1 293.9   9.4   0.0    0.8  9.86   NA
-## m7h2 296.6   6.9   2.7    0.2 10.30 7.68
+## m7h1 294.4   9.6     0   0.62  9.98   NA
+## m7h2 295.4   6.2     1   0.38 10.16 7.84
 ```
-The model with the bed information has the lower WAIC, although not by much.  But it makes since because the mean of each bed is pretty different.  We also see that sigma is lower in the first model.
+
+The model with the bed information has the lower WAIC, although not by much.  But it makes sense because the mean of each bed is pretty different.  We also see that sigma is lower in the first model.
 
 ## 7H3
+_Drop Seycelles from the rugged vs GDP analysis.  Does Africa still have an opposite relationship?_
+
+**A** _fit ineraction model with and without Seychelles and compare_
 
 
 ```r
@@ -253,54 +264,24 @@ precis(m7h3small)
 ## bAR    0.25   0.14  0.04  0.47
 ## sigma  0.93   0.05  0.85  1.01
 ```
-Without Seychelles the interaction effect is smaller but it is still positive and the 89% confidence intervals are above 0.
 
-**B** 
+Without Seychelles the interaction effect is smaller but it is still positive and the 89% confidence intervals are above 0.  Thus it does still seem that the effect of ruggedness on GDP depends on the continent.
+
+**B** _Plot the predictions of the interaction model, with and without Seychelles._
 
 Plot predictons, full model
 
 ```r
 rugged.seq <- seq(from=-1,to=8,by=0.25)
-mu.Africa <- link( m7h3full , data=data.frame(cont_africa=1,rugged=rugged.seq) )
-```
-
-```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-```r
+mu.Africa <- link( m7h3full , data=data.frame(cont_africa=1,rugged=rugged.seq),refresh=0 )
 mu.Africa.mean <- apply( mu.Africa , 2 , mean )
 mu.Africa.PI <- apply( mu.Africa , 2 , PI , prob=0.97 )
-mu.NotAfrica <- link( m7h3full , data=data.frame(cont_africa=0,rugged=rugged.seq) )
-```
-
-```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-```r
+mu.NotAfrica <- link( m7h3full , data=data.frame(cont_africa=0,rugged=rugged.seq),refresh=0 )
 mu.NotAfrica.mean <- apply( mu.NotAfrica , 2 , mean )
 mu.NotAfrica.PI <- apply( mu.NotAfrica , 2 , PI , prob=0.97 )
 
 # plot African nations with regression
+op <- par(mfrow=c(1,2))
 d.A1 <- dd[dd$cont_africa==1,]
 plot( log(rgdppc_2000) ~ rugged , data=d.A1 ,
       col=rangi2 , ylab="log GDP year 2000" ,
@@ -308,11 +289,6 @@ plot( log(rgdppc_2000) ~ rugged , data=d.A1 ,
 mtext( "African nations All Data" , 3 )
 lines( rugged.seq , mu.Africa.mean , col=rangi2 )
 shade( mu.Africa.PI , rugged.seq , col=col.alpha(rangi2,0.3) )
-```
-
-![](Chapter_7_files/figure-html/unnamed-chunk-1-1.png)
-
-```r
 # plot non-African nations with regression
 d.A0 <- dd[dd$cont_africa==0,]
 plot( log(rgdppc_2000) ~ rugged , data=d.A0 ,
@@ -323,48 +299,17 @@ lines( rugged.seq , mu.NotAfrica.mean )
 shade( mu.NotAfrica.PI , rugged.seq )
 ```
 
-![](Chapter_7_files/figure-html/unnamed-chunk-1-2.png)
+![](Chapter_7_files/figure-html/unnamed-chunk-1-1.png)
 
 now plot from smaller model
 
 ```r
+op <- par(mfrow=c(1,2))
 rugged.seq <- seq(from=-1,to=8,by=0.25)
-mu.Africa <- link( m7h3small , data=data.frame(cont_africa=1,rugged=rugged.seq) )
-```
-
-```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-```r
+mu.Africa <- link( m7h3small , data=data.frame(cont_africa=1,rugged=rugged.seq),refresh=0 )
 mu.Africa.mean <- apply( mu.Africa , 2 , mean )
 mu.Africa.PI <- apply( mu.Africa , 2 , PI , prob=0.97 )
-mu.NotAfrica <- link( m7h3small , data=data.frame(cont_africa=0,rugged=rugged.seq) )
-```
-
-```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-```r
+mu.NotAfrica <- link( m7h3small , data=data.frame(cont_africa=0,rugged=rugged.seq),refresh=0 )
 mu.NotAfrica.mean <- apply( mu.NotAfrica , 2 , mean )
 mu.NotAfrica.PI <- apply( mu.NotAfrica , 2 , PI , prob=0.97 )
 
@@ -376,11 +321,6 @@ plot( log(rgdppc_2000) ~ rugged , data=d.A1.small ,
 mtext( "African nations no Seychelles" , 3 )
 lines( rugged.seq , mu.Africa.mean , col=rangi2 )
 shade( mu.Africa.PI , rugged.seq , col=col.alpha(rangi2,0.3) )
-```
-
-![](Chapter_7_files/figure-html/unnamed-chunk-2-1.png)
-
-```r
 # plot non-African nations with regression
 d.A0.small <- dd.small[dd.small$cont_africa==0,]
 plot( log(rgdppc_2000) ~ rugged , data=d.A0.small ,
@@ -391,9 +331,14 @@ lines( rugged.seq , mu.NotAfrica.mean )
 shade( mu.NotAfrica.PI , rugged.seq )
 ```
 
-![](Chapter_7_files/figure-html/unnamed-chunk-2-2.png)
+![](Chapter_7_files/figure-html/unnamed-chunk-2-1.png)
 
-**(C)**
+```r
+par(op)
+```
+
+**(C)** _Fit 3 models to the data without Seychelles and conduct a model comparison.  Ploy the model-averaged predictions of the model set.  Does this change inferences relatvie to part B?_
+
 
 ```r
 m7h3small.R <- NULL
@@ -430,9 +375,9 @@ compare(m7h3small,m7h3small.R,m7h3small.R.A)
 
 ```
 ##                WAIC pWAIC dWAIC weight    SE   dSE
-## m7h3small     462.9   4.3   0.0   0.84 14.96    NA
-## m7h3small.R.A 466.1   3.9   3.2   0.16 14.23  3.31
-## m7h3small.R   536.4   2.8  73.6   0.00 13.29 15.12
+## m7h3small     463.5   4.7   0.0   0.79 15.14    NA
+## m7h3small.R.A 466.1   3.9   2.6   0.21 14.23  3.53
+## m7h3small.R   536.1   2.7  72.6   0.00 13.46 15.39
 ```
 
 ```r
@@ -440,7 +385,63 @@ plot(compare(m7h3small,m7h3small.R,m7h3small.R.A))
 ```
 
 ![](Chapter_7_files/figure-html/unnamed-chunk-3-1.png)
-The interaction model is still the best, but not by as much
+The interaction model is still the best, but not by as much.
+
+Plot predictions:
+
+
+```r
+op <- par(mfrow=c(1,2))
+rugged.seq <- seq(from=-1,to=8,by=0.25)
+mu.Africa <- ensemble( m7h3small,m7h3small.R,m7h3small.R.A , data=data.frame(cont_africa=1,rugged=rugged.seq),refresh=0 )
+```
+
+```
+## Constructing posterior predictions
+## Constructing posterior predictions
+## Constructing posterior predictions
+```
+
+```r
+mu.Africa.mean <- apply( mu.Africa$link , 2 , mean )
+mu.Africa.PI <- apply( mu.Africa$link , 2 , PI , prob=0.97 )
+mu.NotAfrica <- ensemble( m7h3small,m7h3small.R,m7h3small.R.A , data=data.frame(cont_africa=0,rugged=rugged.seq),refresh=0 )
+```
+
+```
+## Constructing posterior predictions
+## Constructing posterior predictions
+## Constructing posterior predictions
+```
+
+```r
+mu.NotAfrica.mean <- apply( mu.NotAfrica$link , 2 , mean )
+mu.NotAfrica.PI <- apply( mu.NotAfrica$link , 2 , PI , prob=0.97 )
+
+# plot African nations with regression
+d.A1.small <- dd.small[dd.small$cont_africa==1,]
+plot( log(rgdppc_2000) ~ rugged , data=d.A1.small ,
+      col=rangi2 , ylab="log GDP year 2000" ,
+      xlab="Terrain Ruggedness Index" )
+mtext( "African nations no Seychelles" , 3 )
+lines( rugged.seq , mu.Africa.mean , col=rangi2 )
+shade( mu.Africa.PI , rugged.seq , col=col.alpha(rangi2,0.3) )
+# plot non-African nations with regression
+d.A0.small <- dd.small[dd.small$cont_africa==0,]
+plot( log(rgdppc_2000) ~ rugged , data=d.A0.small ,
+      col="black" , ylab="log GDP year 2000" ,
+      xlab="Terrain Ruggedness Index" )
+mtext( "Non-African nations no Seychelles" , 3 )
+lines( rugged.seq , mu.NotAfrica.mean )
+shade( mu.NotAfrica.PI , rugged.seq )
+```
+
+![](Chapter_7_files/figure-html/unnamed-chunk-4-1.png)
+
+```r
+par(op)
+```
+
 
 ## 7H4
 
@@ -461,19 +462,19 @@ library(ggplot2)
 plot(log.lang.per.cap ~ mean.growing.season, data=nettle) #looks like positive association
 ```
 
-![](Chapter_7_files/figure-html/unnamed-chunk-5-1.png)
+![](Chapter_7_files/figure-html/unnamed-chunk-6-1.png)
 
 ```r
 plot(log.lang.per.cap ~ log(area), data=nettle) #looks like no association
 ```
 
-![](Chapter_7_files/figure-html/unnamed-chunk-5-2.png)
+![](Chapter_7_files/figure-html/unnamed-chunk-6-2.png)
 
 ```r
 plot(mean.growing.season ~ log(area), data=nettle) # negative assocaition?
 ```
 
-![](Chapter_7_files/figure-html/unnamed-chunk-5-3.png)
+![](Chapter_7_files/figure-html/unnamed-chunk-6-3.png)
 
 Fit a model with `mean.growing.season` as a predictor
 
@@ -506,23 +507,7 @@ precis(m.grow)
 grow.seq <- seq(-1,13,length.out = 50)
 pred.df <- data.frame(mean.growing.season=grow.seq)
 
-mu.m.grow <- link(m.grow,data = pred.df)
-```
-
-```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-```r
+mu.m.grow <- link(m.grow,data = pred.df,refresh=0)
 pred.df$log.lang.per.cap <- apply(mu.m.grow,2,mean)
 pred.df <- cbind(pred.df,t(apply(mu.m.grow,2,PI)))
 colnames(pred.df) <- make.names(colnames(pred.df))
@@ -531,12 +516,12 @@ head(pred.df)
 
 ```
 ##   mean.growing.season log.lang.per.cap       X5.      X94.
-## 1          -1.0000000        -6.777879 -7.510713 -6.048652
-## 2          -0.7142857        -6.730784 -7.443141 -6.026876
-## 3          -0.4285714        -6.683689 -7.376094 -6.002159
-## 4          -0.1428571        -6.636593 -7.308558 -5.978306
-## 5           0.1428571        -6.589498 -7.231666 -5.954907
-## 6           0.4285714        -6.542403 -7.161012 -5.929506
+## 1          -1.0000000        -6.779914 -7.466038 -6.057481
+## 2          -0.7142857        -6.732559 -7.398491 -6.030749
+## 3          -0.4285714        -6.685205 -7.326912 -6.005893
+## 4          -0.1428571        -6.637851 -7.257837 -5.986292
+## 5           0.1428571        -6.590497 -7.191936 -5.956959
+## 6           0.4285714        -6.543142 -7.122367 -5.931443
 ```
 
 ```r
@@ -547,7 +532,7 @@ pl <- pl + geom_line(data=pred.df)
 pl + ggtitle("mu <- a + bG*mean.growing.season")
 ```
 
-![](Chapter_7_files/figure-html/unnamed-chunk-6-1.png)
+![](Chapter_7_files/figure-html/unnamed-chunk-7-1.png)
 
 This first model does a pretty nice job of fitting the data (although misses a bit at the high end).  At the 89% confidence intervals the coefficient for mean.growing.season is above 0.
 
@@ -587,23 +572,7 @@ grow.seq <- seq(-1,13,length.out = 50)
 pred.df <- data.frame(mean.growing.season=grow.seq,
                       log.area=mean(nettle$log.area))
 
-mu.m.grow.area <- link(m.grow.area,data = pred.df)
-```
-
-```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-```r
+mu.m.grow.area <- link(m.grow.area,data = pred.df,refresh=0)
 pred.df$log.lang.per.cap <- apply(mu.m.grow.area,2,mean)
 pred.df <- cbind(pred.df,t(apply(mu.m.grow.area,2,PI)))
 colnames(pred.df) <- make.names(colnames(pred.df))
@@ -615,7 +584,7 @@ pl <- pl + geom_line(data=pred.df)
 pl + ggtitle("mu <- a + bG*mean.growing.season + bA*log.area")
 ```
 
-![](Chapter_7_files/figure-html/unnamed-chunk-7-1.png)
+![](Chapter_7_files/figure-html/unnamed-chunk-8-1.png)
 
 The fits look pretty similar.  The 89% confidence intervals just barely have the log.area coefficient < 0.  The estimate for the coefficient on growth are almost exactly the same in both models.
 
@@ -628,15 +597,15 @@ Next, compare modely using WAIC
 
 ```
 ##              WAIC pWAIC dWAIC weight    SE  dSE
-## m.grow.area 267.1   4.3   0.0   0.61 15.41   NA
-## m.grow      268.0   3.7   0.9   0.39 15.39 2.62
+## m.grow.area 267.3   4.4     0   0.62 15.59   NA
+## m.grow      268.3   3.9     1   0.38 15.59 2.56
 ```
 
 ```r
 plot(compare.out)
 ```
 
-![](Chapter_7_files/figure-html/unnamed-chunk-8-1.png)
+![](Chapter_7_files/figure-html/unnamed-chunk-9-1.png)
 
 ```r
 coeftab(m.grow,m.grow.area)
@@ -655,7 +624,7 @@ coeftab(m.grow,m.grow.area)
 plot(coeftab(m.grow,m.grow.area))
 ```
 
-![](Chapter_7_files/figure-html/unnamed-chunk-8-2.png)
+![](Chapter_7_files/figure-html/unnamed-chunk-9-2.png)
 
 The coefficients in these models are similar except for the intercept, which is closer to 0 and more variable when log.area is included.  I'd be inclined to stick wtih the simpler model, although goes against the philosophy that McElreath advocates.
 
@@ -666,7 +635,7 @@ The coefficients in these models are similar except for the intercept, which is 
 qplot(x=sd.growing.season,y=log.lang.per.cap,data=nettle) # possible negative correlation.
 ```
 
-![](Chapter_7_files/figure-html/unnamed-chunk-9-1.png)
+![](Chapter_7_files/figure-html/unnamed-chunk-10-1.png)
 
 ```r
 m.sd <- NULL
@@ -696,23 +665,7 @@ precis(m.sd)
 sd.seq <- seq(0,6.5,length.out = 50)
 pred.df <- data.frame(sd.growing.season=sd.seq)
 
-mu.m.sd <- link(m.sd,data = pred.df)
-```
-
-```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-```r
+mu.m.sd <- link(m.sd,data = pred.df,refresh=0)
 pred.df$log.lang.per.cap <- apply(mu.m.sd,2,mean)
 pred.df <- cbind(pred.df,t(apply(mu.m.sd,2,PI)))
 colnames(pred.df) <- make.names(colnames(pred.df))
@@ -724,7 +677,7 @@ pl <- pl + geom_line(data=pred.df)
 pl + ggtitle("mu <- a + bS*sd.growing.season")
 ```
 
-![](Chapter_7_files/figure-html/unnamed-chunk-9-2.png)
+![](Chapter_7_files/figure-html/unnamed-chunk-10-2.png)
 
 This  model does a pretty nice job of fitting the data (although there are pretty large residuals).  At the 89% confidence intervals the coefficient for sd.growing.season is below 0.
 
@@ -762,23 +715,7 @@ precis(m.sd.area)
 pred.df <- data.frame(sd.growing.season=sd.seq,
                       log.area=mean(nettle$log.area))
 
-mu.m.sd.area <- link(m.sd.area,data = pred.df)
-```
-
-```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-```r
+mu.m.sd.area <- link(m.sd.area,data = pred.df,refresh=0)
 pred.df$log.lang.per.cap <- apply(mu.m.sd.area,2,mean)
 pred.df <- cbind(pred.df,t(apply(mu.m.sd.area,2,PI)))
 colnames(pred.df) <- make.names(colnames(pred.df))
@@ -790,7 +727,7 @@ pl <- pl + geom_line(data=pred.df)
 pl + ggtitle("mu <- a + bS*sd.growing.season + bA*log.area")
 ```
 
-![](Chapter_7_files/figure-html/unnamed-chunk-10-1.png)
+![](Chapter_7_files/figure-html/unnamed-chunk-11-1.png)
 
 Here the bS predictor is somewhat closer to 0 and the 89% confidence interval is very close to 0.  the 89% CI on the bA predictor includes zero.
 
@@ -803,15 +740,15 @@ Next, compare models using WAIC
 
 ```
 ##            WAIC pWAIC dWAIC weight    SE  dSE
-## m.sd.area 273.3   4.4   0.0   0.54 17.09   NA
-## m.sd      273.6   4.0   0.3   0.46 17.21 1.16
+## m.sd      273.3   3.8   0.0   0.56 16.95   NA
+## m.sd.area 273.7   4.6   0.4   0.44 17.19 1.09
 ```
 
 ```r
 plot(compare.out)
 ```
 
-![](Chapter_7_files/figure-html/unnamed-chunk-11-1.png)
+![](Chapter_7_files/figure-html/unnamed-chunk-12-1.png)
 
 ```r
 coeftab(m.sd,m.sd.area)
@@ -830,7 +767,7 @@ coeftab(m.sd,m.sd.area)
 plot(coeftab(m.sd,m.sd.area))
 ```
 
-![](Chapter_7_files/figure-html/unnamed-chunk-11-2.png)
+![](Chapter_7_files/figure-html/unnamed-chunk-12-2.png)
 
 The coefficients in these models are similar except for the intercept, which is closer to 0 and more variable when log.area is included.  I'd be inclined to stick wtih the simpler model, although that goes against the philosophy that McElreath advocates.
 
@@ -910,19 +847,19 @@ Next, compare models using WAIC
 
 ```
 ##                 WAIC pWAIC dWAIC weight    SE  dSE
-## m.sd.grow      261.6   6.0   0.0   0.52 16.32   NA
-## m.sd.grow.area 262.0   6.1   0.4   0.43 16.33 1.12
-## m.grow.area    267.5   4.5   5.9   0.03 15.76 5.78
-## m.grow         268.2   3.8   6.6   0.02 15.58 6.83
-## m.sd           273.1   3.7  11.5   0.00 16.88 7.87
-## m.sd.area      273.7   4.6  12.1   0.00 17.28 7.55
+## m.sd.grow      261.7   6.0   0.0   0.54 16.25   NA
+## m.sd.grow.area 262.3   6.2   0.5   0.41 16.39 1.01
+## m.grow.area    267.6   4.5   5.9   0.03 15.68 5.67
+## m.grow         268.4   4.0   6.6   0.02 15.63 6.76
+## m.sd.area      273.8   4.7  12.0   0.00 17.34 7.32
+## m.sd           273.9   4.1  12.2   0.00 17.10 7.96
 ```
 
 ```r
 plot(compare.out)
 ```
 
-![](Chapter_7_files/figure-html/unnamed-chunk-14-1.png)
+![](Chapter_7_files/figure-html/unnamed-chunk-15-1.png)
 
 ```r
 coeftab(m.grow,m.grow.area,m.sd,m.sd.area,m.sd.grow,m.sd.grow.area)
@@ -943,4 +880,4 @@ coeftab(m.grow,m.grow.area,m.sd,m.sd.area,m.sd.grow,m.sd.grow.area)
 plot(coeftab(m.grow,m.grow.area,m.sd,m.sd.area,m.sd.grow,m.sd.grow.area))
 ```
 
-![](Chapter_7_files/figure-html/unnamed-chunk-14-2.png)
+![](Chapter_7_files/figure-html/unnamed-chunk-15-2.png)

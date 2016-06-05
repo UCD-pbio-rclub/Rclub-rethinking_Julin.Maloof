@@ -6,7 +6,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,cache=TRUE,autodep = TRUE)
 ```
 
 ## 7E1
@@ -28,12 +28,12 @@ _Which of the following explanations invokes an interaction_
 interaction between heat and moisture content.  low heat only works if they are also moist, and vice versa.
 
 (2) _A car will go faster when it has more cylinders or when it has a bettor fuel injector_
-Can't decide.  Maybe these are additive?  But the or implies, not; more cylinders won't matter if it already ahs a fuel injector?
+Can't decide.  Maybe these are additive?  But the or implies, not; more cylinders won't matter if it already has a fuel injector?
 
 (3) _Most people aquire their political beliefs from their parents, unless they get them instead from their friends._  
 No interaction implied
 
-(4) _Intelligent animal species tend to be either highly social or have manipulative appendages._
+(4) _Intelligent animal species tend to be either highly social or have manipulative appendages._  
 Like (2) I am really not sure here.  
 
 ## 7E3
@@ -49,6 +49,7 @@ _Write a linear model that expresses the relationsihps for each explantion in 7E
 
 ## 7M1
 _No tulips bloom at high temperature.  Explain._
+
 Temperature inhibits blooming at all water and shade conditions
 
 ## 7M2
@@ -66,6 +67,7 @@ Hmmm... I don't see the interaction here.  From the information given isn't it j
 Ravens ~ Intercept + wolves + region + wolves:region
 
 ## 7H1
+_Return to the tulip data set and include `bed` as a variable in the modle_
 
 ```{r 7h1, error=FALSE}
 library(rethinking)
@@ -76,9 +78,10 @@ tulips$bed_id <- coerce_index(tulips$bed)
 tulips$shade.c <- tulips$shade - mean(tulips$shade)
 tulips$water.c <- tulips$water - mean(tulips$water)
 
+#I set up a loop to allow the map() call to be made repeatedly until a fit is made.  Needed because randomly chosen start values may not allow model convergence.
 m7h1 <- NULL
 while(is.null(m7h1) | class(m7h1)=="try-error") {
-  m7h1 <- try(
+  m7h1 <- try( #catch the error if fit doesn't work
     map(
       alist(
         blooms ~ dnorm(mu, sigma),
@@ -93,6 +96,10 @@ while(is.null(m7h1) | class(m7h1)=="try-error") {
 }
 
 ```
+
+
+## 7H2
+_Compare tulip bloom models with and without bed.  Is the WAIC result consistent with the posterior distribution of coefficients?_
 
 ```{r 7h2, error=FALSE}
 m7h2 <- NULL
@@ -117,9 +124,13 @@ precis(m7h1,depth=2)
 precis(m7h2)
 compare(m7h1,m7h2)
 ```
-The model with the bed information has the lower WAIC, although not by much.  But it makes since because the mean of each bed is pretty different.  We also see that sigma is lower in the first model.
+
+The model with the bed information has the lower WAIC, although not by much.  But it makes sense because the mean of each bed is pretty different.  We also see that sigma is lower in the first model.
 
 ## 7H3
+_Drop Seycelles from the rugged vs GDP analysis.  Does Africa still have an opposite relationship?_
+
+**A** _fit ineraction model with and without Seychelles and compare_
 
 ```{r 7h3, error=FALSE}
 data(rugged)
@@ -163,21 +174,23 @@ while(is.null(m7h3small) | class(m7h3small)=="try-error") {
 precis(m7h3full)
 precis(m7h3small)
 ```
-Without Seychelles the interaction effect is smaller but it is still positive and the 89% confidence intervals are above 0.
 
-**B** 
+Without Seychelles the interaction effect is smaller but it is still positive and the 89% confidence intervals are above 0.  Thus it does still seem that the effect of ruggedness on GDP depends on the continent.
+
+**B** _Plot the predictions of the interaction model, with and without Seychelles._
 
 Plot predictons, full model
 ```{r}
 rugged.seq <- seq(from=-1,to=8,by=0.25)
-mu.Africa <- link( m7h3full , data=data.frame(cont_africa=1,rugged=rugged.seq) )
+mu.Africa <- link( m7h3full , data=data.frame(cont_africa=1,rugged=rugged.seq),refresh=0 )
 mu.Africa.mean <- apply( mu.Africa , 2 , mean )
 mu.Africa.PI <- apply( mu.Africa , 2 , PI , prob=0.97 )
-mu.NotAfrica <- link( m7h3full , data=data.frame(cont_africa=0,rugged=rugged.seq) )
+mu.NotAfrica <- link( m7h3full , data=data.frame(cont_africa=0,rugged=rugged.seq),refresh=0 )
 mu.NotAfrica.mean <- apply( mu.NotAfrica , 2 , mean )
 mu.NotAfrica.PI <- apply( mu.NotAfrica , 2 , PI , prob=0.97 )
 
 # plot African nations with regression
+op <- par(mfrow=c(1,2))
 d.A1 <- dd[dd$cont_africa==1,]
 plot( log(rgdppc_2000) ~ rugged , data=d.A1 ,
       col=rangi2 , ylab="log GDP year 2000" ,
@@ -197,11 +210,12 @@ shade( mu.NotAfrica.PI , rugged.seq )
 
 now plot from smaller model
 ```{r}
+op <- par(mfrow=c(1,2))
 rugged.seq <- seq(from=-1,to=8,by=0.25)
-mu.Africa <- link( m7h3small , data=data.frame(cont_africa=1,rugged=rugged.seq) )
+mu.Africa <- link( m7h3small , data=data.frame(cont_africa=1,rugged=rugged.seq),refresh=0 )
 mu.Africa.mean <- apply( mu.Africa , 2 , mean )
 mu.Africa.PI <- apply( mu.Africa , 2 , PI , prob=0.97 )
-mu.NotAfrica <- link( m7h3small , data=data.frame(cont_africa=0,rugged=rugged.seq) )
+mu.NotAfrica <- link( m7h3small , data=data.frame(cont_africa=0,rugged=rugged.seq),refresh=0 )
 mu.NotAfrica.mean <- apply( mu.NotAfrica , 2 , mean )
 mu.NotAfrica.PI <- apply( mu.NotAfrica , 2 , PI , prob=0.97 )
 
@@ -221,9 +235,11 @@ plot( log(rgdppc_2000) ~ rugged , data=d.A0.small ,
 mtext( "Non-African nations no Seychelles" , 3 )
 lines( rugged.seq , mu.NotAfrica.mean )
 shade( mu.NotAfrica.PI , rugged.seq )
+par(op)
 ```
 
-**(C)**
+**(C)** _Fit 3 models to the data without Seychelles and conduct a model comparison.  Ploy the model-averaged predictions of the model set.  Does this change inferences relatvie to part B?_
+
 ```{r, error=FALSE}
 m7h3small.R <- NULL
 while(is.null(m7h3small.R) | class(m7h3small.R)=="try-error") {
@@ -256,8 +272,42 @@ while(is.null(m7h3small.R.A) | class(m7h3small.R.A)=="try-error") {
 
 compare(m7h3small,m7h3small.R,m7h3small.R.A)
 plot(compare(m7h3small,m7h3small.R,m7h3small.R.A))
+
 ```
-The interaction model is still the best, but not by as much
+The interaction model is still the best, but not by as much.
+
+Plot predictions:
+
+```{r, results='hide'}
+op <- par(mfrow=c(1,2))
+rugged.seq <- seq(from=-1,to=8,by=0.25)
+mu.Africa <- ensemble( m7h3small,m7h3small.R,m7h3small.R.A , data=data.frame(cont_africa=1,rugged=rugged.seq),refresh=0 )
+mu.Africa.mean <- apply( mu.Africa$link , 2 , mean )
+mu.Africa.PI <- apply( mu.Africa$link , 2 , PI , prob=0.97 )
+mu.NotAfrica <- ensemble( m7h3small,m7h3small.R,m7h3small.R.A , data=data.frame(cont_africa=0,rugged=rugged.seq),refresh=0 )
+mu.NotAfrica.mean <- apply( mu.NotAfrica$link , 2 , mean )
+mu.NotAfrica.PI <- apply( mu.NotAfrica$link , 2 , PI , prob=0.97 )
+
+# plot African nations with regression
+d.A1.small <- dd.small[dd.small$cont_africa==1,]
+plot( log(rgdppc_2000) ~ rugged , data=d.A1.small ,
+      col=rangi2 , ylab="log GDP year 2000" ,
+      xlab="Terrain Ruggedness Index" )
+mtext( "African nations no Seychelles" , 3 )
+lines( rugged.seq , mu.Africa.mean , col=rangi2 )
+shade( mu.Africa.PI , rugged.seq , col=col.alpha(rangi2,0.3) )
+# plot non-African nations with regression
+d.A0.small <- dd.small[dd.small$cont_africa==0,]
+plot( log(rgdppc_2000) ~ rugged , data=d.A0.small ,
+      col="black" , ylab="log GDP year 2000" ,
+      xlab="Terrain Ruggedness Index" )
+mtext( "Non-African nations no Seychelles" , 3 )
+lines( rugged.seq , mu.NotAfrica.mean )
+shade( mu.NotAfrica.PI , rugged.seq )
+par(op)
+```
+
+Looking at the model predictions from the ensemble, we don't have support for ruggedness having an effect on GDP in Africa at all.  This suggests that the inverse relationship was indeed cause by Seychelles.
 
 ## 7H4
 
@@ -298,7 +348,7 @@ precis(m.grow)
 grow.seq <- seq(-1,13,length.out = 50)
 pred.df <- data.frame(mean.growing.season=grow.seq)
 
-mu.m.grow <- link(m.grow,data = pred.df)
+mu.m.grow <- link(m.grow,data = pred.df,refresh=0)
 pred.df$log.lang.per.cap <- apply(mu.m.grow,2,mean)
 pred.df <- cbind(pred.df,t(apply(mu.m.grow,2,PI)))
 colnames(pred.df) <- make.names(colnames(pred.df))
@@ -337,7 +387,7 @@ grow.seq <- seq(-1,13,length.out = 50)
 pred.df <- data.frame(mean.growing.season=grow.seq,
                       log.area=mean(nettle$log.area))
 
-mu.m.grow.area <- link(m.grow.area,data = pred.df)
+mu.m.grow.area <- link(m.grow.area,data = pred.df,refresh=0)
 pred.df$log.lang.per.cap <- apply(mu.m.grow.area,2,mean)
 pred.df <- cbind(pred.df,t(apply(mu.m.grow.area,2,PI)))
 colnames(pred.df) <- make.names(colnames(pred.df))
@@ -384,7 +434,7 @@ precis(m.sd)
 sd.seq <- seq(0,6.5,length.out = 50)
 pred.df <- data.frame(sd.growing.season=sd.seq)
 
-mu.m.sd <- link(m.sd,data = pred.df)
+mu.m.sd <- link(m.sd,data = pred.df,refresh=0)
 pred.df$log.lang.per.cap <- apply(mu.m.sd,2,mean)
 pred.df <- cbind(pred.df,t(apply(mu.m.sd,2,PI)))
 colnames(pred.df) <- make.names(colnames(pred.df))
@@ -420,7 +470,7 @@ precis(m.sd.area)
 pred.df <- data.frame(sd.growing.season=sd.seq,
                       log.area=mean(nettle$log.area))
 
-mu.m.sd.area <- link(m.sd.area,data = pred.df)
+mu.m.sd.area <- link(m.sd.area,data = pred.df,refresh=0)
 pred.df$log.lang.per.cap <- apply(mu.m.sd.area,2,mean)
 pred.df <- cbind(pred.df,t(apply(mu.m.sd.area,2,PI)))
 colnames(pred.df) <- make.names(colnames(pred.df))
