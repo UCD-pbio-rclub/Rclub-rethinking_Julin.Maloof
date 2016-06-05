@@ -1,0 +1,443 @@
+---
+title: "Chapter_7"
+output: html_document
+keep_md: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 7E1
+_For each of the causal relationships below, name a hypothetical third variable that would lead to an interaction effect._
+
+(1) _Bread Dough rises because of yeast._  
+Interaction: the amount of salt in the dough (because salt inhibits yeast activity).
+
+(2) _Education leads to higher income._  
+Possible interactions: country, ethnicity, field of study
+
+(3) _Gasline makes a car go._  
+Interactions: Battery; whether or not car is started.
+
+## 7E2
+_Which of the following explanations invokes an interaction_
+
+(1) _Carmelizing onions requires cooking over low heat and making sure the onions do not dry out._  
+interaction between heat and moisture content.  low heat only works if they are also moist, and vice versa.
+
+(2) _A car will go faster when it has more cylinders or when it has a bettor fuel injector_
+Can't decide.  Maybe these are additive?  But the or implies, not; more cylinders won't matter if it already ahs a fuel injector?
+
+(3) _Most people aquire their political beliefs from their parents, unless they get them instead from their friends._  
+No interaction implied
+
+(4) _Intelligent animal species tend to be either highly social or have manipulative appendages._
+Like (2) I am really not sure here.  
+
+## 7E3
+_Write a linear model that expresses the relationsihps for each explantion in 7E2_
+
+(1) Carmelization ~ Intercept + heat + moisture + heat:moisture
+
+(2) Speed ~ intercept + cylinders + innjectors + cylinders:injectors
+
+(3) Beliefs ~ source
+
+(4) Intelligence ~ intercept + appendages + social + appendages:social
+
+## 7M1
+_No tulips bloom at high temperature.  Explain._
+Temperature inhibits blooming at all water and shade conditions
+
+## 7M2
+_Invent a regression equation for above_
+
+blooms ~ Intercept + water * shade * cool
+
+where cool=1 in cool temperatures and 0 at warm temps.  Intercept would have to be zero (Take it away?)
+
+## 7M3
+_In some parts of North America, ravens depends on wolves for food.  Species interaction.  invent a hypothetical set of data.  Linear?  why or why not_
+
+Hmmm... I don't see the interaction here.  From the information given isn't it just Ravens ~ wolves?  But I guess not becuase "in some parts of the country"  Still not sure what to do here.  Model is something like
+
+Ravens ~ Intercept + wolves + region + wolves:region
+
+## 7H1
+
+```{r}
+library(rethinking)
+data("tulips")
+head(tulips)
+tulips$bed_id <- coerce_index(tulips$bed)
+
+tulips$shade.c <- tulips$shade - mean(tulips$shade)
+tulips$water.c <- tulips$water - mean(tulips$water)
+
+m7h1 <- map(
+  alist(
+    blooms ~ dnorm(mu, sigma),
+    mu <- a[bed_id] + bW*water.c + bS*shade.c + bWS*water.c*shade.c,
+    a[bed_id] ~ dnorm(mean(tulips$bloom),50),
+    c(bW,bS,bWS) ~ dnorm(0,100),
+    sigma ~ dunif(0,100)),
+  data=tulips,
+  control=list(maxit=1000)
+)
+
+```
+
+```{r}
+m7h2 <- map(
+  alist(
+    blooms ~ dnorm(mu, sigma),
+    mu <- a + bW*water.c + bS*shade.c + bWS*water.c*shade.c,
+    a ~ dnorm(mean(tulips$bloom),sd(tulips$blooms)),
+    c(bW,bS,bWS) ~ dnorm(0,100),
+    sigma ~ dunif(0,100)),
+  data=tulips,
+  #start=list(a=100,bW=0,bS=0,bWS=0,sigma=sd(tulips$blooms)),
+  control=list(maxit=1000)
+)
+
+precis(m7h1,depth=2)
+precis(m7h2)
+compare(m7h1,m7h2)
+```
+The model with the bed information has the lower WAIC, although not by much.  But it makes since because the mean of each bed is pretty different.  We also see that sigma is lower in the first model.
+
+## 7H3
+
+```{r}
+data(rugged)
+rugged$log_gdp <- log(rugged$rgdppc_2000)
+
+dd <- rugged[ complete.cases(rugged$rgdppc_2000) , ]
+
+m7h3full <- map(
+    alist(
+        log_gdp ~ dnorm( mu , sigma ) ,
+        mu <- a + bR*rugged + bAR*rugged*cont_africa + bA*cont_africa,
+        a ~ dnorm( 8 , 100 ) ,
+        bA ~ dnorm( 0 , 1 ) ,
+        bR ~ dnorm( 0 , 1 ) ,
+        bAR ~ dnorm( 0 , 1 ) ,
+        sigma ~ dunif( 0 , 10 )
+), data=dd )
+
+dd.small <- dd[dd$country!="Seychelles",]
+
+m7h3small <- map(
+    alist(
+        log_gdp ~ dnorm( mu , sigma ) ,
+        mu <- a + bR*rugged + bAR*rugged*cont_africa + bA*cont_africa,
+        a ~ dnorm( 8 , 100 ) ,
+        bA ~ dnorm( 0 , 1 ) ,
+        bR ~ dnorm( 0 , 1 ) ,
+        bAR ~ dnorm( 0 , 1 ) ,
+        sigma ~ dunif( 0 , 10 )
+), data=dd.small )
+precis(m7h3full)
+precis(m7h3small)
+```
+Without Seychelles the interaction effect is smaller but it is still positive and the 89% confidence intervals are above 0.
+
+**B** 
+
+Plot predictons, full model
+```{r}
+rugged.seq <- seq(from=-1,to=8,by=0.25)
+mu.Africa <- link( m7h3full , data=data.frame(cont_africa=1,rugged=rugged.seq) )
+mu.Africa.mean <- apply( mu.Africa , 2 , mean )
+mu.Africa.PI <- apply( mu.Africa , 2 , PI , prob=0.97 )
+mu.NotAfrica <- link( m7h3full , data=data.frame(cont_africa=0,rugged=rugged.seq) )
+mu.NotAfrica.mean <- apply( mu.NotAfrica , 2 , mean )
+mu.NotAfrica.PI <- apply( mu.NotAfrica , 2 , PI , prob=0.97 )
+
+# plot African nations with regression
+d.A1 <- dd[dd$cont_africa==1,]
+plot( log(rgdppc_2000) ~ rugged , data=d.A1 ,
+      col=rangi2 , ylab="log GDP year 2000" ,
+      xlab="Terrain Ruggedness Index" )
+mtext( "African nations All Data" , 3 )
+lines( rugged.seq , mu.Africa.mean , col=rangi2 )
+shade( mu.Africa.PI , rugged.seq , col=col.alpha(rangi2,0.3) )
+# plot non-African nations with regression
+d.A0 <- dd[dd$cont_africa==0,]
+plot( log(rgdppc_2000) ~ rugged , data=d.A0 ,
+      col="black" , ylab="log GDP year 2000" ,
+      xlab="Terrain Ruggedness Index" )
+mtext( "Non-African nations All Data" , 3 )
+lines( rugged.seq , mu.NotAfrica.mean )
+shade( mu.NotAfrica.PI , rugged.seq )
+```
+
+now plot from smaller model
+```{r}
+rugged.seq <- seq(from=-1,to=8,by=0.25)
+mu.Africa <- link( m7h3small , data=data.frame(cont_africa=1,rugged=rugged.seq) )
+mu.Africa.mean <- apply( mu.Africa , 2 , mean )
+mu.Africa.PI <- apply( mu.Africa , 2 , PI , prob=0.97 )
+mu.NotAfrica <- link( m7h3small , data=data.frame(cont_africa=0,rugged=rugged.seq) )
+mu.NotAfrica.mean <- apply( mu.NotAfrica , 2 , mean )
+mu.NotAfrica.PI <- apply( mu.NotAfrica , 2 , PI , prob=0.97 )
+
+# plot African nations with regression
+d.A1.small <- dd.small[dd.small$cont_africa==1,]
+plot( log(rgdppc_2000) ~ rugged , data=d.A1.small ,
+      col=rangi2 , ylab="log GDP year 2000" ,
+      xlab="Terrain Ruggedness Index" )
+mtext( "African nations no Seychelles" , 3 )
+lines( rugged.seq , mu.Africa.mean , col=rangi2 )
+shade( mu.Africa.PI , rugged.seq , col=col.alpha(rangi2,0.3) )
+# plot non-African nations with regression
+d.A0.small <- dd.small[dd.small$cont_africa==0,]
+plot( log(rgdppc_2000) ~ rugged , data=d.A0.small ,
+      col="black" , ylab="log GDP year 2000" ,
+      xlab="Terrain Ruggedness Index" )
+mtext( "Non-African nations no Seychelles" , 3 )
+lines( rugged.seq , mu.NotAfrica.mean )
+shade( mu.NotAfrica.PI , rugged.seq )
+```
+
+**(C)**
+```{r}
+m7h3small.R <- map(
+    alist(
+        log_gdp ~ dnorm( mu , sigma ) ,
+        mu <- a + bR*rugged,
+        a ~ dnorm( 8 , 100 ) ,
+        bR ~ dnorm( 0 , 1 ) ,
+        sigma ~ dunif( 0 , 10 )
+), data=dd.small )
+
+m7h3small.R.A <- map(
+    alist(
+        log_gdp ~ dnorm( mu , sigma ) ,
+        mu <- a + bR*rugged + bA*cont_africa,
+        a ~ dnorm( 8 , 100 ) ,
+        bA ~ dnorm( 0 , 1 ) ,
+        bR ~ dnorm( 0 , 1 ) ,
+        sigma ~ dunif( 0 , 10 )
+), data=dd.small )
+
+compare(m7h3small,m7h3small.R,m7h3small.R.A)
+plot(compare(m7h3small,m7h3small.R,m7h3small.R.A))
+```
+The interaction model is still the best, but not by as much
+
+## 7H4
+
+_Evaluate the relationship between language diversity and food security_
+```{r}
+data(nettle)
+nettle$lang.per.cap <- nettle$num.lang / nettle$k.pop
+nettle$log.lang.per.cap <- log(nettle$lang.per.cap)
+```
+
+**(A)** _length of growing season_
+
+Look at some plots of the data
+```{r}
+library(ggplot2)
+plot(log.lang.per.cap ~ mean.growing.season, data=nettle) #looks like positive association
+plot(log.lang.per.cap ~ log(area), data=nettle) #looks like no association
+plot(mean.growing.season ~ log(area), data=nettle) # negative assocaition?
+```
+
+Fit a model with `mean.growing.season` as a predictor
+
+```{r}
+m.grow <- map(
+  alist(log.lang.per.cap ~ dnorm(mu, sigma),
+        mu <- a + bG*mean.growing.season,
+        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+        bG ~ dnorm(0,5),
+        sigma ~ dunif(0,50)),
+        data=nettle)
+
+precis(m.grow)
+grow.seq <- seq(-1,13,length.out = 50)
+pred.df <- data.frame(mean.growing.season=grow.seq)
+
+mu.m.grow <- link(m.grow,data = pred.df)
+pred.df$log.lang.per.cap <- apply(mu.m.grow,2,mean)
+pred.df <- cbind(pred.df,t(apply(mu.m.grow,2,PI)))
+colnames(pred.df) <- make.names(colnames(pred.df))
+head(pred.df)
+
+pl <- ggplot(data=NULL,aes(x=mean.growing.season,y=log.lang.per.cap))
+pl <- pl + geom_ribbon(data=pred.df,aes(ymin=X5.,ymax=X94.),fill="gray80")
+pl <- pl + geom_point(data=nettle,color="skyblue")
+pl <- pl + geom_line(data=pred.df)
+pl + ggtitle("mu <- a + bG*mean.growing.season")
+```
+
+This first model does a pretty nice job of fitting the data (although misses a bit at the high end).  At the 89% confidence intervals the coefficient for mean.growing.season is above 0.
+
+Now fit a model that includes `log(area)` as a covariate
+
+```{r}
+nettle$log.area <- log(nettle$area)
+m.grow.area <- map(
+  alist(log.lang.per.cap ~ dnorm(mu, sigma),
+        mu <- a + bG*mean.growing.season + bA*log.area,
+        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+        bG ~ dnorm(0,5),
+        bA ~ dnorm(0,5),
+        sigma ~ dunif(0,50)),
+        data=nettle)
+
+precis(m.grow.area)
+grow.seq <- seq(-1,13,length.out = 50)
+pred.df <- data.frame(mean.growing.season=grow.seq,
+                      log.area=mean(nettle$log.area))
+
+mu.m.grow.area <- link(m.grow.area,data = pred.df)
+pred.df$log.lang.per.cap <- apply(mu.m.grow.area,2,mean)
+pred.df <- cbind(pred.df,t(apply(mu.m.grow.area,2,PI)))
+colnames(pred.df) <- make.names(colnames(pred.df))
+
+pl <- ggplot(data=NULL,aes(x=mean.growing.season,y=log.lang.per.cap))
+pl <- pl + geom_ribbon(data=pred.df,aes(ymin=X5.,ymax=X94.),fill="gray80")
+pl <- pl + geom_point(data=nettle,color="skyblue")
+pl <- pl + geom_line(data=pred.df)
+pl + ggtitle("mu <- a + bG*mean.growing.season + bA*log.area")
+```
+
+The fits look pretty similar.  The 89% confidence intervals just barely have the log.area coefficient < 0.  The estimate for the coefficient on growth are almost exactly the same in both models.
+
+Next, compare modely using WAIC
+
+```{r}
+(compare.out <- compare(m.grow,m.grow.area))
+plot(compare.out)
+coeftab(m.grow,m.grow.area)
+plot(coeftab(m.grow,m.grow.area))
+```
+
+The coefficients in these models are similar except for the intercept, which is closer to 0 and more variable when log.area is included.  I'd be inclined to stick wtih the simpler model, although goes against the philosophy that McElreath advocates.
+
+**(B)** _Now consider sd as a predictor_
+
+```{r}
+qplot(x=sd.growing.season,y=log.lang.per.cap,data=nettle) # possible negative correlation.
+
+m.sd <- map(
+  alist(log.lang.per.cap ~ dnorm(mu, sigma),
+        mu <- a + bS*sd.growing.season,
+        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+        bS ~ dnorm(0,5),
+        sigma ~ dunif(0,50)),
+        data=nettle)
+
+precis(m.sd)
+sd.seq <- seq(0,6.5,length.out = 50)
+pred.df <- data.frame(sd.growing.season=sd.seq)
+
+mu.m.sd <- link(m.sd,data = pred.df)
+pred.df$log.lang.per.cap <- apply(mu.m.sd,2,mean)
+pred.df <- cbind(pred.df,t(apply(mu.m.sd,2,PI)))
+colnames(pred.df) <- make.names(colnames(pred.df))
+
+pl <- ggplot(data=NULL,aes(x=sd.growing.season,y=log.lang.per.cap))
+pl <- pl + geom_ribbon(data=pred.df,aes(ymin=X5.,ymax=X94.),fill="gray80")
+pl <- pl + geom_point(data=nettle,color="skyblue")
+pl <- pl + geom_line(data=pred.df)
+pl + ggtitle("mu <- a + bS*sd.growing.season")
+```
+
+This  model does a pretty nice job of fitting the data (although there are pretty large residuals).  At the 89% confidence intervals the coefficient for sd.growing.season is below 0.
+
+Now fit a model that includes `log(area)` as a covariate
+
+```{r}
+nettle$log.area <- log(nettle$area)
+m.sd.area <- map(
+  alist(log.lang.per.cap ~ dnorm(mu, sigma),
+        mu <- a + bS*sd.growing.season + bA*log.area,
+        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+        bS ~ dnorm(0,5),
+        bA ~ dnorm(0,5),
+        sigma ~ dunif(0,50)),
+        data=nettle)
+
+precis(m.sd.area)
+pred.df <- data.frame(sd.growing.season=sd.seq,
+                      log.area=mean(nettle$log.area))
+
+mu.m.sd.area <- link(m.sd.area,data = pred.df)
+pred.df$log.lang.per.cap <- apply(mu.m.sd.area,2,mean)
+pred.df <- cbind(pred.df,t(apply(mu.m.sd.area,2,PI)))
+colnames(pred.df) <- make.names(colnames(pred.df))
+
+pl <- ggplot(data=NULL,aes(x=sd.growing.season,y=log.lang.per.cap))
+pl <- pl + geom_ribbon(data=pred.df,aes(ymin=X5.,ymax=X94.),fill="gray80")
+pl <- pl + geom_point(data=nettle,color="skyblue")
+pl <- pl + geom_line(data=pred.df)
+pl + ggtitle("mu <- a + bS*sd.growing.season + bA*log.area")
+```
+
+Here the bS predictor is somewhat closer to 0 and the 89% confidence interval is very close to 0.  the 89% CI on the bA predictor includes zero.
+
+Next, compare models using WAIC
+
+```{r}
+(compare.out <- compare(m.sd,m.sd.area))
+plot(compare.out)
+coeftab(m.sd,m.sd.area)
+plot(coeftab(m.sd,m.sd.area))
+```
+
+The coefficients in these models are similar except for the intercept, which is closer to 0 and more variable when log.area is included.  I'd be inclined to stick wtih the simpler model, although that goes against the philosophy that McElreath advocates.
+
+**(C)** Consider the interaction model
+
+```{r}
+
+# probably should center first?
+
+m.sd.grow <- map(
+  alist(log.lang.per.cap ~ dnorm(mu, sigma),
+        mu <- a + 
+          bS*sd.growing.season + 
+          bG*mean.growing.season + 
+          bSbG*mean.growing.season*sd.growing.season,
+        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+        c(bS,bG,bSbG) ~ dnorm(0,5),
+        sigma ~ dunif(0,50)),
+        data=nettle)
+
+precis(m.sd.grow)
+
+
+```
+
+Now fit a model that includes `log(area)` as a covariate
+
+```{r}
+m.sd.grow.area <- map(
+  alist(log.lang.per.cap ~ dnorm(mu, sigma),
+        mu <- a + 
+          bS*sd.growing.season + 
+          bG*mean.growing.season + 
+          bSbG*mean.growing.season*sd.growing.season +
+          bA*log.area,
+        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+        c(bS,bG,bSbG,bA) ~ dnorm(0,5),
+        sigma ~ dunif(0,50)),
+        data=nettle)
+
+precis(m.sd.grow.area)
+
+```
+
+Next, compare models using WAIC
+
+```{r}
+(compare.out <- compare(m.grow,m.grow.area,m.sd,m.sd.area,m.sd.grow,m.sd.grow.area))
+plot(compare.out)
+coeftab(m.grow,m.grow.area,m.sd,m.sd.area,m.sd.grow,m.sd.grow.area)
+plot(coeftab(m.grow,m.grow.area,m.sd,m.sd.area,m.sd.grow,m.sd.grow.area))
+```
