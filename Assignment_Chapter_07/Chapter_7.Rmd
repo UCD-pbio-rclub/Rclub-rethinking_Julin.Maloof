@@ -66,7 +66,7 @@ Ravens ~ Intercept + wolves + region + wolves:region
 
 ## 7H1
 
-```{r, error=FALSE}
+```{r 7h1, error=FALSE}
 library(rethinking)
 data("tulips")
 head(tulips)
@@ -93,7 +93,7 @@ while(is.null(m7h1) | class(m7h1)=="try-error") {
 
 ```
 
-```{r, error=FALSE}
+```{r 7h2, error=FALSE}
 m7h2 <- NULL
 while(is.null(m7h2) | class(m7h2)=="try-error") {
   m7h2 <- try(
@@ -120,14 +120,14 @@ The model with the bed information has the lower WAIC, although not by much.  Bu
 
 ## 7H3
 
-```{r, error=FALSE}
+```{r 7h3, error=FALSE}
 data(rugged)
 rugged$log_gdp <- log(rugged$rgdppc_2000)
 
 dd <- rugged[ complete.cases(rugged$rgdppc_2000) , ]
 
-m7h3 <- NULL
-while(is.null(m7h3) | class(m7h3)=="try-error") {
+m7h3full <- NULL
+while(is.null(m7h3full) | class(m7h3full)=="try-error") {
   m7h3full <- try(
     map(
       alist(
