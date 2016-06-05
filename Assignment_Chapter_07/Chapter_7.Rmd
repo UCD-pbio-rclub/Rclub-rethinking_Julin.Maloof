@@ -66,7 +66,7 @@ Ravens ~ Intercept + wolves + region + wolves:region
 
 ## 7H1
 
-```{r}
+```{r, error=FALSE}
 library(rethinking)
 data("tulips")
 head(tulips)
@@ -75,31 +75,42 @@ tulips$bed_id <- coerce_index(tulips$bed)
 tulips$shade.c <- tulips$shade - mean(tulips$shade)
 tulips$water.c <- tulips$water - mean(tulips$water)
 
-m7h1 <- map(
-  alist(
-    blooms ~ dnorm(mu, sigma),
-    mu <- a[bed_id] + bW*water.c + bS*shade.c + bWS*water.c*shade.c,
-    a[bed_id] ~ dnorm(mean(tulips$bloom),50),
-    c(bW,bS,bWS) ~ dnorm(0,100),
-    sigma ~ dunif(0,100)),
-  data=tulips,
-  control=list(maxit=1000)
-)
+m7h1 <- NULL
+while(is.null(m7h1) | class(m7h1)=="try-error") {
+  m7h1 <- try(
+    map(
+      alist(
+        blooms ~ dnorm(mu, sigma),
+        mu <- a[bed_id] + bW*water.c + bS*shade.c + bWS*water.c*shade.c,
+        a[bed_id] ~ dnorm(mean(tulips$bloom),50),
+        c(bW,bS,bWS) ~ dnorm(0,100),
+        sigma ~ dunif(0,100)),
+      data=tulips,
+      control=list(maxit=1000)
+    )
+  )
+}
 
 ```
 
-```{r}
-m7h2 <- map(
-  alist(
-    blooms ~ dnorm(mu, sigma),
-    mu <- a + bW*water.c + bS*shade.c + bWS*water.c*shade.c,
-    a ~ dnorm(mean(tulips$bloom),sd(tulips$blooms)),
-    c(bW,bS,bWS) ~ dnorm(0,100),
-    sigma ~ dunif(0,100)),
-  data=tulips,
-  #start=list(a=100,bW=0,bS=0,bWS=0,sigma=sd(tulips$blooms)),
-  control=list(maxit=1000)
-)
+```{r, error=FALSE}
+m7h2 <- NULL
+while(is.null(m7h2) | class(m7h2)=="try-error") {
+  m7h2 <- try(
+    map(
+      alist(
+        blooms ~ dnorm(mu, sigma),
+        mu <- a + bW*water.c + bS*shade.c + bWS*water.c*shade.c,
+        a ~ dnorm(mean(tulips$bloom),sd(tulips$blooms)),
+        c(bW,bS,bWS) ~ dnorm(0,100),
+        sigma ~ dunif(0,100)),
+      data=tulips,
+      #start=list(a=100,bW=0,bS=0,bWS=0,sigma=sd(tulips$blooms)),
+      control=list(maxit=1000)
+    )
+  )
+}
+
 
 precis(m7h1,depth=2)
 precis(m7h2)
@@ -109,14 +120,17 @@ The model with the bed information has the lower WAIC, although not by much.  Bu
 
 ## 7H3
 
-```{r}
+```{r, error=FALSE}
 data(rugged)
 rugged$log_gdp <- log(rugged$rgdppc_2000)
 
 dd <- rugged[ complete.cases(rugged$rgdppc_2000) , ]
 
-m7h3full <- map(
-    alist(
+m7h3 <- NULL
+while(is.null(m7h3) | class(m7h3)=="try-error") {
+  m7h3full <- try(
+    map(
+      alist(
         log_gdp ~ dnorm( mu , sigma ) ,
         mu <- a + bR*rugged + bAR*rugged*cont_africa + bA*cont_africa,
         a ~ dnorm( 8 , 100 ) ,
@@ -124,12 +138,17 @@ m7h3full <- map(
         bR ~ dnorm( 0 , 1 ) ,
         bAR ~ dnorm( 0 , 1 ) ,
         sigma ~ dunif( 0 , 10 )
-), data=dd )
+      ), data=dd )
+  )
+}
 
 dd.small <- dd[dd$country!="Seychelles",]
 
-m7h3small <- map(
-    alist(
+m7h3small <- NULL
+while(is.null(m7h3small) | class(m7h3small)=="try-error") {
+  m7h3small <- try(
+    map(
+      alist(
         log_gdp ~ dnorm( mu , sigma ) ,
         mu <- a + bR*rugged + bAR*rugged*cont_africa + bA*cont_africa,
         a ~ dnorm( 8 , 100 ) ,
@@ -137,7 +156,9 @@ m7h3small <- map(
         bR ~ dnorm( 0 , 1 ) ,
         bAR ~ dnorm( 0 , 1 ) ,
         sigma ~ dunif( 0 , 10 )
-), data=dd.small )
+      ), data=dd.small )
+  )
+}
 precis(m7h3full)
 precis(m7h3small)
 ```
@@ -202,25 +223,35 @@ shade( mu.NotAfrica.PI , rugged.seq )
 ```
 
 **(C)**
-```{r}
-m7h3small.R <- map(
-    alist(
+```{r, error=FALSE}
+m7h3small.R <- NULL
+while(is.null(m7h3small.R) | class(m7h3small.R)=="try-error") {
+  m7h3small.R <- try(
+    map(
+      alist(
         log_gdp ~ dnorm( mu , sigma ) ,
         mu <- a + bR*rugged,
         a ~ dnorm( 8 , 100 ) ,
         bR ~ dnorm( 0 , 1 ) ,
         sigma ~ dunif( 0 , 10 )
-), data=dd.small )
+      ), data=dd.small )
+  )
+}
 
-m7h3small.R.A <- map(
-    alist(
+m7h3small.R.A <- NULL
+while(is.null(m7h3small.R.A) | class(m7h3small.R.A)=="try-error") {
+  m7h3small.R.A <- try(
+    map(
+      alist(
         log_gdp ~ dnorm( mu , sigma ) ,
         mu <- a + bR*rugged + bA*cont_africa,
         a ~ dnorm( 8 , 100 ) ,
         bA ~ dnorm( 0 , 1 ) ,
         bR ~ dnorm( 0 , 1 ) ,
         sigma ~ dunif( 0 , 10 )
-), data=dd.small )
+      ), data=dd.small )
+  )
+}
 
 compare(m7h3small,m7h3small.R,m7h3small.R.A)
 plot(compare(m7h3small,m7h3small.R,m7h3small.R.A))
@@ -248,14 +279,19 @@ plot(mean.growing.season ~ log(area), data=nettle) # negative assocaition?
 
 Fit a model with `mean.growing.season` as a predictor
 
-```{r}
-m.grow <- map(
-  alist(log.lang.per.cap ~ dnorm(mu, sigma),
-        mu <- a + bG*mean.growing.season,
-        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
-        bG ~ dnorm(0,5),
-        sigma ~ dunif(0,50)),
-        data=nettle)
+```{r, error=FALSE}
+m.grow <- NULL
+while(is.null(m.grow) | class(m.grow)=="try-error") {
+  m.grow <- try(
+    map(
+      alist(log.lang.per.cap ~ dnorm(mu, sigma),
+            mu <- a + bG*mean.growing.season,
+            a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+            bG ~ dnorm(0,5),
+            sigma ~ dunif(0,50)),
+      data=nettle)
+  )
+}
 
 precis(m.grow)
 grow.seq <- seq(-1,13,length.out = 50)
@@ -280,14 +316,20 @@ Now fit a model that includes `log(area)` as a covariate
 
 ```{r}
 nettle$log.area <- log(nettle$area)
-m.grow.area <- map(
-  alist(log.lang.per.cap ~ dnorm(mu, sigma),
-        mu <- a + bG*mean.growing.season + bA*log.area,
-        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
-        bG ~ dnorm(0,5),
-        bA ~ dnorm(0,5),
-        sigma ~ dunif(0,50)),
-        data=nettle)
+
+m.grow.area <- NULL
+while(is.null(m.grow.area) | class(m.grow.area)=="try-error") {
+  m.grow.area <- try(
+    map(
+      alist(log.lang.per.cap ~ dnorm(mu, sigma),
+            mu <- a + bG*mean.growing.season + bA*log.area,
+            a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+            bG ~ dnorm(0,5),
+            bA ~ dnorm(0,5),
+            sigma ~ dunif(0,50)),
+      data=nettle)
+  )
+}
 
 precis(m.grow.area)
 grow.seq <- seq(-1,13,length.out = 50)
@@ -324,13 +366,18 @@ The coefficients in these models are similar except for the intercept, which is 
 ```{r}
 qplot(x=sd.growing.season,y=log.lang.per.cap,data=nettle) # possible negative correlation.
 
-m.sd <- map(
-  alist(log.lang.per.cap ~ dnorm(mu, sigma),
-        mu <- a + bS*sd.growing.season,
-        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
-        bS ~ dnorm(0,5),
-        sigma ~ dunif(0,50)),
-        data=nettle)
+m.sd <- NULL
+while(is.null(m.sd) | class(m.sd)=="try-error") {
+  m.sd <- try(
+    map(
+      alist(log.lang.per.cap ~ dnorm(mu, sigma),
+            mu <- a + bS*sd.growing.season,
+            a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+            bS ~ dnorm(0,5),
+            sigma ~ dunif(0,50)),
+      data=nettle)
+  )
+}
 
 precis(m.sd)
 sd.seq <- seq(0,6.5,length.out = 50)
@@ -354,14 +401,19 @@ Now fit a model that includes `log(area)` as a covariate
 
 ```{r}
 nettle$log.area <- log(nettle$area)
-m.sd.area <- map(
-  alist(log.lang.per.cap ~ dnorm(mu, sigma),
-        mu <- a + bS*sd.growing.season + bA*log.area,
-        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
-        bS ~ dnorm(0,5),
-        bA ~ dnorm(0,5),
-        sigma ~ dunif(0,50)),
-        data=nettle)
+m.sd.area <- NULL
+while(is.null(m.sd.area) | class(m.sd.area)=="try-error") {
+  m.sd.area <- try(
+    map(
+      alist(log.lang.per.cap ~ dnorm(mu, sigma),
+            mu <- a + bS*sd.growing.season + bA*log.area,
+            a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+            bS ~ dnorm(0,5),
+            bA ~ dnorm(0,5),
+            sigma ~ dunif(0,50)),
+      data=nettle)
+  )
+}
 
 precis(m.sd.area)
 pred.df <- data.frame(sd.growing.season=sd.seq,
@@ -397,37 +449,46 @@ The coefficients in these models are similar except for the intercept, which is 
 ```{r}
 
 # probably should center first?
-
-m.sd.grow <- map(
-  alist(log.lang.per.cap ~ dnorm(mu, sigma),
-        mu <- a + 
-          bS*sd.growing.season + 
-          bG*mean.growing.season + 
-          bSbG*mean.growing.season*sd.growing.season,
-        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
-        c(bS,bG,bSbG) ~ dnorm(0,5),
-        sigma ~ dunif(0,50)),
-        data=nettle)
+m.sd.grow <- NULL
+while(is.null(m.sd.grow) | class(m.sd.grow)=="try-error") {
+  m.sd.grow <- try(
+    map(
+      alist(log.lang.per.cap ~ dnorm(mu, sigma),
+            mu <- a + 
+              bS*sd.growing.season + 
+              bG*mean.growing.season + 
+              bSbG*mean.growing.season*sd.growing.season,
+            a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+            c(bS,bG,bSbG) ~ dnorm(0,5),
+            sigma ~ dunif(0,50)),
+      data=nettle)
+  )
+}
 
 precis(m.sd.grow)
-
 
 ```
 
 Now fit a model that includes `log(area)` as a covariate
 
 ```{r}
-m.sd.grow.area <- map(
-  alist(log.lang.per.cap ~ dnorm(mu, sigma),
-        mu <- a + 
-          bS*sd.growing.season + 
-          bG*mean.growing.season + 
-          bSbG*mean.growing.season*sd.growing.season +
-          bA*log.area,
-        a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
-        c(bS,bG,bSbG,bA) ~ dnorm(0,5),
-        sigma ~ dunif(0,50)),
-        data=nettle)
+
+m.sd.grow.area <- NULL
+while(is.null(m.sd.grow.area) | class(m.sd.grow.area)=="try-error") {
+  m.sd.grow.area <- try(
+    map(
+      alist(log.lang.per.cap ~ dnorm(mu, sigma),
+            mu <- a + 
+              bS*sd.growing.season + 
+              bG*mean.growing.season + 
+              bSbG*mean.growing.season*sd.growing.season +
+              bA*log.area,
+            a ~ dnorm(mean(log.lang.per.cap), sd(log.lang.per.cap)),
+            c(bS,bG,bSbG,bA) ~ dnorm(0,5),
+            sigma ~ dunif(0,50)),
+      data=nettle)
+  )
+}
 
 precis(m.sd.grow.area)
 
