@@ -1,0 +1,23 @@
+---
+title: "Untitled"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+# Chapter 8
+
+## 8E1
+
+The simple Metropolis algorhithim requires that the proposal distribution be symmetric
+
+## 8E2
+
+Gibbs sampling achieves its efficiency by using conjugate priors.  Maybe you don't want to use conjugate priors. Also becomes very ineffecient with large numbers of parameters.
+
+## 8E3
+
+HMC requires cannot handle discrete parameters.  This is because it is sampling the probability space by gliding through it, and it is unclear how to glide between discrete points.
+
+## 8E3
+
