@@ -19,5 +19,19 @@ Gibbs sampling achieves its efficiency by using conjugate priors.  Maybe you don
 
 HMC requires cannot handle discrete parameters.  This is because it is sampling the probability space by gliding through it, and it is unclear how to glide between discrete points.
 
-## 8E3
+## 8E4
+
+Because there is autocorrelation in MCMC chains samples are not independent and the effective number of samples is reduced.  Neff estimates this.
+
+## 8E5
+
+Rhat should approach 1 (from above)
+
+## 8E6
+
+Should stabilize
+
+## 8M1
+
+
 
