@@ -4,3 +4,6 @@ unnamed-chunk-3	[<-	aes	as.character	as.data.frame	c	cbind	colnames	colnames<-	d
 unnamed-chunk-4	~	a	alist	bA	bAR	bR	cont_africa	dd.trim	map2stan	rugged
 unnamed-chunk-5	m8M2.stan.cauchy.2	m8M2.stan.cauchy.5	m8M2.stan.cauchy1	m8M2.stan.cauchy2	precis
 unnamed-chunk-6	~	a	alist	bA	bAR	bR	cont_africa	dd.trim	map2stan	rugged
+unnamed-chunk-7	m8M2.stan.exp.001	m8M2.stan.exp.1	m8M2.stan.exp.2	m8M2.stan.exp.5	m8M2.stan.exp1	precis
+unnamed-chunk-8	~	a	alist	bA	bAR	bR	cont_africa	dd.trim	map2stan	rugged
+unnamed-chunk-9	m8m3.stan.warm10	m8m3.stan.warm100	m8m3.stan.warm1000	m8m3.stan.warm2	m8m3.stan.warm50	plot	precis
