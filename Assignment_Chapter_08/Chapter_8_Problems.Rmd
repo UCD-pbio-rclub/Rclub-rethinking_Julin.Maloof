@@ -7,6 +7,11 @@ output:
 
 # Chapter 8
 
+```{r}
+knitr::opts_chunk$set(cache = TRUE,autodep = TRUE)
+```
+
+
 ## 8E1
 
 The simple Metropolis algorhithim requires that the proposal distribution be symmetric
@@ -33,5 +38,54 @@ Should stabilize
 
 ## 8M1
 
+Re-estimate the terrain ruggedness model from the chapter but now using a uniform prior and an exponential prior for sigma.  Any difference in postieror distribition?
+
+```{r 8m1}
+library(rethinking)
+data(rugged)
+d <- rugged
+d$log_gdp <- log(d$rgdppc_2000)
+dd <- d[ complete.cases(d$rgdppc_2000) , ]
+
+dd.trim <- dd[ , c("log_gdp","rugged","cont_africa") ]
+
+m8m1A.stan <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dcauchy(0,2)
+  ), data=dd.trim )
+
+
+m8m1_dunif.stan <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dunif(0,10)
+  ), data=dd.trim )
+
+m8m1_exp.stan <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dexp(1)
+  ), data=dd.trim )
+
+precis(m8m1A.stan)
+precis(m8m1_dunif.stan)
+precis(m8m1_exp.stan)
+```
 
 
