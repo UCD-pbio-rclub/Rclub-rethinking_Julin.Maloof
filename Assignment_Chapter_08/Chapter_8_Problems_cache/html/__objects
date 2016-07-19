@@ -1,0 +1,6 @@
+8m1	d	dd	dd.trim	m8m1_dunif.stan	m8m1_exp.stan	m8m1A.stan	pl	sigmas	sigmas.m	.__C__C++Object	.__C__Rcpp_stan_fit4model8c3034b78cd6_log_gdp___dnorm_mu__sigma_	.__C__Rcpp_stan_fit4model8c303de33cb4_log_gdp___dnorm_mu__sigma_	.__C__Rcpp_stan_fit4model8c304fdba56_log_gdp___dnorm_mu__sigma_	.__global__	.requireCachedGenerics	rugged
+unnamed-chunk-2	cauchy.dist	cauchy.dist.m	pl	scale	x
+unnamed-chunk-3	exp.dist	exp.dist.m	pl	rate	x
+unnamed-chunk-4	m8M2.stan.cauchy.2	m8M2.stan.cauchy.5	m8M2.stan.cauchy1	m8M2.stan.cauchy2	.__C__Rcpp_stan_fit4model8c305dfeddd4_log_gdp___dnorm_mu__sigma_	.__C__Rcpp_stan_fit4model8c306ada3e66_log_gdp___dnorm_mu__sigma_	.__C__Rcpp_stan_fit4model8c30759d4ed8_log_gdp___dnorm_mu__sigma_	.__C__Rcpp_stan_fit4model8c3096d1234_log_gdp___dnorm_mu__sigma_
+unnamed-chunk-5	
+unnamed-chunk-6	m8M2.stan.exp.001	m8M2.stan.exp.1	m8M2.stan.exp.2	m8M2.stan.exp.5	m8M2.stan.exp1	.__C__Rcpp_stan_fit4model8c301f1ffab2_log_gdp___dnorm_mu__sigma_	.__C__Rcpp_stan_fit4model8c3036c2a804_log_gdp___dnorm_mu__sigma_	.__C__Rcpp_stan_fit4model8c3054643e58_log_gdp___dnorm_mu__sigma_	.__C__Rcpp_stan_fit4model8c306b741899_log_gdp___dnorm_mu__sigma_	.__C__Rcpp_stan_fit4model8c30773c2e99_log_gdp___dnorm_mu__sigma_

@@ -1,0 +1,6 @@
+8m1	~	$	$<-	a	aes	alist	bA	bAR	bR	c	complete.cases	cont_africa	data	data.frame	dim<-	extract.samples	facet_grid	geom_density	ggplot	library	log	map2stan	melt	precis	prior.function	rugged	sigma	summary
+unnamed-chunk-2	[<-	aes	as.character	as.data.frame	c	cbind	colnames	colnames<-	dcauchy	geom_density	ggplot	ggtitle	head	melt	sapply	scale.value	seq	y
+unnamed-chunk-3	[<-	aes	as.character	as.data.frame	c	cbind	colnames	colnames<-	dexp	geom_density	ggplot	ggtitle	head	melt	rate.value	sapply	seq	y
+unnamed-chunk-4	~	a	alist	bA	bAR	bR	cont_africa	dd.trim	map2stan	rugged
+unnamed-chunk-5	m8M2.stan.cauchy.2	m8M2.stan.cauchy.5	m8M2.stan.cauchy1	m8M2.stan.cauchy2	precis
+unnamed-chunk-6	~	a	alist	bA	bAR	bR	cont_africa	dd.trim	map2stan	rugged
