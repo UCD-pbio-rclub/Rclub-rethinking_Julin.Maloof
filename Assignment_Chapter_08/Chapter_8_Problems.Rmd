@@ -368,3 +368,53 @@ compare(m8m3.stan.warm1000,m8m3.stan.warm100,m8m3.stan.warm50,m8m3.stan.warm10,m
 
 
 Things seem good with 100 warmups and even 50 but certinly not with 10 or 2; the number of effective samples drops to 1 and this is also clear from the chain traces
+
+
+## 8H1
+
+Run the model below and then inspect the posterior distubition and explain what it is accomplishing.  Compare the samples for the parameters a and b.  Can you explain the difference given what you know about the Cauchy distribution.
+
+```{r 8H1.1}
+mp <- map2stan(
+    alist(
+        a ~ dnorm(0,1),
+        b ~ dcauchy(0,1)
+    ),
+    data=list(y=1),
+    start=list(a=0,b=0),
+    iter=1e4, warmup=100 , WAIC=FALSE )
+```
+
+For starters this is a wierd little setup.  data is define as y=1 but this is not references in a formula.  I assume that the value of y does not actually matter.  So I think this is just giving us the normal and Cauchy distributions for a and b.  Will check...
+
+```{r}
+precis(mp)
+plot(precis(mp))
+```
+
+These show us that a has a mean of ~0 and a SD of ~1, as expected from the normal distribution.  b also has a mean of 0 but a much broader SD. This fits with Cauchy being a "thick-tailed" distribution.
+
+Looking at the traces...
+
+```{r}
+plot(mp)
+```
+
+We see that the Cauchy distribution has some very extreme values.  This fits of it being equivalent to the ratio of random draws from two Guassian distributions.  It is easy to obtain an "extreme" value.
+
+Compare to the respective random functions.
+```{r}
+
+norm.df <- melt(data.frame(posterior=extract.samples(mp)$a,
+                           rnorm=rnorm(9900,0,1)))
+qplot(x=value,fill=variable,alpha=0.1,data=norm.df,geom="density",main="normal")
+
+cauchy.df <- melt(data.frame(posterior=extract.samples(mp)$b,
+                             rcauchy=rcauchy(9900,0,1)))
+qplot(x=value,fill=variable,alpha=0.1,data=cauchy.df,geom="density",main="normal")
+
+qplot(x=value,fill=variable,alpha=0.1,data=cauchy.df,geom="density",main="cauchy") + scale_x_log10()
+```
+
+Note that the last plot is not really correct; samples near 0 were dropped due to the log transformation.
+

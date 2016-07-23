@@ -47,7 +47,7 @@ library(rethinking)
 ```
 
 ```
-## rethinking (Version 1.58)
+## rethinking (Version 1.59)
 ```
 
 ```r
@@ -1706,3 +1706,150 @@ compare(m8m3.stan.warm1000,m8m3.stan.warm100,m8m3.stan.warm50,m8m3.stan.warm10,m
 
 
 Things seem good with 100 warmups and even 50 but certinly not with 10 or 2; the number of effective samples drops to 1 and this is also clear from the chain traces
+
+
+## 8H1
+
+Run the model below and then inspect the posterior distubition and explain what it is accomplishing.  Compare the samples for the parameters a and b.  Can you explain the difference given what you know about the Cauchy distribution.
+
+
+```r
+mp <- map2stan(
+    alist(
+        a ~ dnorm(0,1),
+        b ~ dcauchy(0,1)
+    ),
+    data=list(y=1),
+    start=list(a=0,b=0),
+    iter=1e4, warmup=100 , WAIC=FALSE )
+```
+
+```
+## 
+## SAMPLING FOR MODEL 'a ~ dnorm(0, 1)' NOW (CHAIN 1).
+## WARNING: The initial buffer, adaptation window, and terminal buffer
+##          overflow the total number of warmup iterations.
+##          Defaulting to a 15%/75%/10% partition,
+##            init_buffer = 15
+##            adapt_window = 75
+##            term_buffer = 10
+## 
+## 
+## Chain 1, Iteration:    1 / 10000 [  0%]  (Warmup)
+## Chain 1, Iteration:  101 / 10000 [  1%]  (Sampling)
+## Chain 1, Iteration: 1100 / 10000 [ 11%]  (Sampling)
+## Chain 1, Iteration: 2100 / 10000 [ 21%]  (Sampling)
+## Chain 1, Iteration: 3100 / 10000 [ 31%]  (Sampling)
+## Chain 1, Iteration: 4100 / 10000 [ 41%]  (Sampling)
+## Chain 1, Iteration: 5100 / 10000 [ 51%]  (Sampling)
+## Chain 1, Iteration: 6100 / 10000 [ 61%]  (Sampling)
+## Chain 1, Iteration: 7100 / 10000 [ 71%]  (Sampling)
+## Chain 1, Iteration: 8100 / 10000 [ 81%]  (Sampling)
+## Chain 1, Iteration: 9100 / 10000 [ 91%]  (Sampling)
+## Chain 1, Iteration: 10000 / 10000 [100%]  (Sampling)
+##  Elapsed Time: 0.002679 seconds (Warm-up)
+##                0.394272 seconds (Sampling)
+##                0.396951 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL 'a ~ dnorm(0, 1)' NOW (CHAIN 1).
+## WARNING: No variance estimation is
+##          performed for num_warmup < 20
+## 
+## 
+## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
+##  Elapsed Time: 5e-06 seconds (Warm-up)
+##                2.5e-05 seconds (Sampling)
+##                3e-05 seconds (Total)
+```
+
+For starters this is a wierd little setup.  data is define as y=1 but this is not references in a formula.  I assume that the value of y does not actually matter.  So I think this is just giving us the normal and Cauchy distributions for a and b.  Will check...
+
+
+```r
+precis(mp)
+```
+
+```
+##     Mean  StdDev lower 0.89 upper 0.89 n_eff Rhat
+## a  -0.02    1.05      -1.67       1.67  9900 1.00
+## b 360.51 2200.82      -7.67      11.09    39 1.03
+```
+
+```r
+plot(precis(mp))
+```
+
+![](Chapter_8_Problems_files/figure-html/unnamed-chunk-13-1.png)
+
+These show us that a has a mean of ~0 and a SD of ~1, as expected from the normal distribution.  b also has a mean of 0 but a much broader SD. This fits with Cauchy being a "thick-tailed" distribution.
+
+Looking at the traces...
+
+
+```r
+plot(mp)
+```
+
+![](Chapter_8_Problems_files/figure-html/unnamed-chunk-14-1.png)
+
+We see that the Cauchy distribution has some very extreme values.  This fits of it being equivalent to the ratio of random draws from two Guassian distributions.  It is easy to obtain an "extreme" value.
+
+Compare to the respective random functions.
+
+```r
+norm.df <- melt(data.frame(posterior=extract.samples(mp)$a,
+                           rnorm=rnorm(9900,0,1)))
+```
+
+```
+## No id variables; using all as measure variables
+```
+
+```
+## Warning: attributes are not identical across measure variables; they will
+## be dropped
+```
+
+```r
+qplot(x=value,fill=variable,alpha=0.1,data=norm.df,geom="density",main="normal")
+```
+
+![](Chapter_8_Problems_files/figure-html/unnamed-chunk-15-1.png)
+
+```r
+cauchy.df <- melt(data.frame(posterior=extract.samples(mp)$b,
+                             rcauchy=rcauchy(9900,0,1)))
+```
+
+```
+## No id variables; using all as measure variables
+```
+
+```
+## Warning: attributes are not identical across measure variables; they will
+## be dropped
+```
+
+```r
+qplot(x=value,fill=variable,alpha=0.1,data=cauchy.df,geom="density",main="normal")
+```
+
+![](Chapter_8_Problems_files/figure-html/unnamed-chunk-15-2.png)
+
+```r
+qplot(x=value,fill=variable,alpha=0.1,data=cauchy.df,geom="density",main="cauchy") + scale_x_log10()
+```
+
+```
+## Warning in self$trans$transform(x): NaNs produced
+```
+
+```
+## Warning: Removed 9750 rows containing non-finite values (stat_density).
+```
+
+![](Chapter_8_Problems_files/figure-html/unnamed-chunk-15-3.png)
+
+Note that the last plot is not really correct; samples near 0 were dropped due to the log transformation.
+
