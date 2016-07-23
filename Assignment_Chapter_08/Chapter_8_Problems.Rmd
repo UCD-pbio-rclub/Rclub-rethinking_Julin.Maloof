@@ -137,7 +137,7 @@ exp.dist.m <- melt(exp.dist,id.vars="x",variable.name="rate.value",value.name="y
 head(exp.dist.m)
 pl <- ggplot(exp.dist.m,aes(x=x,y=y,fill=rate.value,color=rate.value))
 pl <- pl + geom_density(stat="identity",alpha=0.1)
-pl + ggtitle("expoential distribution at different rates")
+pl + ggtitle("exponential distribution at different rates")
 ```
 
 
@@ -194,6 +194,17 @@ precis(m8M2.stan.cauchy2)
 precis(m8M2.stan.cauchy1)
 precis(m8M2.stan.cauchy.5)
 precis(m8M2.stan.cauchy.2)
+```
+
+plot posteriors
+```{r}
+fits <- ls(pattern="m8M2.stan.cauch")
+sigmas <- sapply(fits, function(x) extract.samples(get(x))$sigma)
+colnames(sigmas) <- fits
+sigmas.m <- melt(sigmas)
+pl <- ggplot(sigmas.m,aes(x=value,color=Var2,fill=Var2))
+pl <- pl + geom_density(alpha=0.1)
+pl
 ```
 
 exp models with smaller scales:
@@ -262,6 +273,17 @@ precis(m8M2.stan.exp.5)
 precis(m8M2.stan.exp.2)
 precis(m8M2.stan.exp.1)
 precis(m8M2.stan.exp.001) #rhat going up?
+```
+
+plot posteriors
+```{r}
+fits <- ls(pattern="m8M2.stan.exp")
+sigmas <- sapply(fits, function(x) extract.samples(get(x))$sigma)
+colnames(sigmas) <- fits
+sigmas.m <- melt(sigmas)
+pl <- ggplot(sigmas.m,aes(x=value,color=Var2,fill=Var2))
+pl <- pl + geom_density(alpha=0.1)
+pl
 ```
 
 ## 8M3
@@ -339,5 +361,10 @@ plot(m8m3.stan.warm50)
 plot(m8m3.stan.warm10)
 plot(m8m3.stan.warm2)
 ```
+
+```{r}
+compare(m8m3.stan.warm1000,m8m3.stan.warm100,m8m3.stan.warm50,m8m3.stan.warm10,m8m3.stan.warm2)
+```
+
 
 Things seem good with 100 warmups and even 50 but certinly not with 10 or 2; the number of effective samples drops to 1 and this is also clear from the chain traces
