@@ -1853,3 +1853,433 @@ qplot(x=value,fill=variable,alpha=0.1,data=cauchy.df,geom="density",main="cauchy
 
 Note that the last plot is not really correct; samples near 0 were dropped due to the log transformation.
 
+## 8H2
+
+Recall the Divorce Rate data set.  Repeat the analyses of models 5.1, 5.2, and 5.3, but with map2stan.  Use compare to compare the fits on WAIC.  Explain.
+
+
+```r
+data(WaffleDivorce)
+d <- WaffleDivorce
+# standardize predictor
+d$MedianAgeMarriage.s <- (d$MedianAgeMarriage-mean(d$MedianAgeMarriage))/
+  sd(d$MedianAgeMarriage)
+  d$Marriage.s <- (d$Marriage - mean(d$Marriage))/sd(d$Marriage)
+```
+
+
+fit model map models
+
+```r
+m5.1 <- map(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bA * MedianAgeMarriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bA ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ) , data = d )
+
+m5.2 <- map(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bR * Marriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bR ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ) , data = d )
+
+m5.3 <- map(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*Marriage.s + bA*MedianAgeMarriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bR ~ dnorm( 0 , 1 ) ,
+    bA ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ),
+  data = d )
+```
+
+fit stan models
+
+```r
+m5.1.stan <- map2stan(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bA * MedianAgeMarriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bA ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ) , data = d )
+```
+
+```
+## Warning: Variable 'Marriage.SE' contains dots '.'.
+## Will attempt to remove dots internally.
+```
+
+```
+## Warning: Variable 'Divorce.SE' contains dots '.'.
+## Will attempt to remove dots internally.
+```
+
+```
+## Warning: Variable 'MedianAgeMarriage.s' contains dots '.'.
+## Will attempt to remove dots internally.
+```
+
+```
+## Warning: Variable 'Marriage.s' contains dots '.'.
+## Will attempt to remove dots internally.
+```
+
+```
+## Warning in FUN(X[[i]], ...): data with name Location is not numeric and not
+## used
+```
+
+```
+## Warning in FUN(X[[i]], ...): data with name Loc is not numeric and not used
+```
+
+```
+## 
+## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 1).
+## 
+## Chain 1, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 1, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 1, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 1, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 1, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 1, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 1, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 1, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 1, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 1, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 1, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 1, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 0.022476 seconds (Warm-up)
+##                0.019423 seconds (Sampling)
+##                0.041899 seconds (Total)
+```
+
+```
+## Warning in FUN(X[[i]], ...): data with name Location is not numeric and not
+## used
+
+## Warning in FUN(X[[i]], ...): data with name Loc is not numeric and not used
+```
+
+```
+## 
+## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 1).
+## WARNING: No variance estimation is
+##          performed for num_warmup < 20
+## 
+## 
+## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
+##  Elapsed Time: 4e-06 seconds (Warm-up)
+##                2.5e-05 seconds (Sampling)
+##                2.9e-05 seconds (Total)
+```
+
+```
+## Computing WAIC
+```
+
+```
+## Constructing posterior predictions
+```
+
+```
+## [ 100 / 1000 ]
+[ 200 / 1000 ]
+[ 300 / 1000 ]
+[ 400 / 1000 ]
+[ 500 / 1000 ]
+[ 600 / 1000 ]
+[ 700 / 1000 ]
+[ 800 / 1000 ]
+[ 900 / 1000 ]
+[ 1000 / 1000 ]
+```
+
+```r
+m5.2.stan <- map2stan(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bR * Marriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bR ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ) , data = d )
+```
+
+```
+## Warning: Variable 'Marriage.SE' contains dots '.'.
+## Will attempt to remove dots internally.
+```
+
+```
+## Warning: Variable 'Divorce.SE' contains dots '.'.
+## Will attempt to remove dots internally.
+```
+
+```
+## Warning: Variable 'MedianAgeMarriage.s' contains dots '.'.
+## Will attempt to remove dots internally.
+```
+
+```
+## Warning: Variable 'Marriage.s' contains dots '.'.
+## Will attempt to remove dots internally.
+```
+
+```
+## Warning in FUN(X[[i]], ...): data with name Location is not numeric and not
+## used
+
+## Warning in FUN(X[[i]], ...): data with name Loc is not numeric and not used
+```
+
+```
+## 
+## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 1).
+## 
+## Chain 1, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 1, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 1, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 1, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 1, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 1, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 1, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 1, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 1, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 1, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 1, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 1, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 0.025244 seconds (Warm-up)
+##                0.020662 seconds (Sampling)
+##                0.045906 seconds (Total)
+```
+
+```
+## Warning in FUN(X[[i]], ...): data with name Location is not numeric and not
+## used
+
+## Warning in FUN(X[[i]], ...): data with name Loc is not numeric and not used
+```
+
+```
+## 
+## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 1).
+## WARNING: No variance estimation is
+##          performed for num_warmup < 20
+## 
+## 
+## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
+##  Elapsed Time: 3e-06 seconds (Warm-up)
+##                2.7e-05 seconds (Sampling)
+##                3e-05 seconds (Total)
+```
+
+```
+## Computing WAIC
+```
+
+```
+## Constructing posterior predictions
+```
+
+```
+## [ 100 / 1000 ]
+[ 200 / 1000 ]
+[ 300 / 1000 ]
+[ 400 / 1000 ]
+[ 500 / 1000 ]
+[ 600 / 1000 ]
+[ 700 / 1000 ]
+[ 800 / 1000 ]
+[ 900 / 1000 ]
+[ 1000 / 1000 ]
+```
+
+```r
+m5.3.stan <- map2stan(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*Marriage.s + bA*MedianAgeMarriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bR ~ dnorm( 0 , 1 ) ,
+    bA ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ),
+  data = d )
+```
+
+```
+## Warning: Variable 'Marriage.SE' contains dots '.'.
+## Will attempt to remove dots internally.
+```
+
+```
+## Warning: Variable 'Divorce.SE' contains dots '.'.
+## Will attempt to remove dots internally.
+```
+
+```
+## Warning: Variable 'MedianAgeMarriage.s' contains dots '.'.
+## Will attempt to remove dots internally.
+```
+
+```
+## Warning: Variable 'Marriage.s' contains dots '.'.
+## Will attempt to remove dots internally.
+```
+
+```
+## Warning in FUN(X[[i]], ...): data with name Location is not numeric and not
+## used
+
+## Warning in FUN(X[[i]], ...): data with name Loc is not numeric and not used
+```
+
+```
+## 
+## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 1).
+## 
+## Chain 1, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 1, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 1, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 1, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 1, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 1, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 1, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 1, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 1, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 1, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 1, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 1, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 0.052893 seconds (Warm-up)
+##                0.036789 seconds (Sampling)
+##                0.089682 seconds (Total)
+```
+
+```
+## Warning in FUN(X[[i]], ...): data with name Location is not numeric and not
+## used
+
+## Warning in FUN(X[[i]], ...): data with name Loc is not numeric and not used
+```
+
+```
+## 
+## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 1).
+## WARNING: No variance estimation is
+##          performed for num_warmup < 20
+## 
+## 
+## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
+##  Elapsed Time: 4e-06 seconds (Warm-up)
+##                3e-05 seconds (Sampling)
+##                3.4e-05 seconds (Total)
+```
+
+```
+## Computing WAIC
+```
+
+```
+## Constructing posterior predictions
+```
+
+```
+## [ 100 / 1000 ]
+[ 200 / 1000 ]
+[ 300 / 1000 ]
+[ 400 / 1000 ]
+[ 500 / 1000 ]
+[ 600 / 1000 ]
+[ 700 / 1000 ]
+[ 800 / 1000 ]
+[ 900 / 1000 ]
+[ 1000 / 1000 ]
+```
+
+Not clear if the problem asks us to compare from stan to map or to compare within each engine type.  Do both.
+
+map vs stan
+
+```r
+compare(m5.1,m5.1.stan)
+```
+
+```
+## Warning in compare(m5.1, m5.1.stan): Not all model fits of same class.
+## This is usually a bad idea, because it implies they were fit by different algorithms.
+## Check yourself, before you wreck yourself.
+```
+
+```
+##            WAIC pWAIC dWAIC weight    SE  dSE
+## m5.1      186.5   4.1   0.0   0.59 13.74   NA
+## m5.1.stan 187.3   4.3   0.8   0.41 12.77 1.01
+```
+
+```r
+compare(m5.2,m5.2.stan)
+```
+
+```
+## Warning in compare(m5.2, m5.2.stan): Not all model fits of same class.
+## This is usually a bad idea, because it implies they were fit by different algorithms.
+## Check yourself, before you wreck yourself.
+```
+
+```
+##            WAIC pWAIC dWAIC weight    SE  dSE
+## m5.2.stan 200.2   3.4   0.0   0.62  9.72   NA
+## m5.2      201.1   4.0   0.9   0.38 10.99 1.29
+```
+
+```r
+compare(m5.3,m5.3.stan)
+```
+
+```
+## Warning in compare(m5.3, m5.3.stan): Not all model fits of same class.
+## This is usually a bad idea, because it implies they were fit by different algorithms.
+## Check yourself, before you wreck yourself.
+```
+
+```
+##            WAIC pWAIC dWAIC weight    SE  dSE
+## m5.3.stan 188.5   5.1     0   0.62 12.62   NA
+## m5.3      189.5   6.0     1   0.38 14.68 2.09
+```
+
+different models
+
+```r
+compare(m5.1,m5.2,m5.3)
+```
+
+```
+##       WAIC pWAIC dWAIC weight    SE   dSE
+## m5.1 186.8   4.3   0.0   0.76 13.89    NA
+## m5.3 189.1   5.8   2.3   0.24 14.34  1.08
+## m5.2 200.4   3.7  13.6   0.00 10.65 10.21
+```
+
+```r
+compare(m5.1.stan,m5.2.stan,m5.3.stan)
+```
+
+```
+##            WAIC pWAIC dWAIC weight    SE  dSE
+## m5.1.stan 187.3   4.3   0.0   0.65 12.77   NA
+## m5.3.stan 188.5   5.1   1.2   0.35 12.62 0.82
+## m5.2.stan 200.2   3.4  12.9   0.00  9.72 9.45
+```
+

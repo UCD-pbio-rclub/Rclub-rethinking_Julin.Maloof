@@ -418,3 +418,97 @@ qplot(x=value,fill=variable,alpha=0.1,data=cauchy.df,geom="density",main="cauchy
 
 Note that the last plot is not really correct; samples near 0 were dropped due to the log transformation.
 
+## 8H2
+
+Recall the Divorce Rate data set.  Repeat the analyses of models 5.1, 5.2, and 5.3, but with map2stan.  Use compare to compare the fits on WAIC.  Explain.
+
+```{r}
+data(WaffleDivorce)
+d <- WaffleDivorce
+# standardize predictor
+d$MedianAgeMarriage.s <- (d$MedianAgeMarriage-mean(d$MedianAgeMarriage))/
+  sd(d$MedianAgeMarriage)
+  d$Marriage.s <- (d$Marriage - mean(d$Marriage))/sd(d$Marriage)
+```
+
+
+fit model map models
+```{r}
+m5.1 <- map(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bA * MedianAgeMarriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bA ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ) , data = d )
+
+m5.2 <- map(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bR * Marriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bR ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ) , data = d )
+
+m5.3 <- map(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*Marriage.s + bA*MedianAgeMarriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bR ~ dnorm( 0 , 1 ) ,
+    bA ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ),
+  data = d )
+```
+
+fit stan models
+```{r}
+m5.1.stan <- map2stan(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bA * MedianAgeMarriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bA ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ) , data = d )
+
+m5.2.stan <- map2stan(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bR * Marriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bR ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ) , data = d )
+
+m5.3.stan <- map2stan(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*Marriage.s + bA*MedianAgeMarriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bR ~ dnorm( 0 , 1 ) ,
+    bA ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ),
+  data = d )
+```
+
+Not clear if the problem asks us to compare from stan to map or to compare within each engine type.  Do both.
+
+map vs stan
+```{r}
+compare(m5.1,m5.1.stan)
+compare(m5.2,m5.2.stan)
+compare(m5.3,m5.3.stan)
+```
+
+different models
+```{r}
+compare(m5.1,m5.2,m5.3)
+compare(m5.1.stan,m5.2.stan,m5.3.stan)
+```
+
+Either way the fits are pretty comparable.  Is this what the point was?
