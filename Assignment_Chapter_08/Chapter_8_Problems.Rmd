@@ -473,7 +473,7 @@ m5.1.stan <- map2stan(
     a ~ dnorm( 10 , 10 ) ,
     bA ~ dnorm( 0 , 1 ) ,
     sigma ~ dunif( 0 , 10 )
-  ) , data = d )
+  ) , data = d, chains=4 )
 
 m5.2.stan <- map2stan(
   alist(
@@ -482,7 +482,7 @@ m5.2.stan <- map2stan(
     a ~ dnorm( 10 , 10 ) ,
     bR ~ dnorm( 0 , 1 ) ,
     sigma ~ dunif( 0 , 10 )
-  ) , data = d )
+  ) , data = d, chains=4 )
 
 m5.3.stan <- map2stan(
   alist(
@@ -493,7 +493,7 @@ m5.3.stan <- map2stan(
     bA ~ dnorm( 0 , 1 ) ,
     sigma ~ dunif( 0 , 10 )
   ),
-  data = d )
+  data = d,chains=4 )
 ```
 
 Not clear if the problem asks us to compare from stan to map or to compare within each engine type.  Do both.
@@ -511,4 +511,95 @@ compare(m5.1,m5.2,m5.3)
 compare(m5.1.stan,m5.2.stan,m5.3.stan)
 ```
 
-Either way the fits are pretty comparable.  Is this what the point was?
+Either way the fits and conclusions are pretty comparable.  Is this what the point was?
+
+## 8H3
+
+Sometimes changes a prior for one parameter has unanticipated effects on other parameters. This can occur when the parameters are highly correlated in the posterior. Work and think through the following example.
+
+Simulate leg length and height for 100 individuals
+```{r}
+N <- 100
+height <- rnorm(N,10,2)
+leg_prop <- runif(N,0.4,0.5)
+leg_left <- leg_prop*height +
+    rnorm( N , 0 , 0.02 )
+leg_right <- leg_prop*height +
+    rnorm( N , 0 , 0.02 )
+d <- data.frame(height,leg_left,leg_right)
+```
+
+Original priors, now fit with Stan
+```{r}
+m5.8s <- map2stan(
+    alist(
+        height ~ dnorm( mu , sigma ) ,
+        mu <- a + bl*leg_left + br*leg_right ,
+        a ~ dnorm( 10 , 100 ) ,
+        bl ~ dnorm( 2 , 10 ) ,
+        br ~ dnorm( 2 , 10 ) ,
+        sigma ~ dcauchy( 0 , 1 )
+),
+data=d, chains=4, start=list(a=10,bl=0,br=0,sigma=1) )
+```
+
+Change prior for bR so that it is alway positive:
+
+```{r}
+m5.8s2 <- map2stan(
+    alist(
+        height ~ dnorm( mu , sigma ) ,
+        mu <- a + bl*leg_left + br*leg_right ,
+        a ~ dnorm( 10 , 100 ) ,
+        bl ~ dnorm( 2 , 10 ) ,
+        br ~ dnorm( 2 , 10 ) & T[0,] ,
+        sigma ~ dcauchy( 0 , 1 )
+),
+data=d, chains=4, start=list(a=10,bl=0,br=0,sigma=1) )
+```
+
+A bunch of warnings for m5.8s2...
+
+Take a look
+```{r}
+precis(m5.8s)
+precis(m5.8s2)
+
+op <- par(mfrow=c(1,2))
+plot(precis(m5.8s))
+plot(precis(m5.8s2))
+par(op)
+```
+
+The paramter estimates and SD are really quite similar.  Of course bR remains positive on the right.  I suspect that the sampling problem in the second version arises when bl is proposed to be positive, then br can not be negative.
+
+I also do not understand why, in the first model, bl is mostly negative.
+
+more diagnostics
+
+```{r}
+plot(m5.8s)
+plot(m5.8s2)
+```
+Here it is more clear that the fits are behaving differently, with the posterior sampleing bR and bL differently in the second version.
+
+```{r}
+pairs(m5.8s)
+pairs(m5.8s2)
+```
+This shows that the posterior for bl and br are skewed in the second fit but not in the first.
+
+Comparing the distributions...
+```{r}
+post.df <- melt(data.frame(bl.m1=extract.samples(m5.8s)$bl,
+                           br.m1=extract.samples(m5.8s)$br,
+                           bl.m2=extract.samples(m5.8s2)$bl,
+                           br.m2=extract.samples(m5.8s2)$br))
+post.df$model=substr(post.df$variable,4,5)
+post.df$parameter=substr(post.df$variable,1,2)
+pl <- ggplot(post.df,aes(x=value,fill=model))
+pl <- pl + geom_density(alpha=0.2)
+pl <- pl + facet_wrap(~ parameter,ncol=2)
+pl
+```
+

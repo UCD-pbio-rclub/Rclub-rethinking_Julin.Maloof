@@ -13,23 +13,11 @@ library(rethinking)
 ```
 
 ```
-## Warning: package 'rstan' was built under R version 3.2.5
-```
-
-```
 ## Loading required package: ggplot2
 ```
 
 ```
-## Warning: package 'ggplot2' was built under R version 3.2.4
-```
-
-```
 ## Loading required package: StanHeaders
-```
-
-```
-## Warning: package 'StanHeaders' was built under R version 3.2.5
 ```
 
 ```
@@ -1911,7 +1899,7 @@ m5.1.stan <- map2stan(
     a ~ dnorm( 10 , 10 ) ,
     bA ~ dnorm( 0 , 1 ) ,
     sigma ~ dunif( 0 , 10 )
-  ) , data = d )
+  ) , data = d, chains=4 )
 ```
 
 ```
@@ -1959,109 +1947,66 @@ m5.1.stan <- map2stan(
 ## Chain 1, Iteration: 1600 / 2000 [ 80%]  (Sampling)
 ## Chain 1, Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Chain 1, Iteration: 2000 / 2000 [100%]  (Sampling)
-##  Elapsed Time: 0.022476 seconds (Warm-up)
-##                0.019423 seconds (Sampling)
-##                0.041899 seconds (Total)
-```
-
-```
-## Warning in FUN(X[[i]], ...): data with name Location is not numeric and not
-## used
-
-## Warning in FUN(X[[i]], ...): data with name Loc is not numeric and not used
-```
-
-```
-## 
-## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 1).
-## WARNING: No variance estimation is
-##          performed for num_warmup < 20
+##  Elapsed Time: 0.020953 seconds (Warm-up)
+##                0.023324 seconds (Sampling)
+##                0.044277 seconds (Total)
 ## 
 ## 
-## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
-##  Elapsed Time: 4e-06 seconds (Warm-up)
-##                2.5e-05 seconds (Sampling)
-##                2.9e-05 seconds (Total)
-```
-
-```
-## Computing WAIC
-```
-
-```
-## Constructing posterior predictions
-```
-
-```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
-```
-
-```r
-m5.2.stan <- map2stan(
-  alist(
-    Divorce ~ dnorm( mu , sigma ) ,
-    mu <- a + bR * Marriage.s ,
-    a ~ dnorm( 10 , 10 ) ,
-    bR ~ dnorm( 0 , 1 ) ,
-    sigma ~ dunif( 0 , 10 )
-  ) , data = d )
-```
-
-```
-## Warning: Variable 'Marriage.SE' contains dots '.'.
-## Will attempt to remove dots internally.
-```
-
-```
-## Warning: Variable 'Divorce.SE' contains dots '.'.
-## Will attempt to remove dots internally.
-```
-
-```
-## Warning: Variable 'MedianAgeMarriage.s' contains dots '.'.
-## Will attempt to remove dots internally.
-```
-
-```
-## Warning: Variable 'Marriage.s' contains dots '.'.
-## Will attempt to remove dots internally.
-```
-
-```
-## Warning in FUN(X[[i]], ...): data with name Location is not numeric and not
-## used
-
-## Warning in FUN(X[[i]], ...): data with name Loc is not numeric and not used
-```
-
-```
+## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 2).
 ## 
-## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 1).
+## Chain 2, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 2, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 2, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 2, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 2, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 2, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 2, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 2, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 2, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 2, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 2, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 2, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 0.023005 seconds (Warm-up)
+##                0.019616 seconds (Sampling)
+##                0.042621 seconds (Total)
 ## 
-## Chain 1, Iteration:    1 / 2000 [  0%]  (Warmup)
-## Chain 1, Iteration:  200 / 2000 [ 10%]  (Warmup)
-## Chain 1, Iteration:  400 / 2000 [ 20%]  (Warmup)
-## Chain 1, Iteration:  600 / 2000 [ 30%]  (Warmup)
-## Chain 1, Iteration:  800 / 2000 [ 40%]  (Warmup)
-## Chain 1, Iteration: 1000 / 2000 [ 50%]  (Warmup)
-## Chain 1, Iteration: 1001 / 2000 [ 50%]  (Sampling)
-## Chain 1, Iteration: 1200 / 2000 [ 60%]  (Sampling)
-## Chain 1, Iteration: 1400 / 2000 [ 70%]  (Sampling)
-## Chain 1, Iteration: 1600 / 2000 [ 80%]  (Sampling)
-## Chain 1, Iteration: 1800 / 2000 [ 90%]  (Sampling)
-## Chain 1, Iteration: 2000 / 2000 [100%]  (Sampling)
-##  Elapsed Time: 0.025244 seconds (Warm-up)
-##                0.020662 seconds (Sampling)
-##                0.045906 seconds (Total)
+## 
+## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 3).
+## 
+## Chain 3, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 3, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 3, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 3, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 3, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 3, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 3, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 3, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 3, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 3, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 3, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 3, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 0.021403 seconds (Warm-up)
+##                0.019855 seconds (Sampling)
+##                0.041258 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 4).
+## 
+## Chain 4, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 4, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 4, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 4, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 4, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 4, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 4, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 4, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 4, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 4, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 4, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 4, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 0.022668 seconds (Warm-up)
+##                0.019391 seconds (Sampling)
+##                0.042059 seconds (Total)
 ```
 
 ```
@@ -2080,8 +2025,8 @@ m5.2.stan <- map2stan(
 ## 
 ## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
 ##  Elapsed Time: 3e-06 seconds (Warm-up)
-##                2.7e-05 seconds (Sampling)
-##                3e-05 seconds (Total)
+##                2.6e-05 seconds (Sampling)
+##                2.9e-05 seconds (Total)
 ```
 
 ```
@@ -2093,29 +2038,27 @@ m5.2.stan <- map2stan(
 ```
 
 ```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
+## [ 400 / 4000 ]
+[ 800 / 4000 ]
+[ 1200 / 4000 ]
+[ 1600 / 4000 ]
+[ 2000 / 4000 ]
+[ 2400 / 4000 ]
+[ 2800 / 4000 ]
+[ 3200 / 4000 ]
+[ 3600 / 4000 ]
+[ 4000 / 4000 ]
 ```
 
 ```r
-m5.3.stan <- map2stan(
+m5.2.stan <- map2stan(
   alist(
     Divorce ~ dnorm( mu , sigma ) ,
-    mu <- a + bR*Marriage.s + bA*MedianAgeMarriage.s ,
+    mu <- a + bR * Marriage.s ,
     a ~ dnorm( 10 , 10 ) ,
     bR ~ dnorm( 0 , 1 ) ,
-    bA ~ dnorm( 0 , 1 ) ,
     sigma ~ dunif( 0 , 10 )
-  ),
-  data = d )
+  ) , data = d, chains=4 )
 ```
 
 ```
@@ -2161,9 +2104,66 @@ m5.3.stan <- map2stan(
 ## Chain 1, Iteration: 1600 / 2000 [ 80%]  (Sampling)
 ## Chain 1, Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Chain 1, Iteration: 2000 / 2000 [100%]  (Sampling)
-##  Elapsed Time: 0.052893 seconds (Warm-up)
-##                0.036789 seconds (Sampling)
-##                0.089682 seconds (Total)
+##  Elapsed Time: 0.023494 seconds (Warm-up)
+##                0.019531 seconds (Sampling)
+##                0.043025 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 2).
+## 
+## Chain 2, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 2, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 2, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 2, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 2, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 2, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 2, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 2, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 2, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 2, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 2, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 2, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 0.021688 seconds (Warm-up)
+##                0.019894 seconds (Sampling)
+##                0.041582 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 3).
+## 
+## Chain 3, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 3, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 3, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 3, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 3, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 3, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 3, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 3, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 3, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 3, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 3, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 3, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 0.021286 seconds (Warm-up)
+##                0.020528 seconds (Sampling)
+##                0.041814 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 4).
+## 
+## Chain 4, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 4, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 4, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 4, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 4, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 4, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 4, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 4, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 4, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 4, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 4, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 4, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 0.021274 seconds (Warm-up)
+##                0.021162 seconds (Sampling)
+##                0.042436 seconds (Total)
 ```
 
 ```
@@ -2182,8 +2182,8 @@ m5.3.stan <- map2stan(
 ## 
 ## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
 ##  Elapsed Time: 4e-06 seconds (Warm-up)
-##                3e-05 seconds (Sampling)
-##                3.4e-05 seconds (Total)
+##                0.000142 seconds (Sampling)
+##                0.000146 seconds (Total)
 ```
 
 ```
@@ -2195,16 +2195,175 @@ m5.3.stan <- map2stan(
 ```
 
 ```
-## [ 100 / 1000 ]
-[ 200 / 1000 ]
-[ 300 / 1000 ]
-[ 400 / 1000 ]
-[ 500 / 1000 ]
-[ 600 / 1000 ]
-[ 700 / 1000 ]
-[ 800 / 1000 ]
-[ 900 / 1000 ]
-[ 1000 / 1000 ]
+## [ 400 / 4000 ]
+[ 800 / 4000 ]
+[ 1200 / 4000 ]
+[ 1600 / 4000 ]
+[ 2000 / 4000 ]
+[ 2400 / 4000 ]
+[ 2800 / 4000 ]
+[ 3200 / 4000 ]
+[ 3600 / 4000 ]
+[ 4000 / 4000 ]
+```
+
+```r
+m5.3.stan <- map2stan(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*Marriage.s + bA*MedianAgeMarriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bR ~ dnorm( 0 , 1 ) ,
+    bA ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ),
+  data = d,chains=4 )
+```
+
+```
+## Warning: Variable 'Marriage.SE' contains dots '.'.
+## Will attempt to remove dots internally.
+```
+
+```
+## Warning: Variable 'Divorce.SE' contains dots '.'.
+## Will attempt to remove dots internally.
+```
+
+```
+## Warning: Variable 'MedianAgeMarriage.s' contains dots '.'.
+## Will attempt to remove dots internally.
+```
+
+```
+## Warning: Variable 'Marriage.s' contains dots '.'.
+## Will attempt to remove dots internally.
+```
+
+```
+## Warning in FUN(X[[i]], ...): data with name Location is not numeric and not
+## used
+
+## Warning in FUN(X[[i]], ...): data with name Loc is not numeric and not used
+```
+
+```
+## 
+## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 1).
+## 
+## Chain 1, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 1, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 1, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 1, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 1, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 1, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 1, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 1, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 1, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 1, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 1, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 1, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 0.03842 seconds (Warm-up)
+##                0.038609 seconds (Sampling)
+##                0.077029 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 2).
+## 
+## Chain 2, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 2, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 2, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 2, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 2, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 2, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 2, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 2, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 2, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 2, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 2, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 2, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 0.038474 seconds (Warm-up)
+##                0.035733 seconds (Sampling)
+##                0.074207 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 3).
+## 
+## Chain 3, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 3, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 3, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 3, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 3, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 3, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 3, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 3, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 3, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 3, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 3, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 3, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 0.037325 seconds (Warm-up)
+##                0.035289 seconds (Sampling)
+##                0.072614 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 4).
+## 
+## Chain 4, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 4, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 4, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 4, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 4, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 4, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 4, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 4, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 4, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 4, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 4, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 4, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 0.036913 seconds (Warm-up)
+##                0.036544 seconds (Sampling)
+##                0.073457 seconds (Total)
+```
+
+```
+## Warning in FUN(X[[i]], ...): data with name Location is not numeric and not
+## used
+
+## Warning in FUN(X[[i]], ...): data with name Loc is not numeric and not used
+```
+
+```
+## 
+## SAMPLING FOR MODEL 'Divorce ~ dnorm(mu, sigma)' NOW (CHAIN 1).
+## WARNING: No variance estimation is
+##          performed for num_warmup < 20
+## 
+## 
+## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
+##  Elapsed Time: 3e-06 seconds (Warm-up)
+##                2.8e-05 seconds (Sampling)
+##                3.1e-05 seconds (Total)
+```
+
+```
+## Computing WAIC
+```
+
+```
+## Constructing posterior predictions
+```
+
+```
+## [ 400 / 4000 ]
+[ 800 / 4000 ]
+[ 1200 / 4000 ]
+[ 1600 / 4000 ]
+[ 2000 / 4000 ]
+[ 2400 / 4000 ]
+[ 2800 / 4000 ]
+[ 3200 / 4000 ]
+[ 3600 / 4000 ]
+[ 4000 / 4000 ]
 ```
 
 Not clear if the problem asks us to compare from stan to map or to compare within each engine type.  Do both.
@@ -2223,8 +2382,8 @@ compare(m5.1,m5.1.stan)
 
 ```
 ##            WAIC pWAIC dWAIC weight    SE  dSE
-## m5.1      186.5   4.1   0.0   0.59 13.74   NA
-## m5.1.stan 187.3   4.3   0.8   0.41 12.77 1.01
+## m5.1.stan 186.6   4.0   0.0   0.58 12.42   NA
+## m5.1      187.3   4.6   0.7   0.42 14.06 1.66
 ```
 
 ```r
@@ -2239,8 +2398,8 @@ compare(m5.2,m5.2.stan)
 
 ```
 ##            WAIC pWAIC dWAIC weight    SE  dSE
-## m5.2.stan 200.2   3.4   0.0   0.62  9.72   NA
-## m5.2      201.1   4.0   0.9   0.38 10.99 1.29
+## m5.2.stan 200.6   3.5   0.0   0.52  9.58   NA
+## m5.2      200.8   3.9   0.2   0.48 10.92 1.37
 ```
 
 ```r
@@ -2255,8 +2414,8 @@ compare(m5.3,m5.3.stan)
 
 ```
 ##            WAIC pWAIC dWAIC weight    SE  dSE
-## m5.3.stan 188.5   5.1     0   0.62 12.62   NA
-## m5.3      189.5   6.0     1   0.38 14.68 2.09
+## m5.3.stan 187.9   4.8   0.0   0.67 12.44   NA
+## m5.3      189.3   5.8   1.4   0.33 14.46 2.08
 ```
 
 different models
@@ -2267,9 +2426,9 @@ compare(m5.1,m5.2,m5.3)
 
 ```
 ##       WAIC pWAIC dWAIC weight    SE   dSE
-## m5.1 186.8   4.3   0.0   0.76 13.89    NA
-## m5.3 189.1   5.8   2.3   0.24 14.34  1.08
-## m5.2 200.4   3.7  13.6   0.00 10.65 10.21
+## m5.1 187.7   4.8   0.0   0.79 14.34    NA
+## m5.3 190.4   6.5   2.7   0.21 15.07  1.13
+## m5.2 201.0   4.0  13.3   0.00 10.92 10.60
 ```
 
 ```r
@@ -2278,8 +2437,386 @@ compare(m5.1.stan,m5.2.stan,m5.3.stan)
 
 ```
 ##            WAIC pWAIC dWAIC weight    SE  dSE
-## m5.1.stan 187.3   4.3   0.0   0.65 12.77   NA
-## m5.3.stan 188.5   5.1   1.2   0.35 12.62 0.82
-## m5.2.stan 200.2   3.4  12.9   0.00  9.72 9.45
+## m5.1.stan 186.6   4.0   0.0   0.65 12.42   NA
+## m5.3.stan 187.9   4.8   1.2   0.35 12.44 0.77
+## m5.2.stan 200.6   3.5  14.0   0.00  9.58 9.16
 ```
+
+Either way the fits and conclusions are pretty comparable.  Is this what the point was?
+
+## 8H3
+
+Sometimes changes a prior for one parameter has unanticipated effects on other parameters. This can occur when the parameters are highly correlated in the posterior. Work and think through the following example.
+
+Simulate leg length and height for 100 individuals
+
+```r
+N <- 100
+height <- rnorm(N,10,2)
+leg_prop <- runif(N,0.4,0.5)
+leg_left <- leg_prop*height +
+    rnorm( N , 0 , 0.02 )
+leg_right <- leg_prop*height +
+    rnorm( N , 0 , 0.02 )
+d <- data.frame(height,leg_left,leg_right)
+```
+
+Original priors, now fit with Stan
+
+```r
+m5.8s <- map2stan(
+    alist(
+        height ~ dnorm( mu , sigma ) ,
+        mu <- a + bl*leg_left + br*leg_right ,
+        a ~ dnorm( 10 , 100 ) ,
+        bl ~ dnorm( 2 , 10 ) ,
+        br ~ dnorm( 2 , 10 ) ,
+        sigma ~ dcauchy( 0 , 1 )
+),
+data=d, chains=4, start=list(a=10,bl=0,br=0,sigma=1) )
+```
+
+```
+## 
+## SAMPLING FOR MODEL 'height ~ dnorm(mu, sigma)' NOW (CHAIN 1).
+## 
+## Chain 1, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 1, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 1, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 1, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 1, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 1, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 1, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 1, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 1, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 1, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 1, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 1, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 3.08304 seconds (Warm-up)
+##                4.73228 seconds (Sampling)
+##                7.81531 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL 'height ~ dnorm(mu, sigma)' NOW (CHAIN 2).
+## 
+## Chain 2, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 2, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 2, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 2, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 2, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 2, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 2, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 2, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 2, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 2, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 2, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 2, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 3.07835 seconds (Warm-up)
+##                4.53165 seconds (Sampling)
+##                7.61 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL 'height ~ dnorm(mu, sigma)' NOW (CHAIN 3).
+## 
+## Chain 3, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 3, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 3, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 3, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 3, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 3, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 3, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 3, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 3, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 3, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 3, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 3, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 3.24873 seconds (Warm-up)
+##                4.51947 seconds (Sampling)
+##                7.7682 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL 'height ~ dnorm(mu, sigma)' NOW (CHAIN 4).
+## 
+## Chain 4, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 4, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 4, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 4, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 4, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 4, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 4, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 4, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 4, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 4, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 4, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 4, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 3.30181 seconds (Warm-up)
+##                4.72257 seconds (Sampling)
+##                8.02438 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL 'height ~ dnorm(mu, sigma)' NOW (CHAIN 1).
+## WARNING: No variance estimation is
+##          performed for num_warmup < 20
+## 
+## 
+## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
+##  Elapsed Time: 3e-06 seconds (Warm-up)
+##                3.8e-05 seconds (Sampling)
+##                4.1e-05 seconds (Total)
+```
+
+```
+## Computing WAIC
+```
+
+```
+## Constructing posterior predictions
+```
+
+```
+## [ 400 / 4000 ]
+[ 800 / 4000 ]
+[ 1200 / 4000 ]
+[ 1600 / 4000 ]
+[ 2000 / 4000 ]
+[ 2400 / 4000 ]
+[ 2800 / 4000 ]
+[ 3200 / 4000 ]
+[ 3600 / 4000 ]
+[ 4000 / 4000 ]
+```
+
+Change prior for bR so that it is alway positive:
+
+
+```r
+m5.8s2 <- map2stan(
+    alist(
+        height ~ dnorm( mu , sigma ) ,
+        mu <- a + bl*leg_left + br*leg_right ,
+        a ~ dnorm( 10 , 100 ) ,
+        bl ~ dnorm( 2 , 10 ) ,
+        br ~ dnorm( 2 , 10 ) & T[0,] ,
+        sigma ~ dcauchy( 0 , 1 )
+),
+data=d, chains=4, start=list(a=10,bl=0,br=0,sigma=1) )
+```
+
+```
+## 
+## SAMPLING FOR MODEL 'height ~ dnorm(mu, sigma)' NOW (CHAIN 1).
+## 
+## Chain 1, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 1, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 1, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 1, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 1, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 1, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 1, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 1, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 1, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 1, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 1, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 1, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 1.4456 seconds (Warm-up)
+##                1.52795 seconds (Sampling)
+##                2.97355 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL 'height ~ dnorm(mu, sigma)' NOW (CHAIN 2).
+## 
+## Chain 2, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 2, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 2, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 2, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 2, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 2, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 2, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 2, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 2, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 2, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 2, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 2, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 1.36797 seconds (Warm-up)
+##                1.60056 seconds (Sampling)
+##                2.96853 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL 'height ~ dnorm(mu, sigma)' NOW (CHAIN 3).
+## 
+## Chain 3, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 3, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 3, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 3, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 3, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 3, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 3, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 3, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 3, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 3, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 3, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 3, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 1.52547 seconds (Warm-up)
+##                1.36465 seconds (Sampling)
+##                2.89012 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL 'height ~ dnorm(mu, sigma)' NOW (CHAIN 4).
+## 
+## Chain 4, Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 4, Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 4, Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 4, Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 4, Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 4, Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 4, Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 4, Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 4, Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 4, Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 4, Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 4, Iteration: 2000 / 2000 [100%]  (Sampling)
+##  Elapsed Time: 1.30523 seconds (Warm-up)
+##                1.67044 seconds (Sampling)
+##                2.97567 seconds (Total)
+## 
+## 
+## SAMPLING FOR MODEL 'height ~ dnorm(mu, sigma)' NOW (CHAIN 1).
+## WARNING: No variance estimation is
+##          performed for num_warmup < 20
+## 
+## 
+## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
+##  Elapsed Time: 3e-06 seconds (Warm-up)
+##                3.8e-05 seconds (Sampling)
+##                4.1e-05 seconds (Total)
+```
+
+```
+## Computing WAIC
+```
+
+```
+## Constructing posterior predictions
+```
+
+```
+## [ 400 / 4000 ]
+[ 800 / 4000 ]
+[ 1200 / 4000 ]
+[ 1600 / 4000 ]
+[ 2000 / 4000 ]
+[ 2400 / 4000 ]
+[ 2800 / 4000 ]
+[ 3200 / 4000 ]
+[ 3600 / 4000 ]
+[ 4000 / 4000 ]
+```
+
+```
+## Warning in map2stan(alist(height ~ dnorm(mu, sigma), mu <- a + bl * leg_left + : There were 1581 divergent iterations during sampling.
+## Check the chains (trace plots, n_eff, Rhat) carefully to ensure they are valid.
+```
+
+A bunch of warnings for m5.8s2...
+
+Take a look
+
+```r
+precis(m5.8s)
+```
+
+```
+##        Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
+## a      1.12   0.32       0.62       1.63  1915    1
+## bl     2.90   2.62      -1.04       7.24  1484    1
+## br    -0.92   2.62      -5.27       2.99  1481    1
+## sigma  0.66   0.05       0.58       0.73  1831    1
+```
+
+```r
+precis(m5.8s2)
+```
+
+```
+## Warning in precis(m5.8s2): There were 1581 divergent iterations during sampling.
+## Check the chains (trace plots, n_eff, Rhat) carefully to ensure they are valid.
+```
+
+```
+##       Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
+## a     1.09   0.32       0.52       1.54   757 1.00
+## bl    0.16   1.48      -1.64       2.04   254 1.02
+## br    1.84   1.48       0.01       3.66   252 1.02
+## sigma 0.66   0.05       0.58       0.73   666 1.00
+```
+
+```r
+op <- par(mfrow=c(1,2))
+plot(precis(m5.8s))
+plot(precis(m5.8s2))
+```
+
+```
+## Warning in precis(m5.8s2): There were 1581 divergent iterations during sampling.
+## Check the chains (trace plots, n_eff, Rhat) carefully to ensure they are valid.
+```
+
+![](Chapter_8_Problems_files/figure-html/unnamed-chunk-24-1.png)<!-- -->
+
+```r
+par(op)
+```
+
+The paramter estimates and SD are really quite similar.  Of course bR remains positive on the right.  I suspect that the sampling problem in the second version arises when bl is proposed to be positive, then br can not be negative.
+
+I also do not understand why, in the first model, bl is mostly negative.
+
+more diagnostics
+
+
+```r
+plot(m5.8s)
+plot(m5.8s2)
+```
+
+![](Chapter_8_Problems_files/figure-html/unnamed-chunk-25-1.png)<!-- -->![](Chapter_8_Problems_files/figure-html/unnamed-chunk-25-2.png)<!-- -->
+Here it is more clear that the fits are behaving differently, with the posterior sampleing bR and bL differently in the second version.
+
+
+```r
+pairs(m5.8s)
+```
+
+![](Chapter_8_Problems_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
+
+```r
+pairs(m5.8s2)
+```
+
+![](Chapter_8_Problems_files/figure-html/unnamed-chunk-26-2.png)<!-- -->
+This shows that the posterior for bl and br are skewed in the second fit but not in the first.
+
+Comparing the distributions...
+
+```r
+post.df <- melt(data.frame(bl.m1=extract.samples(m5.8s)$bl,
+                           br.m1=extract.samples(m5.8s)$br,
+                           bl.m2=extract.samples(m5.8s2)$bl,
+                           br.m2=extract.samples(m5.8s2)$br))
+```
+
+```
+## No id variables; using all as measure variables
+```
+
+```r
+post.df$model=substr(post.df$variable,4,5)
+post.df$parameter=substr(post.df$variable,1,2)
+pl <- ggplot(post.df,aes(x=value,fill=model))
+pl <- pl + geom_density(alpha=0.2)
+pl <- pl + facet_wrap(~ parameter,ncol=2)
+pl
+```
+
+![](Chapter_8_Problems_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
 
