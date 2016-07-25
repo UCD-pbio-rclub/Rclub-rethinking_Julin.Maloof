@@ -1,8 +1,8 @@
 ---
 title: "Chapter 8"
 output: 
-  html_document: 
-    keep_md: yes
+html_document: 
+keep_md: yes
 ---
 
 # Chapter 8
@@ -376,13 +376,13 @@ Run the model below and then inspect the posterior distubition and explain what 
 
 ```{r 8H1.1}
 mp <- map2stan(
-    alist(
-        a ~ dnorm(0,1),
-        b ~ dcauchy(0,1)
-    ),
-    data=list(y=1),
-    start=list(a=0,b=0),
-    iter=1e4, warmup=100 , WAIC=FALSE )
+  alist(
+    a ~ dnorm(0,1),
+    b ~ dcauchy(0,1)
+  ),
+  data=list(y=1),
+  start=list(a=0,b=0),
+  iter=1e4, warmup=100 , WAIC=FALSE )
 ```
 
 For starters this is a wierd little setup.  data is define as y=1 but this is not references in a formula.  I assume that the value of y does not actually matter.  So I think this is just giving us the normal and Cauchy distributions for a and b.  Will check...
@@ -428,7 +428,7 @@ d <- WaffleDivorce
 # standardize predictor
 d$MedianAgeMarriage.s <- (d$MedianAgeMarriage-mean(d$MedianAgeMarriage))/
   sd(d$MedianAgeMarriage)
-  d$Marriage.s <- (d$Marriage - mean(d$Marriage))/sd(d$Marriage)
+d$Marriage.s <- (d$Marriage - mean(d$Marriage))/sd(d$Marriage)
 ```
 
 
@@ -523,39 +523,39 @@ N <- 100
 height <- rnorm(N,10,2)
 leg_prop <- runif(N,0.4,0.5)
 leg_left <- leg_prop*height +
-    rnorm( N , 0 , 0.02 )
+  rnorm( N , 0 , 0.02 )
 leg_right <- leg_prop*height +
-    rnorm( N , 0 , 0.02 )
+  rnorm( N , 0 , 0.02 )
 d <- data.frame(height,leg_left,leg_right)
 ```
 
 Original priors, now fit with Stan
 ```{r}
 m5.8s <- map2stan(
-    alist(
-        height ~ dnorm( mu , sigma ) ,
-        mu <- a + bl*leg_left + br*leg_right ,
-        a ~ dnorm( 10 , 100 ) ,
-        bl ~ dnorm( 2 , 10 ) ,
-        br ~ dnorm( 2 , 10 ) ,
-        sigma ~ dcauchy( 0 , 1 )
-),
-data=d, chains=4, start=list(a=10,bl=0,br=0,sigma=1) )
+  alist(
+    height ~ dnorm( mu , sigma ) ,
+    mu <- a + bl*leg_left + br*leg_right ,
+    a ~ dnorm( 10 , 100 ) ,
+    bl ~ dnorm( 2 , 10 ) ,
+    br ~ dnorm( 2 , 10 ) ,
+    sigma ~ dcauchy( 0 , 1 )
+  ),
+  data=d, chains=4, start=list(a=10,bl=0,br=0,sigma=1) )
 ```
 
 Change prior for bR so that it is alway positive:
 
 ```{r}
 m5.8s2 <- map2stan(
-    alist(
-        height ~ dnorm( mu , sigma ) ,
-        mu <- a + bl*leg_left + br*leg_right ,
-        a ~ dnorm( 10 , 100 ) ,
-        bl ~ dnorm( 2 , 10 ) ,
-        br ~ dnorm( 2 , 10 ) & T[0,] ,
-        sigma ~ dcauchy( 0 , 1 )
-),
-data=d, chains=4, start=list(a=10,bl=0,br=0,sigma=1) )
+  alist(
+    height ~ dnorm( mu , sigma ) ,
+    mu <- a + bl*leg_left + br*leg_right ,
+    a ~ dnorm( 10 , 100 ) ,
+    bl ~ dnorm( 2 , 10 ) ,
+    br ~ dnorm( 2 , 10 ) & T[0,] ,
+    sigma ~ dcauchy( 0 , 1 )
+  ),
+  data=d, chains=4, start=list(a=10,bl=0,br=0,sigma=1) )
 ```
 
 A bunch of warnings for m5.8s2...
@@ -611,6 +611,73 @@ compare(m5.8s,m5.8s2)
 compare(m5.8s,m5.8s2,func=DIC)
 ```
 By both WAIC and DIC the model with the constrained bR has a somewhat smaller number of parameters.  Would we really expect this to be the case?  In both cases they are completely correlated so should only really be 1 parameter.  But it muse be that since now they are constrained they are sampling yet less space.
+
+
+## 8H5
+
+Modify the _Metropolis_ code so that it works even it labels do not corredpond to population sizes
+
+First version
+```{r}
+num_weeks <- 1e5
+pop.sizes <- sample(c(1:10)*100,replace = FALSE)
+positions <- rep(0,num_weeks)
+current <- 10
+for ( i in 1:num_weeks ) {
+  # record current position
+  positions[i] <- current
+  # flip coin to generate proposal
+  proposal <- current + sample( c(-1,1) , size=1 )
+  # now make sure he loops around the archipelago
+  if ( proposal < 1 ) proposal <- 10
+  if ( proposal > 10 ) proposal <- 1
+  # move?
+  prob_move <- pop.sizes[proposal]/pop.sizes[current]
+  current <- ifelse( runif(1) < prob_move , proposal , current )
+}
+```
+
+```{r}
+visits <- as.vector(table(positions))
+names(visits) <- pop.sizes
+visits <- visits[order(as.numeric(names(visits)))]
+barplot(visits)
+```
+Works!
+
+It would be nice to have a version where the island names are arbitrary
+
+Second version
+```{r}
+num_weeks <- 1e5
+
+islands <- data.frame(
+  name=LETTERS[1:10],
+  pop.size=sample(c(1:10)*100,replace = FALSE),stringsAsFactors = FALSE)
+
+positions <- rep(0,num_weeks)
+current <- 10
+for ( i in 1:num_weeks ) {
+  # record current position
+  positions[i] <- islands$name[current]
+  # flip coin to generate proposal
+  proposal <- current + sample( c(-1,1) , size=1 )
+  # now make sure he loops around the archipelago
+  if ( proposal < 1 ) proposal <- 10
+  if ( proposal > 10 ) proposal <- 1
+  # move?
+  prob_move <- islands$pop.size[proposal]/islands$pop.size[current]
+  current <- ifelse( runif(1) < prob_move , proposal , current )
+}
+```
+
+```{r}
+visits <- table(positions)
+names(visits) <- paste(names(visits),islands$pop.size)
+visits <- visits[order(islands$pop.size)]
+barplot(visits)
+```
+Works!
 
 
 
