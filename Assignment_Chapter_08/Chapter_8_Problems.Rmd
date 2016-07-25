@@ -674,11 +674,16 @@ for ( i in 1:num_weeks ) {
 ```{r}
 visits <- table(positions)
 names(visits) <- paste(names(visits),islands$pop.size)
-visits <- visits[order(islands$pop.size)]
-barplot(visits)
+visits <- as.data.frame(visits[order(islands$pop.size)])
+names(visits) <- c("name","visits")
+ggplot(visits,aes(x=name,y=visits)) + geom_bar(stat="identity",fill="skyblue")
 ```
 Works!
 
+#8H6
 
+Modify the _Metropolis_ code to write your own MCMC estimate for the globe tossing data and model from Chapter 2.
 
+Lets think about this.  We have one parameter that we are trying to estimate, the proportion of water on the globe.  We can propose different values of this parameter from 0 to 1.  The probability of accepting the proposal corresponds to the likelihood of the new proposal compared to the likelihood of the current parameter.
 
+I wonder if my proposals can come from `runif` or if they should come from a grid?  One way to find out...
