@@ -603,3 +603,15 @@ pl <- pl + facet_wrap(~ parameter,ncol=2)
 pl
 ```
 
+## 8H4
+Use DIC or WAIC to compare the effective parameters.
+
+```{r}
+compare(m5.8s,m5.8s2)
+compare(m5.8s,m5.8s2,func=DIC)
+```
+By both WAIC and DIC the model with the constrained bR has a somewhat smaller number of parameters.  Would we really expect this to be the case?  In both cases they are completely correlated so should only really be 1 parameter.  But it muse be that since now they are constrained they are sampling yet less space.
+
+
+
+

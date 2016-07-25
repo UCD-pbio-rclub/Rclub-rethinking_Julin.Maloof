@@ -2820,3 +2820,31 @@ pl
 
 ![](Chapter_8_Problems_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
 
+## 8H4
+Use DIC or WAIC to compare the effective parameters.
+
+
+```r
+compare(m5.8s,m5.8s2)
+```
+
+```
+##         WAIC pWAIC dWAIC weight    SE  dSE
+## m5.8s  201.7   3.4   0.0   0.56 10.99   NA
+## m5.8s2 202.1   3.0   0.4   0.44 11.50 2.02
+```
+
+```r
+compare(m5.8s,m5.8s2,func=DIC)
+```
+
+```
+##          DIC  pD dDIC weight
+## m5.8s  202.0 3.8  0.0   0.56
+## m5.8s2 202.4 3.4  0.4   0.44
+```
+By both WAIC and DIC the model with the constrained bR has a somewhat smaller number of parameters.  Would we really expect this to be the case?  In both cases they are completely correlated so should only really be 1 parameter.  But it muse be that since now they are constrained they are sampling yet less space.
+
+
+
+
