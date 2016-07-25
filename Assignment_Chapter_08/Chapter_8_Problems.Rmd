@@ -687,3 +687,84 @@ Modify the _Metropolis_ code to write your own MCMC estimate for the globe tossi
 Lets think about this.  We have one parameter that we are trying to estimate, the proportion of water on the globe.  We can propose different values of this parameter from 0 to 1.  The probability of accepting the proposal corresponds to the likelihood of the new proposal compared to the likelihood of the current parameter.
 
 I wonder if my proposals can come from `runif` or if they should come from a grid?  One way to find out...
+
+```{r}
+tosses <- c("W","L","W","W","W","L","W","L","W")
+water <- sum(tosses=="W")
+land <- sum(tosses=="L")
+
+chain.length <- 100000
+
+posterior <- matrix(NA,nrow=chain.length,ncol = 2)
+
+colnames(posterior) <- c("p","log.lik")
+
+p <- runif(1,0,1)
+
+posterior[1,] <- c(p,dbinom(water,water+land,prob=p,log=TRUE))
+
+for(i in 2:chain.length) {
+  proposal <- runif(1,0,1)
+  log.lik <- dbinom(water,water+land,prob=proposal,log=TRUE)
+  prob.move <- exp(log.lik - posterior[i-1,"log.lik"])
+  if (runif(1,0,1) < prob.move) {
+    posterior[i,] <- c(proposal,log.lik)
+  } else {
+    posterior[i,] <- posterior[i-1,]
+  }
+}
+
+posterior <- as.data.frame(posterior)
+
+plot(posterior$p,type="l")
+
+bin <- data.frame(x=seq(0,1,length.out = 100),y=dbinom(water,water+land,seq(0,1,length.out = 100)))
+bin$y <- bin$y/max(bin$y)
+
+pl <- ggplot(posterior,aes(x=p,y=..scaled..))
+pl <- pl + geom_density(fill="blue",alpha=.1)
+pl + geom_line(aes(x=x,y=y),data=bin,lty=2)
+
+precis(posterior$p)
+```
+
+#alternative, using a grid of possible p values
+
+```{r}
+parameter.table <- data.frame(
+  p = seq(0,1,length.out = 100)) #note: if the steps are small then it takes a LOT of time to sample well.
+parameter.table$log.lik <- dbinom(water,water+land,prob=parameter.table$p,log=TRUE)
+
+chain.length <- 100000
+
+posterior <- matrix(NA,nrow=chain.length,ncol = 2)
+
+colnames(posterior) <- c("p","log.lik")
+
+current <- sample(1:nrow(parameter.table),size = 1)
+
+for (i in 1:chain.length) {
+  posterior[i,] <- as.matrix(parameter.table[current,])
+  proposal <- current + sample( c(-1,1) , size=1 )
+  # now make sure we loop around
+  if ( proposal < 1 ) proposal <- nrow(parameter.table)
+  if ( proposal > nrow(parameter.table) ) proposal <- 1
+  # move?
+  prob.move <- exp(parameter.table$log.lik[proposal] - parameter.table$log.lik[current])
+  #print(paste("current",current,"proposal",proposal,"prob.move",prob.move,sep=": "))
+  current <- ifelse( runif(1) < prob.move , proposal , current ) 
+  #print(paste("new current",current))
+}
+
+posterior <- as.data.frame(posterior)
+
+plot(posterior$p,type="l")
+
+bin <- data.frame(x=seq(0,1,length.out = 100),y=dbinom(water,water+land,seq(0,1,length.out = 100)))
+bin$y <- bin$y/max(bin$y)
+
+pl <- ggplot(posterior,aes(x=p,y=..scaled..))
+pl <- pl + geom_density(fill="blue",alpha=.1)
+pl + geom_line(aes(x=x,y=y),data=bin,lty=2)
+precis(posterior$p)
+```
