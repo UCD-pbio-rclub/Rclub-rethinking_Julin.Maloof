@@ -804,7 +804,8 @@ posterior <- as.data.frame(posterior)
 
 plot(posterior$p,type="l")
 
-bin <- data.frame(x=seq(0,1,length.out = 100),y=dbinom(water,water+land,seq(0,1,length.out = 100)))
+bin <- data.frame(x=seq(0,1,length.out = 100),
+                  y=dbinom(water,water+land,seq(0,1,length.out = 100)))
 bin$y <- bin$y/max(bin$y)
 
 pl <- ggplot(posterior,aes(x=p,y=..scaled..))
