@@ -1,0 +1,43 @@
+---
+title: "Tomato Problem"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,cache=TRUE,autodep = TRUE)
+```
+
+## Problem from Julin
+
+Do a Bayesian analysis of hypocotyl length (hyp) in the attached data sheet.
+
+1) Consider treatment effects (trt) species effects (species) and their interaction.  What is the best model given these possible predictors?
+
+2) Use "S. chmielewskii" as the reference.  For each of the other species evaluate the hypothesis that their response to shade differs from S. chmielewskii.
+
+## get the data
+```{r}
+library(rethinking)
+library(ggplot2)
+data <- read.csv("TomatoR2CSHL.csv")
+head(data)
+summary(data)
+```
+
+## take a look: boxplot
+```{r}
+pl <- ggplot(data,aes(y=hyp,x=species,fill=trt))
+pl <- pl + geom_boxplot(position="dodge")
+pl 
+```
+
+## take a look: histograms
+```{r}
+pl <- ggplot(data,aes(x=hyp,fill=trt))
+pl <- pl + geom_density()
+pl <- pl + facet_grid(species ~ trt)
+pl
+```
+
