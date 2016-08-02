@@ -145,3 +145,79 @@ dens(bT.post, show.zero = TRUE, show.HPDI = 0.95)
 sum(bT.post<=0) / length(bT.post) * 100
 ```
 
+# Try sqrt transformation
+
+
+## fit a model with trt and species, with sqrt tranformation
+```{r, results='hide'}
+data.species.trt.sqrt <- within(data.species.trt, hyp <- sqrt(hyp))
+
+head(data.species.trt.sqrt)
+m.species.trt.sqrt <- map2stan(
+  alist(
+    hyp ~ dnorm(mu,sigma),
+    mu <- a + bT * trt + bChi * S_chilense + bHab * S_habrochaites + bPen * S_pennellii + bPer * S_peruvianum,
+    a ~ dnorm(mu=5.7,sd=10),
+    c(bChi, bHab, bPen, bPer, bT) ~ dnorm(0,10),
+    sigma ~ dcauchy(0,1)),
+    data=data.species.trt.sqrt, chains=4, cores = 1)
+```
+
+```{r}
+plot(m.species.trt.sqrt)
+par(mfrow=c(1,1),mfcol=c(1,1))
+pairs(m.species.trt.sqrt)
+precis(m.species.trt.sqrt)
+precis(m.species.trt.sqrt)^2
+plot(precis(m.species.trt.sqrt))
+```
+
+## compare models
+```{r}
+compare(m.species.trt,m.species.trt.sqrt)
+```
+
+There is strong support for the model that includes both species and trt
+
+This in and of itself is an indication that trt effects hypocotyl length.  Looking more closely, the 95% confidence intervals for bT are way above 0:
+```{r}
+precis(m.species.trt.sqrt,prob = .95)
+```
+
+And none of the posterior samples for bT are less than or equal to zero.
+```{r}
+bT.post <- extract.samples(m.species.trt.sqrt)$bT
+dens(bT.post, show.zero = TRUE, show.HPDI = 0.95)
+sum(bT.post<=0) / length(bT.post) * 100
+```
+
+## Is it really fair to compare the transformed and non-transformed models by WAIC?  Maybe the scale in and of itself matters?  Try fitting when data is divided by 10
+
+```{r, results='hide'}
+data.species.trt.10 <- within(data.species.trt, hyp <- hyp/10)
+
+head(data.species.trt.10)
+m.species.trt.10 <- map2stan(
+  alist(
+    hyp ~ dnorm(mu,sigma),
+    mu <- a + bT * trt + bChi * S_chilense + bHab * S_habrochaites + bPen * S_pennellii + bPer * S_peruvianum,
+    a ~ dnorm(mu=3.3,sd=10),
+    c(bChi, bHab, bPen, bPer, bT) ~ dnorm(0,1),
+    sigma ~ dcauchy(0,1)),
+    data=data.species.trt.10, chains=4, cores = 1)
+```
+
+```{r}
+plot(m.species.trt.10)
+par(mfrow=c(1,1),mfcol=c(1,1))
+pairs(m.species.trt.10)
+precis(m.species.trt.10)
+precis(m.species.trt.10)^2
+plot(precis(m.species.trt.10))
+```
+
+## compare models
+```{r}
+compare(m.species.trt,m.species.trt.10,m.species.trt.sqrt)
+```
+
