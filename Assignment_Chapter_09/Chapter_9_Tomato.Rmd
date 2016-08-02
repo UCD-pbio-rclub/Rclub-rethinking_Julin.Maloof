@@ -13,31 +13,135 @@ knitr::opts_chunk$set(echo = TRUE,cache=TRUE,autodep = TRUE)
 
 Do a Bayesian analysis of hypocotyl length (hyp) in the attached data sheet.
 
-1) Consider treatment effects (trt) species effects (species) and their interaction.  What is the best model given these possible predictors?
 
-2) Use "S. chmielewskii" as the reference.  For each of the other species evaluate the hypothesis that their response to shade differs from S. chmielewskii.
+1) Does the best model include species, trt, or both?
 
-## get the data
+2) Evaluate the hypothesis that trt has an effect on hypocotyl length
+
+If you get stuck early, don't worry, come anyway abd we can work on it in R Club
+
+## Load libraries and get the data
 ```{r}
 library(rethinking)
 library(ggplot2)
+library(reshape2)
 data <- read.csv("TomatoR2CSHL.csv")
 head(data)
 summary(data)
 ```
 
-## take a look: boxplot
+## take a look at the data: boxplot
 ```{r}
 pl <- ggplot(data,aes(y=hyp,x=species,fill=trt))
 pl <- pl + geom_boxplot(position="dodge")
 pl 
 ```
 
-## take a look: histograms
+## take a look at the data: histograms
 ```{r}
 pl <- ggplot(data,aes(x=hyp,fill=trt))
 pl <- pl + geom_density()
 pl <- pl + facet_grid(species ~ trt)
 pl
+```
+
+## fit a model with trt
+```{r, results='hide'}
+mean(data$hyp) #33.35
+data.trt <- data[,c("hyp","trt")]
+data.trt$trt <- as.numeric(data$trt)-1
+m.trt <- map2stan(
+  alist(
+    hyp ~ dnorm(mu,sigma),
+    mu <- a + bT * trt,
+    a ~ dnorm(mu=33,sd=10),
+    bT ~ dnorm(0,10),
+    sigma ~ dcauchy(0,1)),
+    data=data.trt,chains = 4,cores = 1)
+```
+
+```{r}
+plot(m.trt)
+par(mfrow=c(1,1),mfcol=c(1,1))
+pairs(m.trt)
+precis(m.trt)
+plot(precis(m.trt))
+```
+
+## fit a model with species
+```{r, results='hide'}
+data.species <- data[,c("hyp","species")]
+data.species$id <- 1:nrow(data.species)
+data.species <- dcast(data.species, hyp + id ~ species, value.var="species", fun.aggregate = length)
+colnames(data.species) <- sub(". ","_",fixed = TRUE, colnames(data.species))
+head(data.species)
+data.species <- data.species[,c(-2,-4)]
+m.species <- map2stan(
+  alist(
+    hyp ~ dnorm(mu,sigma),
+    mu <- a + bChi * S_chilense + bHab * S_habrochaites + bPen * S_pennellii + bPer * S_peruvianum,
+    a ~ dnorm(mu=33,sd=10),
+    c(bChi, bHab, bPen, bPer) ~ dnorm(0,10),
+    sigma ~ dcauchy(0,1)),
+    data=data.species, chains=4, cores = 1)
+```
+
+```{r}
+plot(m.species)
+par(mfrow=c(1,1),mfcol=c(1,1))
+pairs(m.species)
+precis(m.species)
+plot(precis(m.species))
+```
+
+## fit a model with trt and species
+```{r, results='hide'}
+data.species.trt <- data[,c("hyp","species","trt")]
+data.species.trt$id <- 1:nrow(data.species.trt)
+data.species.trt <- dcast(data.species.trt, hyp + trt + id ~ species, value.var="species", fun.aggregate = length)
+colnames(data.species.trt) <- sub(". ","_",fixed = TRUE, colnames(data.species.trt))
+head(data.species.trt)
+data.species.trt <- data.species.trt[,c(-3,-5)]
+data.species.trt$trt <- as.numeric(data.species.trt$trt)-1
+head(data.species.trt)
+m.species.trt <- map2stan(
+  alist(
+    hyp ~ dnorm(mu,sigma),
+    mu <- a + bT * trt + bChi * S_chilense + bHab * S_habrochaites + bPen * S_pennellii + bPer * S_peruvianum,
+    a ~ dnorm(mu=33,sd=10),
+    c(bChi, bHab, bPen, bPer, bT) ~ dnorm(0,10),
+    sigma ~ dcauchy(0,1)),
+    data=data.species.trt, chains=4, cores = 1)
+
+```
+
+```{r}
+plot(m.species.trt)
+par(mfrow=c(1,1),mfcol=c(1,1))
+pairs(m.species.trt)
+precis(m.species.trt)
+plot(precis(m.species.trt))
+```
+
+## compare models
+```{r}
+compare(m.trt,m.species,m.species.trt)
+plot(compare(m.trt,m.species,m.species.trt))
+coeftab(m.trt,m.species,m.species.trt)
+plot(coeftab(m.trt,m.species,m.species.trt))
+```
+
+There is strong support for the model that includes both species and trt
+
+This in and of itself is an indication that trt effects hypocotyl length.  Looking more closely, the 95% confidence intervals for bT are way above 0:
+```{r}
+precis(m.species.trt,prob = .95)
+```
+
+And none of the posterior samples for bT are less than or equal to zero.
+```{r}
+bT.post <- extract.samples(m.species.trt)$bT
+dens(bT.post, show.zero = TRUE, show.HPDI = 0.95)
+sum(bT.post<=0) / length(bT.post) * 100
 ```
 
