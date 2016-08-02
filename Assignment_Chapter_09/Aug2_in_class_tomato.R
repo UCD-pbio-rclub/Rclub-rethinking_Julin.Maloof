@@ -150,7 +150,13 @@ coeftab(hyp.stan,species.trt.stan,species.stan.intercept,species.stan)
 
 plot(coeftab(hyp.stan,species.trt.stan,species.stan.intercept,species.stan))
 
-post.bT <- extract.samples(species.trt.stan)$bT
-dens(post.bT,show.HPDI = 0.95)
+# what can we say about the treatment effect? 
 
-sum(post.bT <= 0) / length(post.bT) 
+# get the posterior distrubution of bT, the treatment coefficient.
+
+post.bT <- extract.samples(species.trt.stan)$bT
+
+dens(post.bT,show.HPDI = 0.95) # the fact that the 95% HDPI intervals are far away from 0 is strong evidence that bT is positive
+
+# what percent of the posterior distribution of bT is less than or equal to ?
+sum(post.bT <= 0) / length(post.bT) # None of the posterior distribution for bT is less than or equal to 0.
