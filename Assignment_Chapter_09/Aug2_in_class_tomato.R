@@ -52,6 +52,7 @@ levels(data$trt)
 data$trt2 <- as.numeric(data$trt)-1 # 0 = H, 1 = L
 
 #categorical variables for species
+data$index <- 1:nrow(data)
 data2 <- dcast(data,index + hyp + trt2 ~ species, value.var="species",fun.aggregate=length)
 
 head(data2)
