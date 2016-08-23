@@ -276,7 +276,54 @@ Percentage of the posterior that is <= zero for each parameter:
 post.summary
 ```
 
+## plot model predictions
 
+First need data frame with appropriate combinations of 0s and 1s for the experimental factors.
+```{r}
+pred.df <- rbind(diag(nrow=5,ncol=4),diag(nrow=5,ncol=4))
+pred.df <- as.data.frame(cbind(rep(c(0,1),each=5),pred.df))
+colnames(pred.df) <- colnames(data.species.trt)[-1]
+pred.df
+```
 
+I should come up with a more automated way of doing that...
 
-## predictions...
+One possibility: take unique combintaions from the original data frame
+
+```{r}
+pred.df2 <- unique(data.species.trt[,-1])
+pred.df2 <- pred.df2[order(pred.df2$trt, pred.df2$S_chilense, pred.df2$S_habrochaites, pred.df2$S_pennellii, pred.df2$S_habrochaites,decreasing = TRUE),]
+pred.df2
+```
+
+That also works...
+
+Now get the predictions
+
+```{r}
+mu.int <- link(m.species.trt.int,pred.df)
+colnames(mu.int) <- c(
+  paste(c("S_chilense", "S_habrochaites", "S_pennellii", "S_peruvianum", "S_chmielewskii"),"H",sep="."),
+    paste(c("S_chilense", "S_habrochaites", "S_pennellii", "S_peruvianum", "S_chmielewskii"),"L",sep="."))
+mu.mean <- colMeans(mu.int)
+mu.mean
+mu.PI <- apply(mu.int,2,HPDI,prob=0.95)
+mu.PI
+```
+
+make a plot
+
+```{r}
+plot.df <- data.frame(
+  species=unlist(strsplit(colnames(mu.int),split=".",fixed = TRUE))[c(TRUE,FALSE)],
+  treatment=unlist(strsplit(colnames(mu.int),split=".",fixed = TRUE))[c(FALSE,TRUE)],
+  hyp.length=mu.mean,
+  PI.low=mu.PI[1,],
+  PI.high=mu.PI[2,]
+)
+
+pl <- ggplot(plot.df,aes(x=species,fill=treatment,y=hyp.length,ymin=PI.low,ymax=PI.high))
+pl <- pl + geom_bar(stat="identity",position="dodge")
+pl <- pl + geom_errorbar(width=0.5,position=position_dodge(width=0.9))
+pl
+```
