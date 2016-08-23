@@ -260,7 +260,22 @@ coeftab(m.trt,m.species,m.species.trt,m.species.trt.int)
 plot(coeftab(m.trt,m.species,m.species.trt,m.species.trt.int))
 ```
 
-## probability masses
+## posterior distributions
+```{r}
+posterior.int <- extract.samples(m.species.trt.int)
+posterior.int <- posterior.int[names(posterior.int)!="sigma"]
+post.summary <- sapply(names(posterior.int),function(n) {
+  dens(posterior.int[[n]],main=n,show.HPDI = .95, show.zero = TRUE)
+  sum(posterior.int[[n]]<=0) / length(posterior.int[[n]]) * 100
+})
+```
+
+Percentage of the posterior that is <= zero for each parameter:
+
+```{r}
+post.summary
+```
+
 
 
 
