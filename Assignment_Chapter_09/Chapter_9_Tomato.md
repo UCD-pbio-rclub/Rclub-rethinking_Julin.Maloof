@@ -689,6 +689,74 @@ compare(m.species.trt,m.species.trt.10,m.species.trt.sqrt)
 ## m.species.trt      7308.2   7.2 4959.5      0 57.53 18.94
 ```
 
+## one way to compare the model fit is to look at actual vs predicted
+
+
+```r
+mu.species.trt <- link(m.species.trt)
+```
+
+```
+## [ 100 / 1000 ]
+[ 200 / 1000 ]
+[ 300 / 1000 ]
+[ 400 / 1000 ]
+[ 500 / 1000 ]
+[ 600 / 1000 ]
+[ 700 / 1000 ]
+[ 800 / 1000 ]
+[ 900 / 1000 ]
+[ 1000 / 1000 ]
+```
+
+```r
+mu.sqrt.species.trt <- link(m.species.trt.sqrt)
+```
+
+```
+## [ 100 / 1000 ]
+[ 200 / 1000 ]
+[ 300 / 1000 ]
+[ 400 / 1000 ]
+[ 500 / 1000 ]
+[ 600 / 1000 ]
+[ 700 / 1000 ]
+[ 800 / 1000 ]
+[ 900 / 1000 ]
+[ 1000 / 1000 ]
+```
+
+```r
+mu.mean.species.trt <- apply(mu.species.trt, 2, mean)
+mu.mean.sqrt.species.trt <- apply(mu.sqrt.species.trt,2,mean)
+plot(m.species.trt@data$hyp,mu.mean.species.trt)
+```
+
+![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-21-1.png)<!-- -->
+
+```r
+plot(m.species.trt.sqrt@data$hyp^2,mu.mean.sqrt.species.trt^2)
+```
+
+![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-21-2.png)<!-- -->
+
+```r
+cor(m.species.trt@data$hyp,mu.mean.species.trt)
+```
+
+```
+## [1] 0.4203035
+```
+
+```r
+cor(m.species.trt.sqrt@data$hyp^2,mu.mean.sqrt.species.trt^2)
+```
+
+```
+## [1] 0.419432
+```
+
+
 # model with interaction
 
 
@@ -727,13 +795,13 @@ plot(m.species.trt.int)
 par(mfrow=c(1,1),mfcol=c(1,1))
 ```
 
-![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-22-1.png)<!-- -->
+![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-23-1.png)<!-- -->
 
 ```r
 pairs(m.species.trt.int)
 ```
 
-![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-22-2.png)<!-- -->
+![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-23-2.png)<!-- -->
 
 ```r
 precis(m.species.trt.int)
@@ -741,24 +809,180 @@ precis(m.species.trt.int)
 
 ```
 ##         Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
-## a      30.46   0.83      29.15      31.78   979    1
-## bChi    1.09   1.18      -0.84       2.97  1379    1
-## bHab   -0.99   1.14      -2.72       0.88  1130    1
-## bPen   -6.72   1.41      -8.99      -4.57  1721    1
-## bPer    4.82   1.18       2.90       6.71  1228    1
-## bT      3.11   1.15       1.22       4.86  1113    1
-## bChi_T  3.20   1.65       0.65       5.90  1440    1
-## bHab_T  0.29   1.62      -2.20       2.93  1306    1
-## bPen_T  6.19   1.86       3.23       9.16  1677    1
-## bPer_T  3.13   1.61       0.61       5.72  1346    1
-## sigma   9.00   0.20       8.67       9.29  4000    1
+## a      30.46   0.81      29.15      31.73  1225    1
+## bChi    1.10   1.17      -0.81       2.91  1609    1
+## bHab   -0.98   1.12      -2.85       0.72  1618    1
+## bPen   -6.71   1.37      -9.03      -4.63  1825    1
+## bPer    4.78   1.16       3.04       6.75  1576    1
+## bT      3.10   1.13       1.37       4.97  1259    1
+## bChi_T  3.22   1.63       0.84       6.07  1499    1
+## bHab_T  0.28   1.63      -2.32       2.89  1716    1
+## bPen_T  6.18   1.87       3.14       9.13  1684    1
+## bPer_T  3.18   1.59       0.81       5.90  1660    1
+## sigma   9.00   0.20       8.68       9.30  3766    1
 ```
 
 ```r
 plot(precis(m.species.trt.int))
 ```
 
-![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-22-3.png)<!-- -->
+![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-23-3.png)<!-- -->
+
+## sqrt interaction model
+
+
+```r
+m.species.trt.int.sqrt <- map2stan(
+  alist(
+    hyp ~ dnorm(mu,sigma),
+    mu <- a + 
+      bT * trt + 
+      bChi * S_chilense + 
+      bHab * S_habrochaites + 
+      bPen * S_pennellii + 
+      bPer * S_peruvianum +
+      bChi_T * S_chilense * trt + 
+      bHab_T * S_habrochaites * trt + 
+      bPen_T * S_pennellii * trt + 
+      bPer_T * S_peruvianum * trt
+      ,
+    a ~ dnorm(mu=33,sd=10),
+    c(bChi, bHab, bPen, bPer, bT, bChi_T, bHab_T, bPen_T, bPer_T) ~ dnorm(0,10),
+    sigma ~ dcauchy(0,1)),
+    data=data.species.trt.sqrt, chains=4, cores = 1)
+```
+
+```
+## The following numerical problems occured the indicated number of times after warmup on chain 4
+```
+
+```
+##                                                                                 count
+## Exception thrown at line 39: normal_log: Scale parameter is 0, but must be > 0!     2
+```
+
+```
+## When a numerical problem occurs, the Hamiltonian proposal gets rejected.
+```
+
+```
+## If the number in the 'count' column is small, do not ask about this message on stan-users.
+```
+
+```
+## Computing WAIC
+```
+
+```
+## Constructing posterior predictions
+```
+
+
+```r
+plot(m.species.trt.int.sqrt)
+par(mfrow=c(1,1),mfcol=c(1,1))
+```
+
+![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-25-1.png)<!-- -->
+
+```r
+pairs(m.species.trt.int.sqrt)
+```
+
+![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-25-2.png)<!-- -->
+
+```r
+precis(m.species.trt.int.sqrt)
+```
+
+```
+##         Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
+## a       5.50   0.07       5.39       5.62  1062 1.01
+## bChi    0.05   0.10      -0.11       0.22  1283 1.00
+## bHab   -0.10   0.10      -0.25       0.06  1348 1.00
+## bPen   -0.70   0.12      -0.88      -0.50  1533 1.00
+## bPer    0.38   0.10       0.21       0.53  1408 1.00
+## bT      0.25   0.10       0.08       0.40  1020 1.00
+## bChi_T  0.28   0.15       0.03       0.50  1114 1.00
+## bHab_T  0.06   0.14      -0.16       0.29  1266 1.00
+## bPen_T  0.63   0.16       0.38       0.90  1380 1.00
+## bPer_T  0.25   0.14       0.02       0.47  1395 1.00
+## sigma   0.77   0.02       0.74       0.80  3277 1.00
+```
+
+```r
+plot(precis(m.species.trt.int.sqrt))
+```
+
+![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-25-3.png)<!-- -->
+
+## compare sqrt and untransformed
+
+
+
+```r
+mu.species.trt.int <- link(m.species.trt.int)
+```
+
+```
+## [ 100 / 1000 ]
+[ 200 / 1000 ]
+[ 300 / 1000 ]
+[ 400 / 1000 ]
+[ 500 / 1000 ]
+[ 600 / 1000 ]
+[ 700 / 1000 ]
+[ 800 / 1000 ]
+[ 900 / 1000 ]
+[ 1000 / 1000 ]
+```
+
+```r
+mu.sqrt.species.trt.int <- link(m.species.trt.int.sqrt)
+```
+
+```
+## [ 100 / 1000 ]
+[ 200 / 1000 ]
+[ 300 / 1000 ]
+[ 400 / 1000 ]
+[ 500 / 1000 ]
+[ 600 / 1000 ]
+[ 700 / 1000 ]
+[ 800 / 1000 ]
+[ 900 / 1000 ]
+[ 1000 / 1000 ]
+```
+
+```r
+mu.mean.species.trt.int <- apply(mu.species.trt.int, 2, mean)
+mu.mean.sqrt.species.trt.int <- apply(mu.sqrt.species.trt.int,2,mean)
+plot(m.species.trt.int@data$hyp,mu.mean.species.trt.int)
+```
+
+![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-26-1.png)<!-- -->
+
+```r
+plot(m.species.trt.int.sqrt@data$hyp^2,mu.mean.sqrt.species.trt.int^2)
+```
+
+![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-26-2.png)<!-- -->
+
+```r
+cor(m.species.trt.int@data$hyp,mu.mean.species.trt.int)
+```
+
+```
+## [1] 0.4345538
+```
+
+```r
+cor(m.species.trt.int.sqrt@data$hyp^2,mu.mean.sqrt.species.trt.int^2)
+```
+
+```
+## [1] 0.43422
+```
 
 ## compare models
 
@@ -768,17 +992,17 @@ compare(m.trt,m.species,m.species.trt,m.species.trt.int)
 
 ```
 ##                     WAIC pWAIC dWAIC weight    SE   dSE
-## m.species.trt.int 7300.9  11.0   0.0   0.98 57.54    NA
-## m.species.trt     7308.2   7.2   7.4   0.02 57.53  6.77
-## m.species         7390.2   6.3  89.3   0.00 57.31 20.71
-## m.trt             7421.8   3.3 121.0   0.00 56.56 82.67
+## m.species.trt.int 7301.1  11.1   0.0   0.97 57.55    NA
+## m.species.trt     7308.2   7.2   7.1   0.03 57.53  6.79
+## m.species         7390.2   6.3  89.1   0.00 57.31 20.73
+## m.trt             7421.8   3.3 120.8   0.00 56.56 82.68
 ```
 
 ```r
 plot(compare(m.trt,m.species,m.species.trt,m.species.trt.int))
 ```
 
-![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-23-1.png)<!-- -->
+![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-27-1.png)<!-- -->
 
 ```r
 coeftab(m.trt,m.species,m.species.trt,m.species.trt.int)
@@ -787,16 +1011,16 @@ coeftab(m.trt,m.species,m.species.trt,m.species.trt.int)
 ```
 ##        m.trt   m.species m.species.trt m.species.trt.int
 ## a        30.67   32.08     29.36         30.46          
-## bT        5.29      NA      5.30          3.11          
+## bT        5.29      NA      5.30          3.10          
 ## sigma     9.58    9.43      9.05          9.00          
-## bChi        NA    2.68      2.70          1.09          
-## bHab        NA   -0.99     -0.79         -0.99          
-## bPen        NA   -3.28     -3.45         -6.72          
-## bPer        NA    6.39      6.40          4.82          
-## bChi_T      NA      NA        NA           3.2          
-## bHab_T      NA      NA        NA          0.29          
-## bPen_T      NA      NA        NA          6.19          
-## bPer_T      NA      NA        NA          3.13          
+## bChi        NA    2.68      2.70          1.10          
+## bHab        NA   -0.99     -0.79         -0.98          
+## bPen        NA   -3.28     -3.45         -6.71          
+## bPer        NA    6.39      6.40          4.78          
+## bChi_T      NA      NA        NA          3.22          
+## bHab_T      NA      NA        NA          0.28          
+## bPen_T      NA      NA        NA          6.18          
+## bPer_T      NA      NA        NA          3.18          
 ## nobs      1008    1008      1008          1008
 ```
 
@@ -804,7 +1028,7 @@ coeftab(m.trt,m.species,m.species.trt,m.species.trt.int)
 plot(coeftab(m.trt,m.species,m.species.trt,m.species.trt.int))
 ```
 
-![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-23-2.png)<!-- -->
+![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-27-2.png)<!-- -->
 
 ## posterior distributions
 
@@ -817,7 +1041,7 @@ post.summary <- sapply(names(posterior.int),function(n) {
 })
 ```
 
-![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-24-1.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-24-2.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-24-3.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-24-4.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-24-5.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-24-6.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-24-7.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-24-8.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-24-9.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-24-10.png)<!-- -->
+![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-28-1.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-28-2.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-28-3.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-28-4.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-28-5.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-28-6.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-28-7.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-28-8.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-28-9.png)<!-- -->![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-28-10.png)<!-- -->
 
 Percentage of the posterior that is <= zero for each parameter:
 
@@ -828,9 +1052,9 @@ post.summary
 
 ```
 ##       a    bChi    bHab    bPen    bPer      bT  bChi_T  bHab_T  bPen_T 
-##   0.000  17.550  81.100 100.000   0.000   0.300   2.550  43.400   0.000 
+##   0.000  17.350  80.975 100.000   0.000   0.200   2.700  42.425   0.050 
 ##  bPer_T 
-##   2.625
+##   2.800
 ```
 
 ## plot model predictions
@@ -860,7 +1084,7 @@ pred.df
 
 I should come up with a more automated way of doing that...
 
-One possibility: take unique combintaions from the original data frame
+One possibility: take unique combinations from the original data frame
 
 
 ```r
@@ -915,11 +1139,11 @@ mu.mean
 
 ```
 ##     S_chilense.H S_habrochaites.H    S_pennellii.H   S_peruvianum.H 
-##         31.55404         29.46633         23.72818         35.28888 
+##         31.56095         29.48086         23.75359         35.23017 
 ## S_chmielewskii.H     S_chilense.L S_habrochaites.L    S_pennellii.L 
-##         30.42606         37.90952         32.88426         33.06394 
+##         30.38366         37.81362         32.80729         33.03029 
 ##   S_peruvianum.L S_chmielewskii.L 
-##         41.52640         33.58850
+##         41.55383         33.52981
 ```
 
 ```r
@@ -929,14 +1153,14 @@ mu.PI
 
 ```
 ##       S_chilense.H S_habrochaites.H S_pennellii.H S_peruvianum.H
-## |0.95     29.94661         27.90494      21.44710       33.73437
-## 0.95|     33.29000         30.79252      25.89519       37.16713
+## |0.95     29.83711         27.83173      21.30092       33.57182
+## 0.95|     33.27394         31.12550      25.80683       37.05240
 ##       S_chmielewskii.H S_chilense.L S_habrochaites.L S_pennellii.L
-## |0.95         28.85198     36.20285         31.27906      31.15202
-## 0.95|         32.11897     39.54799         34.47767      35.35570
+## |0.95         28.94273     36.19021         30.98189      31.12849
+## 0.95|         31.94500     39.46448         34.33301      35.10653
 ##       S_peruvianum.L S_chmielewskii.L
-## |0.95       39.99140         32.08852
-## 0.95|       43.44892         35.11014
+## |0.95       39.97629         32.18651
+## 0.95|       43.18541         35.16820
 ```
 
 make a plot
@@ -957,4 +1181,4 @@ pl <- pl + geom_errorbar(width=0.5,position=position_dodge(width=0.9))
 pl
 ```
 
-![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-29-1.png)<!-- -->
+![](Chapter_9_Tomato_files/figure-html/unnamed-chunk-33-1.png)<!-- -->
