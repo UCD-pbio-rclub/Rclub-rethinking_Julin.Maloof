@@ -221,6 +221,20 @@ plot(precis(m.species.trt.10))
 compare(m.species.trt,m.species.trt.10,m.species.trt.sqrt)
 ```
 
+## one way to compare the model fit is to look at actual vs predicted
+
+```{r}
+mu.species.trt <- link(m.species.trt)
+mu.sqrt.species.trt <- link(m.species.trt.sqrt)
+mu.mean.species.trt <- apply(mu.species.trt, 2, mean)
+mu.mean.sqrt.species.trt <- apply(mu.sqrt.species.trt,2,mean)
+plot(m.species.trt@data$hyp,mu.mean.species.trt)
+plot(m.species.trt.sqrt@data$hyp^2,mu.mean.sqrt.species.trt^2)
+cor(m.species.trt@data$hyp,mu.mean.species.trt)
+cor(m.species.trt.sqrt@data$hyp^2,mu.mean.sqrt.species.trt^2)
+```
+
+
 # model with interaction
 
 ```{r, results='hide'}
@@ -250,6 +264,51 @@ par(mfrow=c(1,1),mfcol=c(1,1))
 pairs(m.species.trt.int)
 precis(m.species.trt.int)
 plot(precis(m.species.trt.int))
+```
+
+## sqrt interaction model
+
+```{r, results='hide'}
+m.species.trt.int.sqrt <- map2stan(
+  alist(
+    hyp ~ dnorm(mu,sigma),
+    mu <- a + 
+      bT * trt + 
+      bChi * S_chilense + 
+      bHab * S_habrochaites + 
+      bPen * S_pennellii + 
+      bPer * S_peruvianum +
+      bChi_T * S_chilense * trt + 
+      bHab_T * S_habrochaites * trt + 
+      bPen_T * S_pennellii * trt + 
+      bPer_T * S_peruvianum * trt
+      ,
+    a ~ dnorm(mu=33,sd=10),
+    c(bChi, bHab, bPen, bPer, bT, bChi_T, bHab_T, bPen_T, bPer_T) ~ dnorm(0,10),
+    sigma ~ dcauchy(0,1)),
+    data=data.species.trt.sqrt, chains=4, cores = 1)
+```
+
+```{r}
+plot(m.species.trt.int.sqrt)
+par(mfrow=c(1,1),mfcol=c(1,1))
+pairs(m.species.trt.int.sqrt)
+precis(m.species.trt.int.sqrt)
+plot(precis(m.species.trt.int.sqrt))
+```
+
+## compare sqrt and untransformed
+
+
+```{r}
+mu.species.trt.int <- link(m.species.trt.int)
+mu.sqrt.species.trt.int <- link(m.species.trt.int.sqrt)
+mu.mean.species.trt.int <- apply(mu.species.trt.int, 2, mean)
+mu.mean.sqrt.species.trt.int <- apply(mu.sqrt.species.trt.int,2,mean)
+plot(m.species.trt.int@data$hyp,mu.mean.species.trt.int)
+plot(m.species.trt.int.sqrt@data$hyp^2,mu.mean.sqrt.species.trt.int^2)
+cor(m.species.trt.int@data$hyp,mu.mean.species.trt.int)
+cor(m.species.trt.int.sqrt@data$hyp^2,mu.mean.sqrt.species.trt.int^2)
 ```
 
 ## compare models
@@ -288,7 +347,7 @@ pred.df
 
 I should come up with a more automated way of doing that...
 
-One possibility: take unique combintaions from the original data frame
+One possibility: take unique combinations from the original data frame
 
 ```{r}
 pred.df2 <- unique(data.species.trt[,-1])
