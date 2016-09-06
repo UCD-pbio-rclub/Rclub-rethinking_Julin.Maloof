@@ -105,6 +105,7 @@ plot(precis(species.stan))
 data2.species.intercept <- data2[,c(2,4,6:8)]
 
 head(data2.species.intercept)
+head(data2.species.all)
 
 species.stan.intercept <- map2stan(alist(
   hyp ~ dnorm(mu,sigma),
@@ -161,3 +162,76 @@ dens(post.bT,show.HPDI = 0.95) # the fact that the 95% HDPI intervals are far aw
 
 # what percent of the posterior distribution of bT is less than or equal to ?
 sum(post.bT <= 0) / length(post.bT) # None of the posterior distribution for bT is less than or equal to 0.
+
+data2.species.trt.sqrt <- within(data2.species.trt, hyp <- sqrt(hyp))
+head(data2.species.trt.sqrt)
+
+species.trt.stan.sqrt <- map2stan(alist(
+  hyp ~ dnorm(mu,sigma),
+  mu <- a + bT*trt2 + bChil*S_chilense + bHab*S_habrochaites + bPen * S_pennellii + bPer*S_peruvianum,
+  a ~ dnorm(5,10),
+  c(bT,bChil,bHab,bPen,bPer) ~ dnorm(0,10),
+  sigma ~ dunif(0,20)),
+  data2.species.trt.sqrt,
+  chains = 4)
+
+plot(species.trt.stan.sqrt)
+precis(species.trt.stan.sqrt)
+par(mfrow=c(1,1),mfcol=c(1,1))
+plot(precis(species.trt.stan.sqrt))
+
+compare(species.trt.stan,species.trt.stan.sqrt)
+
+species.trt.stan.mu <- link(species.trt.stan)
+dim(species.trt.stan.mu)
+head(species.trt.stan.mu[,1:10])
+tail(species.trt.stan.mu[,1:10])
+species.trt.stan.mu.mean <- apply(species.trt.stan.mu,2,mean)
+head(species.trt.stan.mu.mean)
+plot(species.trt.stan@data$hyp,species.trt.stan.mu.mean)
+cor(species.trt.stan@data$hyp,species.trt.stan.mu.mean)
+
+species.trt.stan.sqrt.mu <- link(species.trt.stan.sqrt)
+dim(species.trt.stan.sqrt.mu)
+head(species.trt.stan.sqrt.mu[,1:10])
+tail(species.trt.stan.sqrt.mu[,1:10])
+species.trt.stan.sqrt.mu.mean <- apply(species.trt.stan.sqrt.mu,2,mean)
+head(species.trt.stan.sqrt.mu.mean)
+plot(species.trt.stan.sqrt@data$hyp^2,species.trt.stan.sqrt.mu.mean^2)
+cor(species.trt.stan.sqrt@data$hyp^2,species.trt.stan.sqrt.mu.mean^2)
+
+## interaction model (non-transformed)
+
+species.trt.int.stan <- map2stan(alist(
+  hyp ~ dnorm(mu,sigma),
+  mu <- a + 
+    bT*trt2 + 
+    bChil*S_chilense + 
+    bHab*S_habrochaites + 
+    bPen*S_pennellii + 
+    bPer*S_peruvianum +
+    bChil_T*S_chilense*trt2 +
+    bHab_T*S_habrochaites*trt2 + 
+    bPen_T*S_pennellii*trt2 + 
+    bPer_T*S_peruvianum*trt2,
+  a ~ dnorm(33.35,10),
+  c(bT,bChil,bHab,bPen,bPer,bChil_T,bHab_T,bPen_T,bPer_T) ~ dnorm(0,10),
+  sigma ~ dunif(0,20)),
+  data2.species.trt,
+  chains = 4)
+
+plot(species.trt.int.stan)
+precis(species.trt.int.stan)
+par(mfrow=c(1,1),mfcol=c(1,1))
+plot(precis(species.trt.int.stan))
+
+posterior.int <- extract.samples(species.trt.int.stan)
+names(posterior.int)
+head(posterior.int$bPen_T)
+posterior.int <- posterior.int[names(posterior.int)!="sigma"]
+post.summary <- sapply(names(posterior.int),function(n) {
+  dens(posterior.int[[n]],main=n,show.HPDI = .95, show.zero = TRUE)
+  sum(posterior.int[[n]]<=0) / length(posterior.int[[n]]) 
+})
+post.summary
+
