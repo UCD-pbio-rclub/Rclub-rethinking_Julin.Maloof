@@ -1,0 +1,138 @@
+---
+title: "Chapter_10_Assignment"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = TRUE,autodep = TRUE)
+```
+
+```{r}
+library(rethinking)
+library(ggplot2)
+```
+
+
+## 10E1
+_If an event has probability of 0.35 what are the log-odds of this event?_
+
+The log odds are 
+```{r}
+log(.35/(1-.35))
+```
+
+## 10E2
+_If an event has log-odds of 3.2, what is the probability of this event?_
+
+The probability is
+```{r}
+logistic(3.2) # this is p/(1-p)
+```
+
+## 10E3
+_Suppose that a coefficient in a logistic regression has a value of 1.7.  What does this imply about the proportional change in odds ofthe outcome_
+
+There is a proportional increase of
+```{r}
+exp(1.7)
+```
+in the odds of the event
+
+## 10M1
+_Bionomial data can be organized as aggregated or disaggregated without any impact on inference.  The likelihood of the data does change.  Why?_
+
+```{r}
+dbinom(5,10,.5)
+dbinom(rep(c(0,1),each=5),1,.5)
+```
+
+The latter does not take into account all of the different ways that the observations could have occured.
+
+## 10M3
+_Explain why the logit link is appropriate for a binomial model_
+
+Because it allows modeling of p, the important parameter for the binomial, as a linear function of the predictors, and limits p to between 0 and 1.
+
+## 10H1
+
+_Use `map` to construct a quadractic approximation of the posterior distribution for m10.4.  Compare to MCMC and explain the similarities and differences_
+
+### First set up the data and run the MCMC model
+```{r}
+data("chimpanzees")
+d <- chimpanzees
+d2 <- d
+d2$recipient <- NULL
+m10.4.stan <- map2stan(
+  alist(
+    pulled_left ~ dbinom( 1 , p ) ,
+    logit(p) <- a[actor] + (bp + bpC*condition)*prosoc_left ,
+    a[actor] ~ dnorm(0,10),
+    bp ~ dnorm(0,10),
+    bpC ~ dnorm(0,10)
+  ),
+  data=d2 , chains=2 , iter=2500 , warmup=500 )
+```
+
+### Now run the quadratic approximation
+```{r}
+m10.4.map <- map(  alist(
+    pulled_left ~ dbinom( 1 , p ) ,
+    logit(p) <- a[actor] + (bp + bpC*condition)*prosoc_left ,
+    a[actor] ~ dnorm(0,10),
+    bp ~ dnorm(0,10),
+    bpC ~ dnorm(0,10)
+  ),
+  data=d2)
+```
+
+### compare
+```{r}
+precis(m10.4.stan,depth=2)
+precis(m10.4.map,depth=2)
+compare(m10.4.stan,m10.4.map) # not a good idea?
+coeftab(m10.4.map,m10.4.stan)
+plot(coeftab(m10.4.map,m10.4.stan))
+pairs(m10.4.map)
+pairs(m10.4.stan)
+```
+
+The models differ the most in the posterior for a2 and a7.  These posteriors have the most non--Guassian distribution.
+
+## 10H2
+_Use WAIC to compare m10.4 to the simpler models fit to the same data_
+
+So I guess I shoud fit the all with stan
+```{r}
+m10.1.stan <- map2stan(
+  alist(
+    pulled_left ~ dbinom(1,p),
+    logit(p) <- a,
+    a ~ dnorm(0,10)
+  ),
+  data=d2)
+
+m10.2.stan <- map2stan(
+  alist(
+    pulled_left ~ dbinom( 1 , p ) ,
+    logit(p) <- a + bp*prosoc_left ,
+    a ~ dnorm(0,10) ,
+    bp ~ dnorm(0,10)
+  ),
+  data=d2 )
+
+m10.3.stan <- map2stan(
+  alist(
+    pulled_left ~ dbinom( 1 , p ) ,
+    logit(p) <- a + (bp + bpC*condition)*prosoc_left ,
+    a ~ dnorm(0,10) ,
+    bp ~ dnorm(0,10) ,
+    bpC ~ dnorm(0,10)
+  ), data=d2 )
+
+compare(m10.1.stan,m10.2.stan,m10.3.stan,m10.4.stan)
+```
+
+Conclusion: the model with an individual intercept for each actor is strongly favored.
