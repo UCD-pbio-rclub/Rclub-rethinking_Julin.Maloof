@@ -100,6 +100,34 @@ precis(species.stan)
 par(mfrow=c(1,1),mfcol=c(1,1))
 plot(precis(species.stan))
 
+
+# Try making an index for species
+
+data.species.index <- data
+data.species.index$species_index <- coerce_index(data.species.index$species)
+
+head(data.species.index)
+
+data.species.index <- data.species.index[,c(9,27,29)]
+head(data.species.index)
+
+species.stan.index <- map2stan(alist(
+  hyp ~ dnorm(mu,sigma),
+  mu <- a[species_index],
+  a[species_index] ~ dnorm(33.35,20),
+  sigma ~ dunif(0,20)),
+  data.species.index,
+  chains = 4)
+
+plot(species.stan.index)
+precis(species.stan.index,depth=2)
+par(mfrow=c(1,1),mfcol=c(1,1))
+plot(precis(species.stan.index))
+
+coeftab(species.stan,species.stan.index)
+
+
+
 # use S. chm as intercept
 
 data2.species.intercept <- data2[,c(2,4,6:8)]
