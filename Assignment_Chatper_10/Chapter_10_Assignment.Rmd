@@ -164,10 +164,100 @@ Conclusion: the model with an individual intercept for each actor is strongly fa
 __(a)__ _Model the relationship between density and percent cover.  In what way does the model do a good and bad job?_
 
 ```{r}
+library(rethinking)
+library(ggplot)
+data(salamanders)
+head(salamanders)
+qplot(x=PCTCOVER,y=SALAMAN,geom="point",data=salamanders)
+msal1 <- map(alist( SALAMAN ~ dpois(lambda),
+                    log(lambda) <- a + b_c*PCTCOVER,
+                    a ~ dnorm(0,2),
+                    b_c ~ dnorm(0,1)),
+             data=salamanders)
+precis(msal1,corr = TRUE)
+plot(precis(msal1))                    
+```
 
+```{r}
+pred.df <- data.frame(PCTCOVER=seq(0,100,1))
+lambda.link <- link(msal1,pred.df)
+pred.df$lambda.med <- apply(lambda.link,2,median)
+pred.df <- cbind(pred.df,t(apply(lambda.link,2,PI)))
+colnames(pred.df)[c(3,4)] <- c("PI.low","PI.high")
+pl <- ggplot(pred.df,aes(x=PCTCOVER,y=lambda.med))
+pl <- pl + geom_line()
+pl <- pl + geom_ribbon(aes_string(ymin="PI.low",ymax="PI.high"),alpha=.1)
+pl <- pl + geom_point(data=salamanders,aes(y=SALAMAN)) 
+pl + ylab("Salamander density")
 ```
 
 
+```{r}
+msal1.stan <- map2stan(msal1,chains=4,iter=4000)
+precis(msal1.stan) #pretty poor sampling, really.  Due to correlation I assume.
+pairs(msal1.stan)
+```
 
 
-__(b)__ _Can you improve the model by using the FORESTAGE predictor?  Try any models that may be useful.  Explain why FORESTAGE helps or does nothelp_
+The model does a good job at low PCTCOVER and captures the average increase but does not account for the variability at high PCTCOVER.
+
+
+__(b)__ _Can you improve the model by using the FORESTAGE predictor?  Try any models that may be useful.  Explain why FORESTAGE helps or does not help_
+
+```{r}
+qplot(x=FORESTAGE,y=SALAMAN,geom="point",data=salamanders)
+qplot(x=FORESTAGE,y=PCTCOVER,geom="point",data=salamanders)
+msal.add <- map(alist( SALAMAN ~ dpois(lambda),
+                    log(lambda) <- a + b_c*PCTCOVER + b_age*FORESTAGE,
+                    a ~ dnorm(0,2),
+                    c(b_c,b_age) ~ dnorm(0,1)),
+                method="Nelder-Mead",
+             data=salamanders)
+precis(msal.add,corr = TRUE) #note : this can be really variable!
+plot(precis(msal.add))  
+
+(compare.out <- compare(msal1,msal.add)) #model with FORESTAGE is a bit worse
+plot(compare.out)
+```
+
+Model that includes FORESTAGE is a bit worse and FORESTAGE is not predicting anything
+
+```{r}
+msal.age <- map(alist( SALAMAN ~ dpois(lambda),
+                    log(lambda) <- a +  b_age*FORESTAGE,
+                    a ~ dnorm(0,2),
+                    c(b_age) ~ dnorm(0,1)),
+                method="Nelder-Mead",
+             data=salamanders)
+precis(msal.age,corr = TRUE) #note : this can be really variable!
+plot(precis(msal.age))  
+
+(compare.out <- compare(msal1,msal.add,msal.age)) #model with FORESTAGE is a bit worse
+plot(compare.out)
+```
+
+```{r}
+pred.df <- data.frame(PCTCOVER=seq(0,100,1))
+lambda.link <- link(msal1,pred.df)
+pred.df$lambda.med <- apply(lambda.link,2,median)
+pred.df <- cbind(pred.df,t(apply(lambda.link,2,PI)))
+colnames(pred.df)[c(3,4)] <- c("PI.low","PI.high")
+pl <- ggplot(pred.df,aes(x=PCTCOVER,y=lambda.med))
+pl <- pl + geom_line()
+pl <- pl + geom_ribbon(aes_string(ymin="PI.low",ymax="PI.high"),alpha=.1)
+pl <- pl + geom_point(data=salamanders,aes(y=SALAMAN)) 
+pl + ylab("Salamander density")
+```
+
+```{r }
+msal.int <- map(alist( SALAMAN ~ dpois(lambda),
+                    log(lambda) <- a + b_c*PCTCOVER + b_age*FORESTAGE + b_c_age*PCTCOVER * FORESTAGE,
+                    a ~ dnorm(0,2),
+                    c(b_c,b_age,b_c_age) ~ dnorm(0,1)),
+             data=salamanders,
+             method="Nelder-Mead",
+             start=list(a=0,b_c=0,b_age=0,b_c_age=0))
+precis(msal1,corr = TRUE)
+plot(precis(msal1)) 
+```
+```
