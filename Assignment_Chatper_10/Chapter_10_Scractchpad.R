@@ -223,3 +223,204 @@ precis( m10.9 , depth=2 )
 exp(-.1)
 exp(-2.62)
 logistic(-2.62)
+
+# 10.39
+library(rethinking)
+data(Kline)
+d <- Kline
+d
+
+#10.40
+d$log_pop <- log(d$population)
+d$contact_high <- ifelse(d$contact=="high",1,0)
+
+#10.41
+m10.10 <- map(
+  alist(
+    total_tools ~ dpois(lambda),
+    log(lambda) <- a + bp*log_pop + bc*contact_high + bpc*contact_high*log_pop,
+    a ~ dnorm(0,100),
+    c(bp,bc,bpc) ~ dnorm(0,1)
+  ),
+  data=d)
+
+#10.42
+precis(m10.10,corr = TRUE)
+plot(precis(m10.10))
+
+#10.43
+post <- extract.samples(m10.10)
+lambda_high <- exp(post$a + post$bc + (post$bp + post$bpc)*8)
+lambda_low <- exp(post$a + post$bp*8) 
+
+diff <- lambda_high - lambda_low
+sum(diff>0) / length(diff)
+
+#10.45
+#no interaction
+m10.11 <- map(
+  alist(
+    total_tools ~ dpois(lambda),
+    log(lambda) <- a + bp*log_pop + bc*contact_high,
+    a ~ dnorm(0,100),
+    c(bp,bc) ~ dnorm(0,1)),
+  data=d)
+ 
+#10.46
+# no contact rate
+m10.12 <- map(
+  alist(
+    total_tools ~ dpois( lambda ),
+    log(lambda) <- a + bp*log_pop,
+    a ~ dnorm(0,100),
+    bp ~ dnorm( 0 , 1 )
+  ), data=d )
+
+# no log-population
+m10.13 <- map(
+  alist(
+    total_tools ~ dpois( lambda ),
+    log(lambda) <- a + bc*contact_high,
+    a ~ dnorm(0,100),
+    bc ~ dnorm( 0 , 1 )
+  ), data=d )
+
+# intercept only
+m10.14 <- map(
+  alist(
+    total_tools ~ dpois( lambda ),
+    log(lambda) <- a,
+    a ~ dnorm(0,100)
+  ), data=d )
+# compare all using WAIC
+# adding n=1e4 for more stable WAIC estimates
+# will also plot the comparison
+( islands.compare <- compare(m10.10,m10.11,m10.12,m10.13,m10.14,n=1e4) )
+plot(islands.compare)
+
+
+
+#10.48
+# make plot of raw data to begin
+# point character (pch) indicates contact rate
+pch <- ifelse( d$contact_high==1 , 16 , 1 )
+plot( d$log_pop , d$total_tools , col=rangi2 , pch=pch ,
+      xlab="log-population" , ylab="total tools" )
+# sequence of log-population sizes to compute over
+log_pop.seq <- seq( from=6 , to=13 , length.out=30 )
+# compute trend for high contact islands
+d.pred <- data.frame(
+  log_pop = log_pop.seq,
+  contact_high = 1
+)
+lambda.pred.h <- ensemble( m10.10 , m10.11 , m10.12 , data=d.pred )
+lambda.med <- apply( lambda.pred.h$link , 2 , median )
+lambda.PI <- apply( lambda.pred.h$link , 2 , PI )
+# plot predicted trend for high contact islands
+lines( log_pop.seq , lambda.med , col=rangi2 )
+shade( lambda.PI , log_pop.seq , col=col.alpha(rangi2,0.2) )
+# compute trend for low contact islands
+d.pred <- data.frame(
+  log_pop = log_pop.seq,
+  contact_high = 0
+)
+lambda.pred.l <- ensemble( m10.10 , m10.11 , m10.12 , data=d.pred )
+lambda.med <- apply( lambda.pred.l$link , 2 , median )
+lambda.PI <- apply( lambda.pred.l$link , 2 , PI )
+# plot again
+lines( log_pop.seq , lambda.med , lty=2 )
+shade( lambda.PI , log_pop.seq , col=col.alpha("black",0.1) )
+
+# but is this really better than the model without interaction?
+
+# compute trend for high contact islands
+d.pred <- data.frame(
+  log_pop = log_pop.seq,
+  contact_high = 1
+)
+lambda.pred.h.no.int <- link(m10.11, data=d.pred )
+lambda.med.no.int <- apply( lambda.pred.h.no.int , 2 , median )
+lambda.PI.no.int <- apply( lambda.pred.h.no.int , 2 , PI )
+# plot predicted trend for high contact islands
+lines( log_pop.seq , lambda.med.no.int , col="darkgreen" )
+shade( lambda.PI.no.int , log_pop.seq , col=col.alpha("darkgreen",0.2) )
+# compute trend for low contact islands
+d.pred <- data.frame(
+  log_pop = log_pop.seq,
+  contact_high = 0
+)
+lambda.pred.l.no.int <- link(m10.11 , data=d.pred )
+lambda.med.no.int <- apply( lambda.pred.l.no.int , 2 , median )
+lambda.PI.no.int <- apply( lambda.pred.l.no.int , 2 , PI )
+# plot again
+lines( log_pop.seq , lambda.med , lty=3, lwd=2,col = "red")
+shade( lambda.PI , log_pop.seq , col=col.alpha("red",0.1) )
+
+#won't the most complex model get a lot of weight even if the complexity is silly?
+
+m10.10j <- map(
+  alist(
+    total_tools ~ dpois(lambda),
+    log(lambda) <- a + bp*log_pop + bc*contact_high + bpc*contact_high*log_pop + bpp*log_pop*log_pop,
+    a ~ dnorm(0,100),
+    c(bp,bc,bpc,bpp) ~ dnorm(0,1)
+  ),
+  data=d)
+
+( islands.compare <- compare(m10.10,m10.11,m10.12,m10.13,m10.14,m10.10j,n=1e4) )
+
+#not exactly...
+
+
+#10.49
+m10.10stan <- map2stan( m10.10 , iter=3000 , warmup=1000 , chains=4 )
+precis(m10.10stan)
+
+#10.50
+# construct centered predictor
+d$log_pop_c <- d$log_pop - mean(d$log_pop)
+# re-estimate
+m10.10stan.c <- map2stan(
+  alist(
+    total_tools ~ dpois( lambda ) ,
+    log(lambda) <- a + bp*log_pop_c + bc*contact_high +
+      bcp*log_pop_c*contact_high ,
+    a ~ dnorm(0,10) ,
+    bp ~ dnorm(0,1) ,
+    bc ~ dnorm(0,1) ,
+    bcp ~ dnorm(0,1)
+  ),
+  data=d , iter=3000 , warmup=1000 , chains=4 )
+precis(m10.10stan.c)
+
+#10.51
+num_days <- 30
+y <- rpois( num_days , 1.5 )
+
+#10.52
+num_weeks <- 4
+y_new <- rpois( num_weeks , 0.5*7 )
+
+#10.53
+y_all <- c( y , y_new )
+exposure <- c( rep(1,30) , rep(7,4) )
+monastery <- c( rep(0,30) , rep(1,4) )
+d <- data.frame( y=y_all , days=exposure , monastery=monastery )
+d
+
+#10.54
+# compute the offset
+d$log_days <- log( d$days )
+# fit the model
+m10.15 <- map(
+  alist(
+    y ~ dpois( lambda ),
+    log(lambda) <- log_days + a + b*monastery,
+    a ~ dnorm(0,100),
+    b ~ dnorm(0,1)
+  ), data=d )
+
+post <- extract.samples( m10.15 )
+lambda_old <- exp( post$a )
+lambda_new <- exp( post$a + post$b )
+precis( data.frame( lambda_old , lambda_new ) )
