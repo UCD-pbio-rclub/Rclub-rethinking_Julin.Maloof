@@ -40,6 +40,11 @@ exp(1.7)
 ```
 in the odds of the event
 
+## 10E4
+_Why do Poisson regressons sometimes require an offset?_
+
+An offset is required of the measurement interval is different for different observations.  Perhaps you are comparing transposon insertion rates in two different species and in one the reported rate is per 100kb and the other is per 10kb.
+
 ## 10M1
 _Bionomial data can be organized as aggregated or disaggregated without any impact on inference.  The likelihood of the data does change.  Why?_
 
@@ -50,10 +55,27 @@ dbinom(rep(c(0,1),each=5),1,.5)
 
 The latter does not take into account all of the different ways that the observations could have occured.
 
+## 10M2
+_If a coefficint in a Poisson regression has a value of 1.7, what does this imply about the change in outcome?_
+
+For this we need to use the inverse function
+```{r}
+exp(1.7)
+```
+each unit of change in the predictor increases the lambda (aka the mean and variance) by 5.47.
+
 ## 10M3
 _Explain why the logit link is appropriate for a binomial model_
 
 Because it allows modeling of p, the important parameter for the binomial, as a linear function of the predictors, and limits p to between 0 and 1.
+
+## 10M4
+_Explain why the log link is appropriate for Poisson GLM_
+The log link ensures that the outcome is positive.
+
+## 10M5
+_What would it impoly to use a logit link for a Poisson GLM?  Why might you want to_
+IT implies that the mean is between 0 and 1.  This makes sense if it is an impossibilty for the event to occur more than once per unit of measurement.  So if you are measureing the number of balls per widget and each widget can only hold a single ball and you measure every widget.
 
 ## 10H1
 
@@ -136,3 +158,16 @@ compare(m10.1.stan,m10.2.stan,m10.3.stan,m10.4.stan)
 ```
 
 Conclusion: the model with an individual intercept for each actor is strongly favored.
+
+## 10H4
+
+__(a)__ _Model the relationship between density and percent cover.  In what way does the model do a good and bad job?_
+
+```{r}
+
+```
+
+
+
+
+__(b)__ _Can you improve the model by using the FORESTAGE predictor?  Try any models that may be useful.  Explain why FORESTAGE helps or does nothelp_

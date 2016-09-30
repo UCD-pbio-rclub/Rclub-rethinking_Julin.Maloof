@@ -94,6 +94,11 @@ exp(1.7)
 ```
 in the odds of the event
 
+## 10E4
+_Why do Poisson regressons sometimes require an offset?_
+
+An offset is required of the measurement interval is different for different observations.  Perhaps you are comparing transposon insertion rates in two different species and in one the reported rate is per 100kb and the other is per 10kb.
+
 ## 10M1
 _Bionomial data can be organized as aggregated or disaggregated without any impact on inference.  The likelihood of the data does change.  Why?_
 
@@ -116,10 +121,32 @@ dbinom(rep(c(0,1),each=5),1,.5)
 
 The latter does not take into account all of the different ways that the observations could have occured.
 
+## 10M2
+_If a coefficint in a Poisson regression has a value of 1.7, what does this imply about the change in outcome?_
+
+For this we need to use the inverse function
+
+```r
+exp(1.7)
+```
+
+```
+## [1] 5.473947
+```
+each unit of change in the predictor increases the lambda (aka the mean and variance) by 5.47.
+
 ## 10M3
 _Explain why the logit link is appropriate for a binomial model_
 
 Because it allows modeling of p, the important parameter for the binomial, as a linear function of the predictors, and limits p to between 0 and 1.
+
+## 10M4
+_Explain why the log link is appropriate for Poisson GLM_
+The log link ensures that the outcome is positive.
+
+## 10M5
+_What would it impoly to use a logit link for a Poisson GLM?  Why might you want to_
+IT implies that the mean is between 0 and 1.  This makes sense if it is an impossibilty for the event to occur more than once per unit of measurement.  So if you are measureing the number of balls per widget and each widget can only hold a single ball and you measure every widget.
 
 ## 10H1
 
@@ -159,9 +186,9 @@ m10.4.stan <- map2stan(
 ## Chain 1, Iteration: 2000 / 2500 [ 80%]  (Sampling)
 ## Chain 1, Iteration: 2250 / 2500 [ 90%]  (Sampling)
 ## Chain 1, Iteration: 2500 / 2500 [100%]  (Sampling)
-##  Elapsed Time: 0.641491 seconds (Warm-up)
-##                1.99827 seconds (Sampling)
-##                2.63976 seconds (Total)
+##  Elapsed Time: 0.647754 seconds (Warm-up)
+##                1.95672 seconds (Sampling)
+##                2.60448 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL 'pulled_left ~ dbinom(1, p)' NOW (CHAIN 2).
@@ -178,9 +205,9 @@ m10.4.stan <- map2stan(
 ## Chain 2, Iteration: 2000 / 2500 [ 80%]  (Sampling)
 ## Chain 2, Iteration: 2250 / 2500 [ 90%]  (Sampling)
 ## Chain 2, Iteration: 2500 / 2500 [100%]  (Sampling)
-##  Elapsed Time: 0.630307 seconds (Warm-up)
-##                2.30416 seconds (Sampling)
-##                2.93447 seconds (Total)
+##  Elapsed Time: 0.621152 seconds (Warm-up)
+##                2.36161 seconds (Sampling)
+##                2.98276 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL 'pulled_left ~ dbinom(1, p)' NOW (CHAIN 1).
@@ -190,8 +217,8 @@ m10.4.stan <- map2stan(
 ## 
 ## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
 ##  Elapsed Time: 4e-06 seconds (Warm-up)
-##                0.000285 seconds (Sampling)
-##                0.000289 seconds (Total)
+##                0.000277 seconds (Sampling)
+##                0.000281 seconds (Total)
 ```
 
 ```
@@ -312,19 +339,19 @@ coeftab(m10.4.map,m10.4.stan)
 plot(coeftab(m10.4.map,m10.4.stan))
 ```
 
-![](Chapter_10_Assignment_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+![](Chapter_10_Assignment_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
 
 ```r
 pairs(m10.4.map)
 ```
 
-![](Chapter_10_Assignment_files/figure-html/unnamed-chunk-8-2.png)<!-- -->
+![](Chapter_10_Assignment_files/figure-html/unnamed-chunk-9-2.png)<!-- -->
 
 ```r
 pairs(m10.4.stan)
 ```
 
-![](Chapter_10_Assignment_files/figure-html/unnamed-chunk-8-3.png)<!-- -->
+![](Chapter_10_Assignment_files/figure-html/unnamed-chunk-9-3.png)<!-- -->
 
 The models differ the most in the posterior for a2 and a7.  These posteriors have the most non--Guassian distribution.
 
@@ -359,9 +386,9 @@ m10.1.stan <- map2stan(
 ## Chain 1, Iteration: 1600 / 2000 [ 80%]  (Sampling)
 ## Chain 1, Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Chain 1, Iteration: 2000 / 2000 [100%]  (Sampling)
-##  Elapsed Time: 0.277235 seconds (Warm-up)
-##                0.286142 seconds (Sampling)
-##                0.563377 seconds (Total)
+##  Elapsed Time: 0.272146 seconds (Warm-up)
+##                0.282721 seconds (Sampling)
+##                0.554867 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL 'pulled_left ~ dbinom(1, p)' NOW (CHAIN 1).
@@ -370,9 +397,9 @@ m10.1.stan <- map2stan(
 ## 
 ## 
 ## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
-##  Elapsed Time: 3e-06 seconds (Warm-up)
-##                0.000209 seconds (Sampling)
-##                0.000212 seconds (Total)
+##  Elapsed Time: 4e-06 seconds (Warm-up)
+##                0.00021 seconds (Sampling)
+##                0.000214 seconds (Total)
 ```
 
 ```
@@ -423,9 +450,9 @@ m10.2.stan <- map2stan(
 ## Chain 1, Iteration: 1600 / 2000 [ 80%]  (Sampling)
 ## Chain 1, Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Chain 1, Iteration: 2000 / 2000 [100%]  (Sampling)
-##  Elapsed Time: 0.47476 seconds (Warm-up)
-##                0.457178 seconds (Sampling)
-##                0.931938 seconds (Total)
+##  Elapsed Time: 0.44034 seconds (Warm-up)
+##                0.471916 seconds (Sampling)
+##                0.912256 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL 'pulled_left ~ dbinom(1, p)' NOW (CHAIN 1).
@@ -434,9 +461,9 @@ m10.2.stan <- map2stan(
 ## 
 ## 
 ## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
-##  Elapsed Time: 7e-06 seconds (Warm-up)
-##                0.000608 seconds (Sampling)
-##                0.000615 seconds (Total)
+##  Elapsed Time: 4e-06 seconds (Warm-up)
+##                0.000299 seconds (Sampling)
+##                0.000303 seconds (Total)
 ```
 
 ```
@@ -484,9 +511,9 @@ m10.3.stan <- map2stan(
 ## Chain 1, Iteration: 1600 / 2000 [ 80%]  (Sampling)
 ## Chain 1, Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Chain 1, Iteration: 2000 / 2000 [100%]  (Sampling)
-##  Elapsed Time: 0.697328 seconds (Warm-up)
-##                0.617636 seconds (Sampling)
-##                1.31496 seconds (Total)
+##  Elapsed Time: 0.700338 seconds (Warm-up)
+##                0.65195 seconds (Sampling)
+##                1.35229 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL 'pulled_left ~ dbinom(1, p)' NOW (CHAIN 1).
@@ -496,8 +523,8 @@ m10.3.stan <- map2stan(
 ## 
 ## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
 ##  Elapsed Time: 4e-06 seconds (Warm-up)
-##                0.000256 seconds (Sampling)
-##                0.00026 seconds (Total)
+##                0.000272 seconds (Sampling)
+##                0.000276 seconds (Total)
 ```
 
 ```
@@ -531,3 +558,14 @@ compare(m10.1.stan,m10.2.stan,m10.3.stan,m10.4.stan)
 ```
 
 Conclusion: the model with an individual intercept for each actor is strongly favored.
+
+## 10H4
+
+__(a)__ _Model the relationship between density and percent cover.  In what way does the model do a good and bad job?_
+
+
+
+
+
+
+__(b)__ _Can you improve the model by using the FORESTAGE predictor?  Try any models that may be useful.  Explain why FORESTAGE helps or does nothelp_
