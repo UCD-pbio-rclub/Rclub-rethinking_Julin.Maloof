@@ -18,7 +18,7 @@ Do a Bayesian analysis of hypocotyl length (hyp) in the attached data sheet.
 
 2) Evaluate the hypothesis that trt has an effect on hypocotyl length
 
-If you get stuck early, don't worry, come anyway abd we can work on it in R Club
+If you get stuck early, don't worry, come anyway and we can work on it in R Club
 
 ## Load libraries and get the data
 ```{r}
