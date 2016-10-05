@@ -1,0 +1,101 @@
+---
+title: "Untitled"
+author: "Julin Maloof"
+date: "10/4/2016"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rethinking)
+library(ggplot2)
+```
+
+```{r germination analysis}
+d <- read.csv("LironData.csv")
+summary(d)
+with(d,table(Germination,Time))
+write.csv(d[d$Time==1,],"LironDataTime1.csv",row.names = FALSE)
+
+d <- read.csv("LironDataTime1.csv")
+summary(d)
+head(d)
+d$Germination2 <- as.numeric(d$Germination)-1
+d$pen <- as.numeric(d$Species)-1
+d$Temperature_b <- d$Temperature-min(d$Temperature) # baselined temperature
+d.stan <- d[,grepl("Germination2|pen|Temperature_b",colnames(d))]
+head(d.stan)
+```
+
+```{r plot}
+pl <- ggplot(d,aes(x=Germination,fill=Germination))
+pl + geom_bar() + facet_grid(Species ~ Temperature)
+```
+
+
+```{r model1}
+m1 <- map2stan(alist(Germination2 ~ dbinom(1, p),
+                     logit(p) <- a + bPen*pen + bTemp*Temperature_b,
+                     c(a,bPen,bTemp) ~ dnorm(0,5)),
+               data=d.stan,chains = 4)
+plot(m1)
+pairs(m1)
+precis(m1)
+```
+
+```{r model2}
+m2 <- map2stan(alist(Germination2 ~ dbinom(1, p),
+                     logit(p) <- a + bPen*pen + bTemp*Temperature_b + bPen_Temp*pen*Temperature_b,
+                     c(a,bPen,bTemp,bPen_Temp) ~ dnorm(0,5)),
+               data=d.stan,chains = 4)
+plot(m2)
+pairs(m2)
+precis(m2)
+```
+
+```{r model3}
+m3 <- map2stan(alist(Germination2 ~ dbinom(1, p),
+                     logit(p) <- a + bPen*pen,
+                     c(a,bPen) ~ dnorm(0,5)),
+               data=d.stan,chains = 4) # rhat is above 1 with defaults
+plot(m3)
+pairs(m3)
+precis(m3)
+```
+
+```{r model4}
+m4 <- map2stan(alist(Germination2 ~ dbinom(1, p),
+                     logit(p) <- a + bTemp*Temperature_b,
+                     c(a,bTemp) ~ dnorm(0,5)),
+               data=d.stan,chains = 4) # rhat is above 1 with defaults
+plot(m4)
+pairs(m4)
+precis(m4)
+```
+
+```{r compare}
+compare(m1,m2,m3,m4)
+coeftab(m1,m2,m3,m4)
+logistic(-3.38-2.96)
+```
+
+```{r}
+round(logistic(c(-.87,1.91,.32,-.21)),2)
+pred.df <- data.frame(
+  pen=c(0,0,1,1),
+  Temperature_b=c(0,8,0,8))
+pred.df
+p.link <- link(m2,pred.df)
+p.mean <- apply(p.link,2,mean)
+p.PI <- apply(p.link,2,PI)
+p.mean
+p.PI
+```
+
+
+
+
+
+

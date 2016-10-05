@@ -265,6 +265,7 @@ m10.11 <- map(
     a ~ dnorm(0,100),
     c(bp,bc) ~ dnorm(0,1)),
   data=d)
+precis(m10.11)
  
 #10.46
 # no contact rate
@@ -392,6 +393,7 @@ m10.10stan.c <- map2stan(
   ),
   data=d , iter=3000 , warmup=1000 , chains=4 )
 precis(m10.10stan.c)
+pairs(m10.10stan.c)
 
 #10.51
 num_days <- 30
