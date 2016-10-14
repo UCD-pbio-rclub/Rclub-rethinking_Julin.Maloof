@@ -229,6 +229,108 @@ logistic(0.66 -5.06)
 logistic(0.66 + 4.65 + 1.13 -5.06)
 ```
 
+Some predictions...
+
+First get the probability predictions
+```{r}
+pred.df <- eagles[,-1]
+
+eagle.link <- link(fit = M10h3.1.stan, data = pred.df)
+
+dim(eagle.link)
+head(eagle.link) #these are probabilities
+
+pred.df$p.mean <- apply(eagle.link,2,mean)
+pred.df$p.PI.low <- apply(eagle.link,2,PI)[1,]
+pred.df$p.PI.high <- apply(eagle.link,2,PI)[2,]
+```
+
+Calculate count predictions
+
+```{r}
+pred.df$counts.mean <- pred.df$n * pred.df$p.mean
+pred.df$counts.PI.low <- pred.df$n * pred.df$p.PI.low
+pred.df$counts.PI.high <- pred.df$n * pred.df$p.PI.high
+```
+
+Plot the predictions
+
+```{r}
+#make some intellegent names for plotting
+pred.df$pirate_size <- factor(pred.df$P,levels=c("S","L"),labels = c("small","large"))
+pred.df$pirate_age <- factor(pred.df$A,levels=c("I","A"),labels = c("immature","adult"))
+pred.df$victim_size <- factor(pred.df$V,levels=c("S","L"),labels = c("small_victim","large_victim"))
+
+pl <- ggplot(pred.df,aes(x=pirate_size,fill=pirate_age))
+pl <- pl + geom_bar(stat="identity",position="dodge")
+pl <- pl + geom_errorbar(position=position_dodge(width=0.9),width=0.5)
+pl <- pl + facet_grid(. ~ victim_size)
+pl + aes(y=p.mean,ymax=p.PI.high,ymin=p.PI.low) + ggtitle("probability of pirating success")
+
+pl + aes(y=counts.mean,ymax=counts.PI.high,ymin=counts.PI.low) + ggtitle("count of successful pirating attempts")
+```
+
+### C
+
+```{r}
+M10h3.2.stan <- map2stan(
+  alist(
+    y ~ dbinom(n, p),
+    logit(p) <- a + b_PS*PSize + b_PA*PAge + b_VS*VSize + b_PA_PS*PSize*PAge,
+    a ~ dnorm(0,10),
+    c(b_PS, b_PA, b_VS, b_PA_PS) ~ dnorm(0,5)),
+  data=eagles,chains = 4, cores=2)
+
+plot(M10h3.2.stan)
+pairs(M10h3.2.stan)
+precis(M10h3.2.stan)
+compare(M10h3.1.stan,M10h3.2.stan)
+coeftab(M10h3.1.stan,M10h3.2.stan)
+par(mfrow=c(1,1))
+plot(coeftab(M10h3.1.stan,M10h3.2.stan))
+```
+
+Redo plots
+
+First get the probability predictions
+```{r}
+pred.df.int <- eagles[,-1]
+
+eagle.link.int <- link(fit = M10h3.2.stan, data = pred.df.int)
+
+dim(eagle.link.int)
+head(eagle.link.int) #these are probabilities
+
+pred.df.int$p.mean <- apply(eagle.link.int,2,mean)
+pred.df.int$p.PI.low <- apply(eagle.link.int,2,PI)[1,]
+pred.df.int$p.PI.high <- apply(eagle.link.int,2,PI)[2,]
+```
+
+Calculate count predictions
+
+```{r}
+pred.df.int$counts.mean <- pred.df.int$n * pred.df.int$p.mean
+pred.df.int$counts.PI.low <- pred.df.int$n * pred.df.int$p.PI.low
+pred.df.int$counts.PI.high <- pred.df.int$n * pred.df.int$p.PI.high
+```
+
+Plot the predictions
+
+```{r}
+#make some intellegent names for plotting
+pred.df.int$pirate_size <- factor(pred.df.int$P,levels=c("S","L"),labels = c("small","large"))
+pred.df.int$pirate_age <- factor(pred.df.int$A,levels=c("I","A"),labels = c("immature","adult"))
+pred.df.int$victim_size <- factor(pred.df.int$V,levels=c("S","L"),labels = c("small_victim","large_victim"))
+
+pl <- ggplot(pred.df.int,aes(x=pirate_size,fill=pirate_age))
+pl <- pl + geom_bar(stat="identity",position="dodge")
+pl <- pl + geom_errorbar(position=position_dodge(width=0.9),width=0.5)
+pl <- pl + facet_grid(. ~ victim_size)
+pl + aes(y=p.mean,ymax=p.PI.high,ymin=p.PI.low) + ggtitle("probability of pirating success")
+
+pl + aes(y=counts.mean,ymax=counts.PI.high,ymin=counts.PI.low) + ggtitle("count of successful pirating attempts")
+```
+
 
 ## 10H4
 
