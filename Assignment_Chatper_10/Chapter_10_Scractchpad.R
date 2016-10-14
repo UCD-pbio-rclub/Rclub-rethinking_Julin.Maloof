@@ -426,3 +426,95 @@ post <- extract.samples( m10.15 )
 lambda_old <- exp( post$a )
 lambda_new <- exp( post$a + post$b )
 precis( data.frame( lambda_old , lambda_new ) )
+
+#10.56
+# simulate career choices among 500 individuals
+library(rethinking)
+N <- 500             # number of individuals
+income <- 1:3        # expected income of each career
+score <- 0.5*income  # scores for each career, based on income
+# next line converts scores to probabilities
+p <- softmax(score[1],score[2],score[3])
+#softmax(income[1],income[2],income[3])
+# now simulate choice
+# outcome career holds event type values, not counts
+career <- rep(NA,N)  # empty vector of choices for each individual
+# sample chosen career for each individual
+for ( i in 1:N ) career[i] <- sample( 1:3 , size=1 , prob=p )
+
+# fit the model, using dcategorical and softmax link
+m10.16 <- map(
+  alist(career ~ dcategorical( softmax(0,s2,s3) ),
+        s2 <- b*2,    # linear model for event type 2
+        s3 <- b*3,    # linear model for event type 3
+        b ~ dnorm(0,5)
+  ), data=list(career=career) )
+precis(m10.16)
+
+#10.57
+N <- 100
+# simulate family incomes for each individual
+family_income <- runif(N)
+# assign a unique coefficient for each type of event
+b <- (1:-1)
+career <- rep(NA,N)  # empty vector of choices for each individual
+for ( i in 1:N ) {
+  score <- 0.5*(1:3) + b*family_income[i]
+  p <- softmax(score[1],score[2],score[3])
+  career[i] <- sample( 1:3 , size=1 , prob=p )
+}
+m10.17 <- map(
+  alist(
+    career ~ dcategorical( softmax(0,s2,s3) ),
+    s2 <- a2 + b2*family_income,
+    s3 <- a3 + b3*family_income,
+    c(a2,a3,b2,b3) ~ dnorm(0,5)
+  ), data=list(career=career,family_income=family_income) )
+
+precis(m10.17)
+
+#10.59
+library(rethinking)
+data(UCBadmit)
+d <- UCBadmit
+
+#10.60
+# binomial model of overall admission probability
+m_binom <- map(
+  alist(
+    admit ~ dbinom(applications,p),
+    logit(p) <- a,
+    a ~ dnorm(0,100)
+  ), data=d )
+# Poisson model of overall admission rate and rejection rate
+d$rej <- d$reject # 'reject' is a reserved word
+m_pois <- map2stan(
+  alist(
+    admit ~ dpois(lambda1),
+    rej ~ dpois(lambda2),
+    log(lambda1) <- a1,
+    log(lambda2) <- a2,
+    c(a1,a2) ~ dnorm(0,100)
+  ),
+  data=d , chains=3 , cores=2 )
+
+logistic(coef(m_binom))
+
+
+k <- as.numeric(coef(m_pois))
+exp(k[1])/(exp(k[1])+exp(k[2]))
+
+# simulate
+N <- 100
+x <- runif(N)
+y <- rgeom( N , prob=logistic( -1 + 2*x ) )
+# estimate
+m10.18 <- map(
+  alist(
+    y ~ dgeom( p ),
+    logit(p) <- a + b*x,
+    a ~ dnorm(0,10),
+    b ~ dnorm(0,1)
+  ),
+  data=list(y=y,x=x) )
+precis(m10.18)
