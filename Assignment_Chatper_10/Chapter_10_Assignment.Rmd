@@ -159,6 +159,77 @@ compare(m10.1.stan,m10.2.stan,m10.3.stan,m10.4.stan)
 
 Conclusion: the model with an individual intercept for each actor is strongly favored.
 
+## 10H3
+
+### A
+```{r}
+library(MASS)
+data("eagles")
+eagles
+eagles$PSize <- abs(as.numeric(eagles$P)-2) # 0 is small, 1 is large
+eagles$PAge <- abs(as.numeric(eagles$A)-2) #0 is immature, 1 is adult
+eagles$VSize <- abs(as.numeric(eagles$V)-2) # 0 is small, 1 is large
+M10h3.1 <- map(
+  alist(
+    y ~ dbinom(n, p),
+    logit(p) <- a + b_PS*PSize + b_PA*PAge + b_VS*VSize,
+    a ~ dnorm(0,10),
+    c(b_PS, b_PA, b_VS) ~ dnorm(0,5)),
+  data=eagles)
+precis(M10h3.1)
+
+M10h3.1.stan <- map2stan(M10h3.1,chains=4,cores=2)
+precis(M10h3.1.stan)
+plot(M10h3.1.stan)
+pairs(M10h3.1.stan)
+```
+
+b\_PS and b\_VS show some skew, so better to use STAN
+
+### B
+
+Inerpret the model
+
+```{r}
+precis(M10h3.1.stan)
+```
+
+The means are the log odds associated with the various predictors.  To get the odds change we need to exponentiate these.  For all but alpha the 89% confidence interval does not include 0, indicating that the predictors are important
+
+```{r}
+# Pirate Size
+exp(4.65) #more than 100-fold increase in success if large pirate
+
+# Pirate Age
+exp(1.13) # 3-fold increase in success if adult pirate
+
+# Victim Size
+exp(-5.06) # much less chance of success if large victim
+```
+
+We can look at the probabilty of success by using this logistic function
+
+```{r}
+#baseline (small victim, small pirate, immature pirate)
+logistic(0.66)
+
+#probability with large pirate
+logistic(0.66+4.65)
+
+#probability with adult pirate
+logistic(0.66+1.13)
+
+#probability with large, adult pirate
+logistic(0.66 + 4.65 + 1.13)
+
+#probability with large victim (and small, immature pirate)
+logistic(0.66 -5.06)
+
+#probability with large victim and large, adult pirate)
+logistic(0.66 + 4.65 + 1.13 -5.06)
+```
+
+
 ## 10H4
 
 __(a)__ _Model the relationship between density and percent cover.  In what way does the model do a good and bad job?_
