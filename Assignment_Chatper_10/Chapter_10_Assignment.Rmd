@@ -74,7 +74,7 @@ _Explain why the log link is appropriate for Poisson GLM_
 The log link ensures that the outcome is positive.
 
 ## 10M5
-_What would it impoly to use a logit link for a Poisson GLM?  Why might you want to_
+_What would it imply to use a logit link for a Poisson GLM?  Why might you want to_
 IT implies that the mean is between 0 and 1.  This makes sense if it is an impossibilty for the event to occur more than once per unit of measurement.  So if you are measureing the number of balls per widget and each widget can only hold a single ball and you measure every widget.
 
 ## 10H1
@@ -207,7 +207,7 @@ exp(1.13) # 3-fold increase in success if adult pirate
 exp(-5.06) # much less chance of success if large victim
 ```
 
-We can look at the probabilty of success by using this logistic function
+We can look at the probabilty of success by using the logistic function
 
 ```{r}
 #baseline (small victim, small pirate, immature pirate)
@@ -322,13 +322,17 @@ pred.df.int$pirate_size <- factor(pred.df.int$P,levels=c("S","L"),labels = c("sm
 pred.df.int$pirate_age <- factor(pred.df.int$A,levels=c("I","A"),labels = c("immature","adult"))
 pred.df.int$victim_size <- factor(pred.df.int$V,levels=c("S","L"),labels = c("small_victim","large_victim"))
 
-pl <- ggplot(pred.df.int,aes(x=pirate_size,fill=pirate_age))
-pl <- pl + geom_bar(stat="identity",position="dodge")
-pl <- pl + geom_errorbar(position=position_dodge(width=0.9),width=0.5)
-pl <- pl + facet_grid(. ~ victim_size)
-pl + aes(y=p.mean,ymax=p.PI.high,ymin=p.PI.low) + ggtitle("probability of pirating success")
+pl.int <- ggplot(pred.df.int,aes(x=pirate_size,fill=pirate_age))
+pl.int <- pl.int + geom_bar(stat="identity",position="dodge")
+pl.int <- pl.int + geom_errorbar(position=position_dodge(width=0.9),width=0.5)
+pl.int <- pl.int + facet_grid(. ~ victim_size)
+pl.int + aes(y=p.mean,ymax=p.PI.high,ymin=p.PI.low) + ggtitle("probability of pirating success, interaction model")
 
-pl + aes(y=counts.mean,ymax=counts.PI.high,ymin=counts.PI.low) + ggtitle("count of successful pirating attempts")
+pl + aes(y=p.mean,ymax=p.PI.high,ymin=p.PI.low) + ggtitle("probability of pirating success, additive model")
+
+pl.int + aes(y=counts.mean,ymax=counts.PI.high,ymin=counts.PI.low) + ggtitle("count of successful pirating attempts, interaction model")
+
+pl + aes(y=counts.mean,ymax=counts.PI.high,ymin=counts.PI.low) + ggtitle("count of successful pirating attempts, additive model")
 ```
 
 

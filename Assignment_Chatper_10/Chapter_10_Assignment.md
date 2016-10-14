@@ -12,23 +12,11 @@ library(rethinking)
 ```
 
 ```
-## Warning: package 'rstan' was built under R version 3.2.5
-```
-
-```
 ## Loading required package: ggplot2
 ```
 
 ```
-## Warning: package 'ggplot2' was built under R version 3.2.4
-```
-
-```
 ## Loading required package: StanHeaders
-```
-
-```
-## Warning: package 'StanHeaders' was built under R version 3.2.5
 ```
 
 ```
@@ -145,7 +133,7 @@ _Explain why the log link is appropriate for Poisson GLM_
 The log link ensures that the outcome is positive.
 
 ## 10M5
-_What would it impoly to use a logit link for a Poisson GLM?  Why might you want to_
+_What would it imply to use a logit link for a Poisson GLM?  Why might you want to_
 IT implies that the mean is between 0 and 1.  This makes sense if it is an impossibilty for the event to occur more than once per unit of measurement.  So if you are measureing the number of balls per widget and each widget can only hold a single ball and you measure every widget.
 
 ## 10H1
@@ -186,9 +174,9 @@ m10.4.stan <- map2stan(
 ## Chain 1, Iteration: 2000 / 2500 [ 80%]  (Sampling)
 ## Chain 1, Iteration: 2250 / 2500 [ 90%]  (Sampling)
 ## Chain 1, Iteration: 2500 / 2500 [100%]  (Sampling)
-##  Elapsed Time: 0.647754 seconds (Warm-up)
-##                1.95672 seconds (Sampling)
-##                2.60448 seconds (Total)
+##  Elapsed Time: 0.489888 seconds (Warm-up)
+##                1.69977 seconds (Sampling)
+##                2.18966 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL 'pulled_left ~ dbinom(1, p)' NOW (CHAIN 2).
@@ -205,9 +193,9 @@ m10.4.stan <- map2stan(
 ## Chain 2, Iteration: 2000 / 2500 [ 80%]  (Sampling)
 ## Chain 2, Iteration: 2250 / 2500 [ 90%]  (Sampling)
 ## Chain 2, Iteration: 2500 / 2500 [100%]  (Sampling)
-##  Elapsed Time: 0.621152 seconds (Warm-up)
-##                2.36161 seconds (Sampling)
-##                2.98276 seconds (Total)
+##  Elapsed Time: 0.504737 seconds (Warm-up)
+##                1.8286 seconds (Sampling)
+##                2.33333 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL 'pulled_left ~ dbinom(1, p)' NOW (CHAIN 1).
@@ -216,9 +204,9 @@ m10.4.stan <- map2stan(
 ## 
 ## 
 ## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
-##  Elapsed Time: 4e-06 seconds (Warm-up)
-##                0.000277 seconds (Sampling)
-##                0.000281 seconds (Total)
+##  Elapsed Time: 2e-06 seconds (Warm-up)
+##                0.000267 seconds (Sampling)
+##                0.000269 seconds (Total)
 ```
 
 ```
@@ -243,7 +231,7 @@ m10.4.stan <- map2stan(
 ```
 
 ```
-## Warning in map2stan(alist(pulled_left ~ dbinom(1, p), logit(p) <- a[actor] + : There were 7 divergent iterations during sampling.
+## Warning in map2stan(alist(pulled_left ~ dbinom(1, p), logit(p) <- a[actor] + : There were 40 divergent iterations during sampling.
 ## Check the chains (trace plots, n_eff, Rhat) carefully to ensure they are valid.
 ```
 
@@ -267,21 +255,21 @@ precis(m10.4.stan,depth=2)
 ```
 
 ```
-## Warning in precis(m10.4.stan, depth = 2): There were 7 divergent iterations during sampling.
+## Warning in precis(m10.4.stan, depth = 2): There were 40 divergent iterations during sampling.
 ## Check the chains (trace plots, n_eff, Rhat) carefully to ensure they are valid.
 ```
 
 ```
 ##       Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
-## a[1] -0.75   0.26      -1.15      -0.31  3125    1
-## a[2] 10.91   5.17       3.83      18.26  1312    1
-## a[3] -1.05   0.27      -1.47      -0.60  2438    1
-## a[4] -1.06   0.27      -1.49      -0.62  2816    1
-## a[5] -0.75   0.26      -1.15      -0.31  2843    1
-## a[6]  0.20   0.26      -0.24       0.60  2729    1
-## a[7]  1.81   0.39       1.20       2.42  2921    1
-## bp    0.85   0.25       0.43       1.23  1780    1
-## bpC  -0.13   0.29      -0.61       0.31  2661    1
+## a[1] -0.75   0.26      -1.19      -0.35  2302    1
+## a[2] 10.81   5.01       3.76      17.85  1683    1
+## a[3] -1.05   0.28      -1.50      -0.61  2308    1
+## a[4] -1.05   0.28      -1.52      -0.64  2790    1
+## a[5] -0.74   0.27      -1.13      -0.27  2689    1
+## a[6]  0.22   0.27      -0.19       0.67  2776    1
+## a[7]  1.82   0.39       1.17       2.41  2095    1
+## bp    0.84   0.26       0.40       1.23  1603    1
+## bpC  -0.14   0.30      -0.62       0.35  2296    1
 ```
 
 ```r
@@ -291,7 +279,7 @@ precis(m10.4.map,depth=2)
 ```
 ##       Mean StdDev  5.5% 94.5%
 ## a[1] -0.73   0.27 -1.16 -0.30
-## a[2]  6.68   3.61  0.90 12.45
+## a[2]  6.67   3.61  0.90 12.45
 ## a[3] -1.03   0.28 -1.48 -0.59
 ## a[4] -1.03   0.28 -1.48 -0.59
 ## a[5] -0.73   0.27 -1.16 -0.30
@@ -312,9 +300,9 @@ compare(m10.4.stan,m10.4.map) # not a good idea?
 ```
 
 ```
-##            WAIC pWAIC dWAIC weight    SE  dSE
-## m10.4.stan  529   7.9     0      1 19.95   NA
-## m10.4.map   551  15.8    22      0 18.58 2.47
+##             WAIC pWAIC dWAIC weight    SE  dSE
+## m10.4.stan 529.4   8.1   0.0      1 19.98   NA
+## m10.4.map  548.3  14.6  18.9      0 18.75 2.19
 ```
 
 ```r
@@ -324,14 +312,14 @@ coeftab(m10.4.map,m10.4.stan)
 ```
 ##      m10.4.map m10.4.stan
 ## a[1]   -0.73     -0.75   
-## a[2]    6.68     10.91   
+## a[2]    6.67     10.81   
 ## a[3]   -1.03     -1.05   
-## a[4]   -1.03     -1.06   
-## a[5]   -0.73     -0.75   
-## a[6]    0.21      0.20   
-## a[7]    1.75      1.81   
-## bp      0.82      0.85   
-## bpC    -0.13     -0.13   
+## a[4]   -1.03     -1.05   
+## a[5]   -0.73     -0.74   
+## a[6]    0.21      0.22   
+## a[7]    1.75      1.82   
+## bp      0.82      0.84   
+## bpC    -0.13     -0.14   
 ## nobs     504       504
 ```
 
@@ -386,9 +374,9 @@ m10.1.stan <- map2stan(
 ## Chain 1, Iteration: 1600 / 2000 [ 80%]  (Sampling)
 ## Chain 1, Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Chain 1, Iteration: 2000 / 2000 [100%]  (Sampling)
-##  Elapsed Time: 0.272146 seconds (Warm-up)
-##                0.282721 seconds (Sampling)
-##                0.554867 seconds (Total)
+##  Elapsed Time: 0.224299 seconds (Warm-up)
+##                0.237254 seconds (Sampling)
+##                0.461553 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL 'pulled_left ~ dbinom(1, p)' NOW (CHAIN 1).
@@ -398,8 +386,8 @@ m10.1.stan <- map2stan(
 ## 
 ## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
 ##  Elapsed Time: 4e-06 seconds (Warm-up)
-##                0.00021 seconds (Sampling)
-##                0.000214 seconds (Total)
+##                0.000198 seconds (Sampling)
+##                0.000202 seconds (Total)
 ```
 
 ```
@@ -450,9 +438,9 @@ m10.2.stan <- map2stan(
 ## Chain 1, Iteration: 1600 / 2000 [ 80%]  (Sampling)
 ## Chain 1, Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Chain 1, Iteration: 2000 / 2000 [100%]  (Sampling)
-##  Elapsed Time: 0.44034 seconds (Warm-up)
-##                0.471916 seconds (Sampling)
-##                0.912256 seconds (Total)
+##  Elapsed Time: 0.382582 seconds (Warm-up)
+##                0.435859 seconds (Sampling)
+##                0.818441 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL 'pulled_left ~ dbinom(1, p)' NOW (CHAIN 1).
@@ -461,9 +449,9 @@ m10.2.stan <- map2stan(
 ## 
 ## 
 ## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
-##  Elapsed Time: 4e-06 seconds (Warm-up)
-##                0.000299 seconds (Sampling)
-##                0.000303 seconds (Total)
+##  Elapsed Time: 6e-06 seconds (Warm-up)
+##                0.000375 seconds (Sampling)
+##                0.000381 seconds (Total)
 ```
 
 ```
@@ -511,9 +499,9 @@ m10.3.stan <- map2stan(
 ## Chain 1, Iteration: 1600 / 2000 [ 80%]  (Sampling)
 ## Chain 1, Iteration: 1800 / 2000 [ 90%]  (Sampling)
 ## Chain 1, Iteration: 2000 / 2000 [100%]  (Sampling)
-##  Elapsed Time: 0.700338 seconds (Warm-up)
-##                0.65195 seconds (Sampling)
-##                1.35229 seconds (Total)
+##  Elapsed Time: 0.607603 seconds (Warm-up)
+##                0.555699 seconds (Sampling)
+##                1.1633 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL 'pulled_left ~ dbinom(1, p)' NOW (CHAIN 1).
@@ -523,8 +511,8 @@ m10.3.stan <- map2stan(
 ## 
 ## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
 ##  Elapsed Time: 4e-06 seconds (Warm-up)
-##                0.000272 seconds (Sampling)
-##                0.000276 seconds (Total)
+##                0.000276 seconds (Sampling)
+##                0.00028 seconds (Total)
 ```
 
 ```
@@ -551,10 +539,10 @@ compare(m10.1.stan,m10.2.stan,m10.3.stan,m10.4.stan)
 
 ```
 ##             WAIC pWAIC dWAIC weight    SE   dSE
-## m10.4.stan 529.0   7.9   0.0      1 19.95    NA
-## m10.2.stan 680.2   1.8 151.1      0  9.47 19.25
-## m10.3.stan 682.0   2.8 153.0      0  9.46 19.17
-## m10.1.stan 687.9   1.0 158.9      0  7.11 19.96
+## m10.4.stan 529.4   8.1   0.0      1 19.98    NA
+## m10.2.stan 680.4   1.9 151.0      0  9.34 19.25
+## m10.3.stan 682.0   2.8 152.6      0  9.44 19.21
+## m10.1.stan 687.9   1.0 158.5      0  7.07 19.95
 ```
 
 Conclusion: the model with an individual intercept for each actor is strongly favored.
@@ -639,9 +627,9 @@ M10h3.1.stan <- map2stan(M10h3.1,chains=4,cores=2)
 ## 
 ## 
 ## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
-##  Elapsed Time: 4e-06 seconds (Warm-up)
-##                4.4e-05 seconds (Sampling)
-##                4.8e-05 seconds (Total)
+##  Elapsed Time: 7e-06 seconds (Warm-up)
+##                5.9e-05 seconds (Sampling)
+##                6.6e-05 seconds (Total)
 ```
 
 ```
@@ -675,10 +663,10 @@ precis(M10h3.1.stan)
 
 ```
 ##       Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
-## a     0.67   0.67      -0.41       1.70  1572    1
-## b_PS  4.69   0.96       3.22       6.21  1370    1
-## b_PA  1.14   0.53       0.30       1.97  2106    1
-## b_VS -5.11   1.01      -6.77      -3.60  1156    1
+## a     0.67   0.67      -0.39       1.69  1663    1
+## b_PS  4.60   0.95       3.14       6.05  1535    1
+## b_PA  1.12   0.53       0.32       2.00  1963    1
+## b_VS -5.03   1.02      -6.57      -3.42  1478    1
 ```
 
 ```r
@@ -701,10 +689,10 @@ precis(M10h3.1.stan)
 
 ```
 ##       Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
-## a     0.67   0.67      -0.41       1.70  1572    1
-## b_PS  4.69   0.96       3.22       6.21  1370    1
-## b_PA  1.14   0.53       0.30       1.97  2106    1
-## b_VS -5.11   1.01      -6.77      -3.60  1156    1
+## a     0.67   0.67      -0.39       1.69  1663    1
+## b_PS  4.60   0.95       3.14       6.05  1535    1
+## b_PA  1.12   0.53       0.32       2.00  1963    1
+## b_VS -5.03   1.02      -6.57      -3.42  1478    1
 ```
 
 The means are the log odds associated with the various predictors.  To get the odds change we need to exponentiate these.  For all but alpha the 89% confidence interval does not include 0, indicating that the predictors are important
@@ -737,7 +725,7 @@ exp(-5.06) # much less chance of success if large victim
 ## [1] 0.00634556
 ```
 
-We can look at the probabilty of success by using this logistic function
+We can look at the probabilty of success by using the logistic function
 
 
 ```r
@@ -831,19 +819,19 @@ head(eagle.link) #these are probabilities
 
 ```
 ##           [,1]      [,2]      [,3]      [,4]        [,5]      [,6]
-## [1,] 0.7674346 0.9965279 0.4953460 0.9884222 0.064872374 0.8578289
-## [2,] 0.8585640 0.9996581 0.5731105 0.9984560 0.026524299 0.9292021
-## [3,] 0.7248013 0.9996421 0.4512791 0.9988547 0.007687156 0.8914837
-## [4,] 0.8112001 0.9954604 0.6081797 0.9875340 0.076044151 0.8077080
-## [5,] 0.7175205 0.9980269 0.6279278 0.9970332 0.021554601 0.8143602
-## [6,] 0.8298059 0.9987392 0.6699632 0.9969770 0.037614676 0.8639455
+## [1,] 0.7615709 0.9925732 0.4692341 0.9736781 0.108510785 0.8358754
+## [2,] 0.8388373 0.9992174 0.5136812 0.9961555 0.104848130 0.9663674
+## [3,] 0.7561294 0.9994763 0.5548896 0.9986985 0.005365831 0.7685603
+## [4,] 0.7368163 0.9957237 0.5423628 0.9899567 0.046094648 0.8007561
+## [5,] 0.8427387 0.9980911 0.5956729 0.9930911 0.046540949 0.8264652
+## [6,] 0.8247175 0.9997367 0.5127417 0.9988240 0.025624663 0.9550085
 ##             [,7]      [,8]
-## [1,] 0.020217944 0.6421883
-## [2,] 0.005989902 0.7437661
-## [3,] 0.002413175 0.7195194
-## [4,] 0.028874128 0.6027713
-## [5,] 0.014425404 0.7445468
-## [6,] 0.016012329 0.7255618
+## [1,] 0.032591353 0.5849976
+## [2,] 0.023217802 0.8536079
+## [3,] 0.002164386 0.5717689
+## [4,] 0.020045610 0.6298092
+## [5,] 0.013241828 0.5669699
+## [6,] 0.005847332 0.8260063
 ```
 
 ```r
@@ -930,9 +918,9 @@ M10h3.2.stan <- map2stan(
 ## 
 ## 
 ## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
-##  Elapsed Time: 4e-06 seconds (Warm-up)
-##                7.2e-05 seconds (Sampling)
-##                7.6e-05 seconds (Total)
+##  Elapsed Time: 5e-06 seconds (Warm-up)
+##                3.6e-05 seconds (Sampling)
+##                4.1e-05 seconds (Total)
 ```
 
 ```
@@ -973,11 +961,11 @@ precis(M10h3.2.stan)
 
 ```
 ##          Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
-## a       -0.78   1.01      -2.37       0.74  1367 1.00
-## b_PS     6.56   1.36       4.23       8.51  1092 1.00
-## b_PA     3.44   1.21       1.55       5.38  1178 1.00
-## b_VS    -5.27   1.11      -7.00      -3.50  1311 1.01
-## b_PA_PS -2.98   1.31      -4.97      -0.80  1211 1.00
+## a       -0.79   1.03      -2.36       0.83  1274    1
+## b_PS     6.57   1.44       4.34       8.86  1189    1
+## b_PA     3.44   1.26       1.50       5.47  1195    1
+## b_VS    -5.27   1.15      -7.09      -3.54  1405    1
+## b_PA_PS -2.96   1.38      -5.16      -0.78  1248    1
 ```
 
 ```r
@@ -986,8 +974,8 @@ compare(M10h3.1.stan,M10h3.2.stan)
 
 ```
 ##              WAIC pWAIC dWAIC weight    SE  dSE
-## M10h3.2.stan 93.1   4.4   0.0   0.93 12.60   NA
-## M10h3.1.stan 98.2   3.9   5.1   0.07 13.34 4.69
+## M10h3.2.stan 93.7   4.6   0.0    0.9 12.73   NA
+## M10h3.1.stan 98.2   3.8   4.4    0.1 13.20 4.62
 ```
 
 ```r
@@ -996,11 +984,11 @@ coeftab(M10h3.1.stan,M10h3.2.stan)
 
 ```
 ##         M10h3.1.stan M10h3.2.stan
-## a          0.67        -0.78     
-## b_PS       4.69         6.56     
-## b_PA       1.14         3.44     
-## b_VS      -5.11        -5.27     
-## b_PA_PS      NA        -2.98     
+## a          0.67        -0.79     
+## b_PS       4.60         6.57     
+## b_PA       1.12         3.44     
+## b_VS      -5.03        -5.27     
+## b_PA_PS      NA        -2.96     
 ## nobs          8            8
 ```
 
@@ -1048,19 +1036,19 @@ head(eagle.link.int) #these are probabilities
 
 ```
 ##           [,1]      [,2]      [,3]      [,4]       [,5]      [,6]
-## [1,] 0.6412921 0.9986797 0.5863041 0.9983350 0.08587581 0.9754577
-## [2,] 0.8849807 0.9986316 0.4648747 0.9880091 0.17940530 0.9539944
-## [3,] 0.6687391 0.9928529 0.6579161 0.9925006 0.12171007 0.9050853
-## [4,] 0.7404338 0.9971573 0.6294337 0.9952352 0.04273685 0.8459145
-## [5,] 0.7739649 0.9994285 0.6083507 0.9987411 0.15781245 0.9896590
-## [6,] 0.8193010 0.9984295 0.5714308 0.9946796 0.07067999 0.9142670
-##             [,7]      [,8]
-## [1,] 0.001425169 0.3764916
-## [2,] 0.010722662 0.5069150
-## [3,] 0.006371255 0.3061499
-## [4,] 0.001157946 0.1247693
-## [5,] 0.001523745 0.4380154
-## [6,] 0.005800436 0.4499607
+## [1,] 0.6128257 0.9983746 0.6806816 0.9987926 0.09407790 0.9757871
+## [2,] 0.7942849 0.9987793 0.5303455 0.9958384 0.03503413 0.8849727
+## [3,] 0.7861128 0.9913740 0.6530684 0.9832952 0.14103250 0.8369788
+## [4,] 0.6219639 0.9950597 0.6946461 0.9964222 0.05126715 0.8686881
+## [5,] 0.7182220 0.9984637 0.6255682 0.9976581 0.08392682 0.9589493
+## [6,] 0.7617016 0.9993038 0.6589998 0.9988491 0.03225023 0.9373643
+##              [,7]      [,8]
+## [1,] 0.0019617535 0.4327200
+## [2,] 0.0099330394 0.6801043
+## [3,] 0.0075389094 0.1919403
+## [4,] 0.0010080542 0.1099513
+## [5,] 0.0011944074 0.2336653
+## [6,] 0.0007579055 0.2540724
 ```
 
 ```r
@@ -1087,20 +1075,32 @@ pred.df.int$pirate_size <- factor(pred.df.int$P,levels=c("S","L"),labels = c("sm
 pred.df.int$pirate_age <- factor(pred.df.int$A,levels=c("I","A"),labels = c("immature","adult"))
 pred.df.int$victim_size <- factor(pred.df.int$V,levels=c("S","L"),labels = c("small_victim","large_victim"))
 
-pl <- ggplot(pred.df.int,aes(x=pirate_size,fill=pirate_age))
-pl <- pl + geom_bar(stat="identity",position="dodge")
-pl <- pl + geom_errorbar(position=position_dodge(width=0.9),width=0.5)
-pl <- pl + facet_grid(. ~ victim_size)
-pl + aes(y=p.mean,ymax=p.PI.high,ymin=p.PI.low) + ggtitle("probability of pirating success")
+pl.int <- ggplot(pred.df.int,aes(x=pirate_size,fill=pirate_age))
+pl.int <- pl.int + geom_bar(stat="identity",position="dodge")
+pl.int <- pl.int + geom_errorbar(position=position_dodge(width=0.9),width=0.5)
+pl.int <- pl.int + facet_grid(. ~ victim_size)
+pl.int + aes(y=p.mean,ymax=p.PI.high,ymin=p.PI.low) + ggtitle("probability of pirating success, interaction model")
 ```
 
 ![](Chapter_10_Assignment_files/figure-html/unnamed-chunk-21-1.png)<!-- -->
 
 ```r
-pl + aes(y=counts.mean,ymax=counts.PI.high,ymin=counts.PI.low) + ggtitle("count of successful pirating attempts")
+pl + aes(y=p.mean,ymax=p.PI.high,ymin=p.PI.low) + ggtitle("probability of pirating success, additive model")
 ```
 
 ![](Chapter_10_Assignment_files/figure-html/unnamed-chunk-21-2.png)<!-- -->
+
+```r
+pl.int + aes(y=counts.mean,ymax=counts.PI.high,ymin=counts.PI.low) + ggtitle("count of successful pirating attempts, interaction model")
+```
+
+![](Chapter_10_Assignment_files/figure-html/unnamed-chunk-21-3.png)<!-- -->
+
+```r
+pl + aes(y=counts.mean,ymax=counts.PI.high,ymin=counts.PI.low) + ggtitle("count of successful pirating attempts, additive model")
+```
+
+![](Chapter_10_Assignment_files/figure-html/unnamed-chunk-21-4.png)<!-- -->
 
 
 ## 10H4
@@ -1206,9 +1206,9 @@ msal1.stan <- map2stan(msal1,chains=4,iter=4000)
 ## Chain 1, Iteration: 3200 / 4000 [ 80%]  (Sampling)
 ## Chain 1, Iteration: 3600 / 4000 [ 90%]  (Sampling)
 ## Chain 1, Iteration: 4000 / 4000 [100%]  (Sampling)
-##  Elapsed Time: 0.286047 seconds (Warm-up)
-##                0.112102 seconds (Sampling)
-##                0.398149 seconds (Total)
+##  Elapsed Time: 0.482682 seconds (Warm-up)
+##                0.103523 seconds (Sampling)
+##                0.586205 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL 'SALAMAN ~ dpois(lambda)' NOW (CHAIN 2).
@@ -1225,9 +1225,9 @@ msal1.stan <- map2stan(msal1,chains=4,iter=4000)
 ## Chain 2, Iteration: 3200 / 4000 [ 80%]  (Sampling)
 ## Chain 2, Iteration: 3600 / 4000 [ 90%]  (Sampling)
 ## Chain 2, Iteration: 4000 / 4000 [100%]  (Sampling)
-##  Elapsed Time: 0.364529 seconds (Warm-up)
-##                0.131949 seconds (Sampling)
-##                0.496478 seconds (Total)
+##  Elapsed Time: 0.149343 seconds (Warm-up)
+##                0.090857 seconds (Sampling)
+##                0.2402 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL 'SALAMAN ~ dpois(lambda)' NOW (CHAIN 3).
@@ -1244,9 +1244,9 @@ msal1.stan <- map2stan(msal1,chains=4,iter=4000)
 ## Chain 3, Iteration: 3200 / 4000 [ 80%]  (Sampling)
 ## Chain 3, Iteration: 3600 / 4000 [ 90%]  (Sampling)
 ## Chain 3, Iteration: 4000 / 4000 [100%]  (Sampling)
-##  Elapsed Time: 0.181168 seconds (Warm-up)
-##                0.119699 seconds (Sampling)
-##                0.300867 seconds (Total)
+##  Elapsed Time: 0.320701 seconds (Warm-up)
+##                0.099186 seconds (Sampling)
+##                0.419887 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL 'SALAMAN ~ dpois(lambda)' NOW (CHAIN 4).
@@ -1263,9 +1263,9 @@ msal1.stan <- map2stan(msal1,chains=4,iter=4000)
 ## Chain 4, Iteration: 3200 / 4000 [ 80%]  (Sampling)
 ## Chain 4, Iteration: 3600 / 4000 [ 90%]  (Sampling)
 ## Chain 4, Iteration: 4000 / 4000 [100%]  (Sampling)
-##  Elapsed Time: 0.778915 seconds (Warm-up)
-##                0.132007 seconds (Sampling)
-##                0.910922 seconds (Total)
+##  Elapsed Time: 0.14008 seconds (Warm-up)
+##                0.105652 seconds (Sampling)
+##                0.245732 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL 'SALAMAN ~ dpois(lambda)' NOW (CHAIN 1).
@@ -1274,9 +1274,9 @@ msal1.stan <- map2stan(msal1,chains=4,iter=4000)
 ## 
 ## 
 ## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
-##  Elapsed Time: 4e-06 seconds (Warm-up)
-##                3.2e-05 seconds (Sampling)
-##                3.6e-05 seconds (Total)
+##  Elapsed Time: 2e-06 seconds (Warm-up)
+##                3.5e-05 seconds (Sampling)
+##                3.7e-05 seconds (Total)
 ```
 
 ```
@@ -1306,8 +1306,8 @@ precis(msal1.stan) #pretty poor sampling, really.  Due to correlation I assume.
 
 ```
 ##      Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
-## a   -1.46   0.44      -2.14      -0.78  1436    1
-## b_c  0.03   0.01       0.02       0.04  1436    1
+## a   -1.49   0.44      -2.18      -0.80  1321    1
+## b_c  0.03   0.01       0.02       0.04  1329    1
 ```
 
 ```r
@@ -1367,8 +1367,8 @@ plot(precis(msal.add))
 
 ```
 ##           WAIC pWAIC dWAIC weight    SE  dSE
-## msal1    213.2   4.6   0.0   0.87 26.22   NA
-## msal.add 217.0   7.2   3.7   0.13 26.70 1.02
+## msal1    213.4   4.8   0.0   0.86 26.21   NA
+## msal.add 217.0   7.3   3.6   0.14 26.70 1.09
 ```
 
 ```r
@@ -1410,9 +1410,9 @@ plot(precis(msal.age))
 
 ```
 ##           WAIC pWAIC dWAIC weight    SE   dSE
-## msal1    213.0   4.6   0.0   0.88 26.10    NA
-## msal.add 217.0   7.2   3.9   0.12 26.64  1.03
-## msal.age 264.8   6.9  51.7   0.00 35.25 22.22
+## msal1    212.9   4.3   0.0   0.89 26.09    NA
+## msal.add 217.1   7.2   4.2   0.11 26.75  1.08
+## msal.age 264.8   6.8  51.9   0.00 35.30 22.13
 ```
 
 ```r
