@@ -1,0 +1,27 @@
+---
+title: "Chapter 12 Problems"
+author: "Julin Maloof"
+date: "10/27/2016"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+## 12E1
+
+The prior of normal(0,1) will provide more shrinkage
+
+## 12E2
+
+Instead of 
+
+a_group ~ Normal(0,10)
+
+use 
+
+a_group ~ normal(a,sigma)
+a ~ (0,10)
+sigma ~ cacuhy(0,1)
+
+## 12M1
+
