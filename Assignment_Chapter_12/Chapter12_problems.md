@@ -150,33 +150,10 @@ m12m1.tank <- map2stan(
 ## Chain 1, Iteration: 3200 / 4000 [ 80%]  (Sampling)
 ## Chain 1, Iteration: 3600 / 4000 [ 90%]  (Sampling)
 ## Chain 1, Iteration: 4000 / 4000 [100%]  (Sampling)
-##  Elapsed Time: 0.325623 seconds (Warm-up)
-##                0.284301 seconds (Sampling)
-##                0.609924 seconds (Total)
-```
-
-```
-## The following numerical problems occured the indicated number of times after warmup on chain 1
-```
-
-```
-##                                                                                 count
-## Exception thrown at line 17: normal_log: Scale parameter is 0, but must be > 0!     1
-```
-
-```
-## When a numerical problem occurs, the Hamiltonian proposal gets rejected.
-```
-
-```
-## See http://mc-stan.org/misc/warnings.html#exception-hamiltonian-proposal-rejected
-```
-
-```
-## If the number in the 'count' column is small, do not ask about this message on stan-users.
-```
-
-```
+##  Elapsed Time: 0.328575 seconds (Warm-up)
+##                0.282204 seconds (Sampling)
+##                0.610779 seconds (Total)
+## 
 ## 
 ## SAMPLING FOR MODEL 'surv ~ dbinom(density, p)' NOW (CHAIN 2).
 ## 
@@ -192,33 +169,10 @@ m12m1.tank <- map2stan(
 ## Chain 2, Iteration: 3200 / 4000 [ 80%]  (Sampling)
 ## Chain 2, Iteration: 3600 / 4000 [ 90%]  (Sampling)
 ## Chain 2, Iteration: 4000 / 4000 [100%]  (Sampling)
-##  Elapsed Time: 0.307933 seconds (Warm-up)
-##                0.283015 seconds (Sampling)
-##                0.590948 seconds (Total)
-```
-
-```
-## The following numerical problems occured the indicated number of times after warmup on chain 2
-```
-
-```
-##                                                                                 count
-## Exception thrown at line 17: normal_log: Scale parameter is 0, but must be > 0!     1
-```
-
-```
-## When a numerical problem occurs, the Hamiltonian proposal gets rejected.
-```
-
-```
-## See http://mc-stan.org/misc/warnings.html#exception-hamiltonian-proposal-rejected
-```
-
-```
-## If the number in the 'count' column is small, do not ask about this message on stan-users.
-```
-
-```
+##  Elapsed Time: 0.333265 seconds (Warm-up)
+##                0.27771 seconds (Sampling)
+##                0.610975 seconds (Total)
+## 
 ## 
 ## SAMPLING FOR MODEL 'surv ~ dbinom(density, p)' NOW (CHAIN 3).
 ## 
@@ -234,9 +188,9 @@ m12m1.tank <- map2stan(
 ## Chain 3, Iteration: 3200 / 4000 [ 80%]  (Sampling)
 ## Chain 3, Iteration: 3600 / 4000 [ 90%]  (Sampling)
 ## Chain 3, Iteration: 4000 / 4000 [100%]  (Sampling)
-##  Elapsed Time: 0.342051 seconds (Warm-up)
-##                0.291322 seconds (Sampling)
-##                0.633373 seconds (Total)
+##  Elapsed Time: 0.326872 seconds (Warm-up)
+##                0.288224 seconds (Sampling)
+##                0.615096 seconds (Total)
 ## 
 ## 
 ## SAMPLING FOR MODEL 'surv ~ dbinom(density, p)' NOW (CHAIN 4).
@@ -253,9 +207,9 @@ m12m1.tank <- map2stan(
 ## Chain 4, Iteration: 3200 / 4000 [ 80%]  (Sampling)
 ## Chain 4, Iteration: 3600 / 4000 [ 90%]  (Sampling)
 ## Chain 4, Iteration: 4000 / 4000 [100%]  (Sampling)
-##  Elapsed Time: 0.334983 seconds (Warm-up)
-##                0.307648 seconds (Sampling)
-##                0.642631 seconds (Total)
+##  Elapsed Time: 0.344322 seconds (Warm-up)
+##                0.299568 seconds (Sampling)
+##                0.64389 seconds (Total)
 ```
 
 ```
@@ -295,9 +249,9 @@ m12m1.tank <- map2stan(
 ## 
 ## 
 ## Chain 1, Iteration: 1 / 1 [100%]  (Sampling)
-##  Elapsed Time: 4e-06 seconds (Warm-up)
-##                7.6e-05 seconds (Sampling)
-##                8e-05 seconds (Total)
+##  Elapsed Time: 7e-06 seconds (Warm-up)
+##                0.000126 seconds (Sampling)
+##                0.000133 seconds (Total)
 ```
 
 ```
@@ -358,8 +312,8 @@ precis(m12m1.tank)
 
 ```
 ##       Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
-## a     1.30   0.25       0.93       1.71  8000    1
-## sigma 1.62   0.22       1.29       1.97  5414    1
+## a     1.30   0.25       0.90       1.68  8000    1
+## sigma 1.62   0.21       1.28       1.94  5000    1
 ```
 
 ![](Chapter12_problems_files/figure-html/unnamed-chunk-3-4.png)<!-- -->
@@ -392,7 +346,7 @@ m12m1.tank.pred <- map2stan(
 ```
 
 ```
-## The following numerical problems occured the indicated number of times after warmup on chain 4
+## The following numerical problems occured the indicated number of times after warmup on chain 3
 ```
 
 ```
@@ -465,9 +419,9 @@ precis(m12m1.tank.pred)
 
 ```
 ##         Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
-## a       2.57   0.23       2.20       2.93  1385 1.01
-## sigma   0.83   0.14       0.61       1.04  2997 1.00
-## b_pred -2.54   0.30      -3.02      -2.07  1153 1.01
+## a       2.55   0.23       2.18       2.91  1219    1
+## sigma   0.83   0.14       0.61       1.05  2977    1
+## b_pred -2.52   0.29      -2.98      -2.04   965    1
 ```
 
 ![](Chapter12_problems_files/figure-html/unnamed-chunk-5-4.png)<!-- -->
@@ -499,7 +453,7 @@ m12m1.tank.size <- map2stan(
 ```
 
 ```
-## The following numerical problems occured the indicated number of times after warmup on chain 2
+## The following numerical problems occured the indicated number of times after warmup on chain 1
 ```
 
 ```
@@ -520,12 +474,12 @@ m12m1.tank.size <- map2stan(
 ```
 
 ```
-## The following numerical problems occured the indicated number of times after warmup on chain 3
+## The following numerical problems occured the indicated number of times after warmup on chain 4
 ```
 
 ```
 ##                                                                                 count
-## Exception thrown at line 20: normal_log: Scale parameter is 0, but must be > 0!     1
+## Exception thrown at line 20: normal_log: Scale parameter is 0, but must be > 0!     2
 ```
 
 ```
@@ -593,9 +547,9 @@ precis(m12m1.tank.size)
 
 ```
 ##        Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
-## a      1.43   0.35       0.91       2.01  1366    1
-## sigma  1.63   0.22       1.30       1.97  3941    1
-## b_big -0.27   0.51      -1.09       0.55   802    1
+## a      1.43   0.34       0.88       1.97  1473    1
+## sigma  1.62   0.21       1.27       1.93  5338    1
+## b_big -0.27   0.50      -1.11       0.49   858    1
 ```
 
 ![](Chapter12_problems_files/figure-html/unnamed-chunk-7-4.png)<!-- -->
@@ -626,12 +580,12 @@ m12m1.tank.pred.size <- map2stan(
 ```
 
 ```
-## The following numerical problems occured the indicated number of times after warmup on chain 2
+## The following numerical problems occured the indicated number of times after warmup on chain 1
 ```
 
 ```
 ##                                                                                 count
-## Exception thrown at line 23: normal_log: Scale parameter is 0, but must be > 0!     2
+## Exception thrown at line 23: normal_log: Scale parameter is 0, but must be > 0!     1
 ```
 
 ```
@@ -652,7 +606,7 @@ m12m1.tank.pred.size <- map2stan(
 
 ```
 ##                                                                                 count
-## Exception thrown at line 23: normal_log: Scale parameter is 0, but must be > 0!     2
+## Exception thrown at line 23: normal_log: Scale parameter is 0, but must be > 0!     1
 ```
 
 ```
@@ -741,10 +695,10 @@ precis(m12m1.tank.pred.size)
 
 ```
 ##         Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
-## a       2.73   0.27       2.30       3.16   969    1
-## sigma   0.78   0.14       0.55       0.99  2673    1
-## b_big  -0.39   0.29      -0.85       0.08  1892    1
-## b_pred -2.51   0.30      -2.97      -2.01  1149    1
+## a       2.73   0.26       2.30       3.14   853 1.01
+## sigma   0.79   0.14       0.56       1.00  2504 1.00
+## b_big  -0.37   0.29      -0.84       0.09  1606 1.00
+## b_pred -2.51   0.29      -2.98      -2.05  1263 1.00
 ```
 
 ![](Chapter12_problems_files/figure-html/unnamed-chunk-9-4.png)<!-- -->
@@ -775,7 +729,7 @@ m12m1.tank.pred.size.int <- map2stan(
 ```
 
 ```
-## The following numerical problems occured the indicated number of times after warmup on chain 2
+## The following numerical problems occured the indicated number of times after warmup on chain 1
 ```
 
 ```
@@ -801,28 +755,7 @@ m12m1.tank.pred.size.int <- map2stan(
 
 ```
 ##                                                                                 count
-## Exception thrown at line 25: normal_log: Scale parameter is 0, but must be > 0!     1
-```
-
-```
-## When a numerical problem occurs, the Hamiltonian proposal gets rejected.
-```
-
-```
-## See http://mc-stan.org/misc/warnings.html#exception-hamiltonian-proposal-rejected
-```
-
-```
-## If the number in the 'count' column is small, do not ask about this message on stan-users.
-```
-
-```
-## The following numerical problems occured the indicated number of times after warmup on chain 4
-```
-
-```
-##                                                                                 count
-## Exception thrown at line 25: normal_log: Scale parameter is 0, but must be > 0!     1
+## Exception thrown at line 25: normal_log: Scale parameter is 0, but must be > 0!     2
 ```
 
 ```
@@ -890,11 +823,11 @@ precis(m12m1.tank.pred.size.int)
 
 ```
 ##             Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
-## a           2.37   0.30       1.91       2.85   581 1.01
-## sigma       0.76   0.15       0.51       0.97  1908 1.00
-## b_big       0.41   0.45      -0.28       1.14  1006 1.01
-## b_pred     -1.89   0.40      -2.50      -1.24   689 1.01
-## b_big_pred -1.34   0.58      -2.22      -0.38  1247 1.00
+## a           2.37   0.30       1.91       2.87   677 1.00
+## sigma       0.75   0.15       0.50       0.96  1150 1.01
+## b_big       0.41   0.46      -0.32       1.13  1014 1.00
+## b_pred     -1.89   0.40      -2.52      -1.26   790 1.00
+## b_big_pred -1.34   0.59      -2.25      -0.40  1322 1.00
 ```
 
 ```r
@@ -918,8 +851,8 @@ precis(m12m1.tank)
 
 ```
 ##       Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
-## a     1.30   0.25       0.93       1.71  8000    1
-## sigma 1.62   0.22       1.29       1.97  5414    1
+## a     1.30   0.25       0.90       1.68  8000    1
+## sigma 1.62   0.21       1.28       1.94  5000    1
 ```
 
 ```r
@@ -932,9 +865,9 @@ precis(m12m1.tank.pred)
 
 ```
 ##         Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
-## a       2.57   0.23       2.20       2.93  1385 1.01
-## sigma   0.83   0.14       0.61       1.04  2997 1.00
-## b_pred -2.54   0.30      -3.02      -2.07  1153 1.01
+## a       2.55   0.23       2.18       2.91  1219    1
+## sigma   0.83   0.14       0.61       1.05  2977    1
+## b_pred -2.52   0.29      -2.98      -2.04   965    1
 ```
 
 ```r
@@ -947,9 +880,9 @@ precis(m12m1.tank.size)
 
 ```
 ##        Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
-## a      1.43   0.35       0.91       2.01  1366    1
-## sigma  1.63   0.22       1.30       1.97  3941    1
-## b_big -0.27   0.51      -1.09       0.55   802    1
+## a      1.43   0.34       0.88       1.97  1473    1
+## sigma  1.62   0.21       1.27       1.93  5338    1
+## b_big -0.27   0.50      -1.11       0.49   858    1
 ```
 
 ```r
@@ -962,10 +895,10 @@ precis(m12m1.tank.pred.size)
 
 ```
 ##         Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
-## a       2.73   0.27       2.30       3.16   969    1
-## sigma   0.78   0.14       0.55       0.99  2673    1
-## b_big  -0.39   0.29      -0.85       0.08  1892    1
-## b_pred -2.51   0.30      -2.97      -2.01  1149    1
+## a       2.73   0.26       2.30       3.14   853 1.01
+## sigma   0.79   0.14       0.56       1.00  2504 1.00
+## b_big  -0.37   0.29      -0.84       0.09  1606 1.00
+## b_pred -2.51   0.29      -2.98      -2.05  1263 1.00
 ```
 
 ```r
@@ -978,11 +911,11 @@ precis(m12m1.tank.pred.size.int)
 
 ```
 ##             Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
-## a           2.37   0.30       1.91       2.85   581 1.01
-## sigma       0.76   0.15       0.51       0.97  1908 1.00
-## b_big       0.41   0.45      -0.28       1.14  1006 1.01
-## b_pred     -1.89   0.40      -2.50      -1.24   689 1.01
-## b_big_pred -1.34   0.58      -2.22      -0.38  1247 1.00
+## a           2.37   0.30       1.91       2.87   677 1.00
+## sigma       0.75   0.15       0.50       0.96  1150 1.01
+## b_big       0.41   0.46      -0.32       1.13  1014 1.00
+## b_pred     -1.89   0.40      -2.52      -1.26   790 1.00
+## b_big_pred -1.34   0.59      -2.25      -0.40  1322 1.00
 ```
 
 Basically we see that having predation in the model reduces variance among tanks.  This is because predation is a strong predicor of survival, so including it in the model reduces the otherwise unexplained tank to tank variance.
@@ -998,11 +931,11 @@ compare(m12m1.tank,m12m1.tank.pred,m12m1.tank.size,m12m1.tank.pred.size,m12m1.ta
 
 ```
 ##                            WAIC pWAIC dWAIC weight    SE  dSE
-## m12m1.tank.pred          1000.1  28.8   0.0   0.42 37.48   NA
-## m12m1.tank.pred.size     1000.8  28.0   0.6   0.30 37.36 1.64
-## m12m1.tank.pred.size.int 1001.0  28.2   0.8   0.27 37.73 2.92
-## m12m1.tank               1009.1  37.5   8.9   0.00 37.96 6.54
-## m12m1.tank.size          1009.8  37.9   9.7   0.00 38.14 6.61
+## m12m1.tank.pred           999.9  28.6   0.0   0.46 37.34   NA
+## m12m1.tank.pred.size     1000.8  28.2   0.9   0.29 37.40 1.58
+## m12m1.tank.pred.size.int 1001.1  28.1   1.2   0.25 37.71 2.92
+## m12m1.tank               1009.5  37.7   9.6   0.00 37.98 6.47
+## m12m1.tank.size          1010.4  38.2  10.5   0.00 38.10 6.54
 ```
 
 Models that include `pred` have a smaller number of effective parameters and a lower WAIC.  This makes sense w.r.t. the posterior distributions; tanks 
@@ -1069,10 +1002,10 @@ precis(m12m1.tank.pred.size.int)
 
 ```
 ##             Mean StdDev lower 0.89 upper 0.89 n_eff Rhat
-## a           2.37   0.30       1.91       2.85   581 1.01
-## sigma       0.76   0.15       0.51       0.97  1908 1.00
-## b_big       0.41   0.45      -0.28       1.14  1006 1.01
-## b_pred     -1.89   0.40      -2.50      -1.24   689 1.01
-## b_big_pred -1.34   0.58      -2.22      -0.38  1247 1.00
+## a           2.37   0.30       1.91       2.87   677 1.00
+## sigma       0.75   0.15       0.50       0.96  1150 1.01
+## b_big       0.41   0.46      -0.32       1.13  1014 1.00
+## b_pred     -1.89   0.40      -2.52      -1.26   790 1.00
+## b_big_pred -1.34   0.59      -2.25      -0.40  1322 1.00
 ```
 
