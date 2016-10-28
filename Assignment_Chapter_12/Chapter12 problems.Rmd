@@ -7,6 +7,16 @@ output:
     keep_md: yes
 ---
 
+## setup
+
+```{r}
+knitr::opts_chunk$set(cache = TRUE, autodep = TRUE)
+library(rethinking)
+library(brms)
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+```
+
 ## 12E1
 
 The prior of normal(0,1) will provide more shrinkage
@@ -24,4 +34,146 @@ a ~ (0,10)
 sigma ~ cacuhy(0,1)
 
 ## 12M1
+
+alpha only
+
+```{r}
+data(reedfrogs, results='hide')
+d <- reedfrogs
+d$tank <- 1:nrow(d)
+m12m1.tank <- map2stan(
+  alist(
+    surv ~ dbinom( density , p ) ,
+    logit(p) <- a_tank[tank] ,
+    a_tank[tank] ~ dnorm( a , sigma ) ,
+    a ~ dnorm(0,1) ,
+    sigma ~ dcauchy(0,1)
+  ), data=d , iter=4000 , chains=4 )
+```
+
+```{r}
+plot(m12m1.tank,ask=FALSE)
+precis(m12m1.tank)
+```
+
+
+with predation
+
+```{r, results='hide'}
+d$pred2 <- ifelse(d$pred=="pred",1,0)
+m12m1.tank.pred <- map2stan(
+  alist(
+    surv ~ dbinom( density , p ) ,
+    logit(p) <- a_tank[tank] + b_pred*pred2 ,
+    a_tank[tank] ~ dnorm( a , sigma ) ,
+    a ~ dnorm(0,1) ,
+    sigma ~ dcauchy(0,1),
+    b_pred ~ dnorm(0,5)
+  ), data=d , iter=4000 , chains=4 )
+```
+
+```{r}
+plot(m12m1.tank.pred,ask=FALSE)
+precis(m12m1.tank.pred)
+```
+
+with size
+
+```{r, results='hide'}
+d$big <- ifelse(d$size=="big",1,0)
+m12m1.tank.size <- map2stan(
+  alist(
+    surv ~ dbinom( density , p ) ,
+    logit(p) <- a_tank[tank] + b_big*big ,
+    a_tank[tank] ~ dnorm( a , sigma ) ,
+    a ~ dnorm(0,1) ,
+    sigma ~ dcauchy(0,1),
+    b_big ~ dnorm(0,5)
+  ), data=d , iter=4000 , chains=4 )
+```
+
+```{r}
+plot(m12m1.tank.size,ask=FALSE)
+precis(m12m1.tank.size)
+```
+
+additive, with pred and size
+
+```{r, results='hide'}
+m12m1.tank.pred.size <- map2stan(
+  alist(
+    surv ~ dbinom( density , p ) ,
+    logit(p) <- a_tank[tank] + b_big*big + b_pred*pred2,
+    a_tank[tank] ~ dnorm( a , sigma ) ,
+    a ~ dnorm(0,1) ,
+    sigma ~ dcauchy(0,1),
+    c(b_big,b_pred) ~ dnorm(0,5)
+  ), data=d , iter=4000 , chains=4 )
+```
+
+```{r}
+plot(m12m1.tank.pred.size,ask=FALSE)
+precis(m12m1.tank.pred.size)
+```
+
+interaction, with pred and size
+
+```{r, results='hide'}
+m12m1.tank.pred.size.int <- map2stan(
+  alist(
+    surv ~ dbinom( density , p ) ,
+    logit(p) <- a_tank[tank] + b_big*big + b_pred*pred2 + b_big_pred*big*pred2,
+    a_tank[tank] ~ dnorm( a , sigma ) ,
+    a ~ dnorm(0,1) ,
+    sigma ~ dcauchy(0,1),
+    c(b_big,b_pred,b_big_pred) ~ dnorm(0,5)
+  ), data=d , iter=4000 , chains=4 )
+```
+
+```{r}
+plot(m12m1.tank.pred.size.int,ask=FALSE)
+precis(m12m1.tank.pred.size.int)
+par(mfrow=c(1,1))
+```
+
+_Focus on the inferred variation across tanks.  Explain why it changes as it does across models_
+
+At first pass we can just look at the `sigma` parameter from each model as this is the estimate of adaptive estimate of standard deviation from tank to tank.
+
+```{r}
+precis(m12m1.tank)
+precis(m12m1.tank.pred)
+precis(m12m1.tank.size)
+precis(m12m1.tank.pred.size)
+precis(m12m1.tank.pred.size.int)
+```
+
+Basically we see that having predation in the model reduces variance among tanks.  This is because predation is a strong predicor of survival, so including it in the model reduces the otherwise unexplained tank to tank variance.
+
+## 12M2
+
+_Compare the models you fit just above, using WAIC.  Can you reconcile the differences in WAIC with the posterior distributions of the models?_
+
+```{r}
+compare(m12m1.tank,m12m1.tank.pred,m12m1.tank.size,m12m1.tank.pred.size,m12m1.tank.pred.size.int)
+```
+
+Models that include `pred` have a smaller number of effective parameters and a lower WAIC.  This makes sense w.r.t. the posterior distributions; tanks 
+
+## Fit one of these with brms
+
+```{r, results='hide'}
+m12m1.tank.pred.size.int.b <- 
+  brm(surv | trials(density) ~ 0 + (1| tank) + pred*size,
+               data=d,
+               family=binomial(link = "logit"),
+               prior=c(set_prior("cauchy(0,1)", class = "sd"),
+                       set_prior("normal(0,5)", class = "b")))
+```
+
+```{r}
+plot(m12m1.tank.pred.size.int.b)
+m12m1.tank.pred.size.int.b
+precis(m12m1.tank.pred.size.int)
+```
 

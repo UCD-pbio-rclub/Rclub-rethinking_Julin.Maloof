@@ -22,7 +22,7 @@ m12.1 <- map2stan(
     a_tank[tank] ~ dnorm( 0 , 5 )
   ), data=d, chains = 4 )
 
-m12.1.b <- brm(surv ~ 0 + tank2,
+m12.1.b <- brm(surv | trials(density) ~ 0 + tank2,
                data=d,
                family=binomial(link = "logit"),
                prior=set_prior("normal(0,5)", class = "b"))
