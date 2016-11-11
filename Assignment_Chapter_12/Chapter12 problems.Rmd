@@ -251,3 +251,61 @@ For the most part, cauchy causes more shrinkage.  This is because it is a fat-ta
 
 
 #12H1
+
+_Analyze bangladehi data to model contraception use by district.  Model using separate intercepts for each district and pooled information across districts_
+
+get the data
+```{r}
+data("bangladesh")
+bangladesh$district_id <- as.numeric(as.factor(bangladesh$district)) 
+summary(bangladesh)
+```
+
+fixed intercepts model
+```{r, results='hide'}
+mb1 <- map2stan(alist(
+  use.contraception ~ dbinom(1,p),
+  logit(p) <- a[district_id],
+  a[district_id] <- dnorm(0,5)),
+  data=bangladesh,
+  chains = 4)
+```
+
+```{r}
+plot(mb1,ask=FALSE)
+precis(mb1,depth = 2)
+```
+
+```{r, results='hide'}
+mb2 <- map2stan(alist(
+  use.contraception ~ dbinom(1,p),
+  logit(p) <- a[district_id],
+  a[district_id] <- dnorm(a,sigma),
+  a <- dnorm(0,5),
+  sigma <- dcauchy(0,1)),
+  data=bangladesh,
+  chains = 4)
+```
+```{r}
+plot(mb2,ask=FALSE)
+precis(mb2,depth=2)
+```
+
+Not fitting well, try increasing sampling
+
+```{r,results='hide',eval=FALSE}
+# Not run, this doesn't help and is very slow
+mb2a <- map2stan(mb2,iter=5000,data=bangladesh,chains = 4,control=list(adapt_delta=.95))
+```
+
+Try with exp prior
+```{r, results='hide'}
+mb3 <- map2stan(alist(
+  use.contraception ~ dbinom(1,p),
+  logit(p) <- a[district_id],
+  a[district_id] <- dnorm(a,sigma),
+  a <- dnorm(0,5),
+  sigma <- dexp(1)),
+  data=bangladesh,
+  chains = 4)
+```
