@@ -243,9 +243,11 @@ d.melt <- melt(d,measure.vars = c("propsurv","est.gauss","est.cauchy"))
 head(d.melt)
 pl <- ggplot(d.melt,aes(y=value,x=tank,color=variable,shape=variable))
 pl <- pl + geom_point(size=2)
-pl + facet_wrap(~ density, scales = "free_x")
+pl <- pl + facet_wrap(~ density, scales = "free_x")
+pl <- pl + geom_hline(yintercept=logistic(mean(post.gauss$a)),lty=2)
+pl
 ```
-
+For the most part, cauchy causes more shrinkage.  This is because it is a fat-tailed distrubution.  It does not shrink the most extreme tanks as much, however, and I do not understand why.
 
 
 #12H1
