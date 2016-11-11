@@ -37,8 +37,8 @@ sigma ~ cacuhy(0,1)
 
 alpha only
 
-```{r}
-data(reedfrogs, results='hide')
+```{r, results='hide'}
+data(reedfrogs)
 d <- reedfrogs
 d$tank <- 1:nrow(d)
 m12m1.tank <- map2stan(
@@ -177,3 +177,75 @@ m12m1.tank.pred.size.int.b
 precis(m12m1.tank.pred.size.int)
 ```
 
+## 12M3
+
+_Refit reed frog data but use Cauchy prior for the varying intercepts.  Compare to Gaussian prior.  Explain._
+
+First, with Gausian
+
+```{r, results='hide'}
+data(reedfrogs)
+
+d <- reedfrogs
+
+str(d)
+
+# make the tank cluster variable
+d$tank <- 1:nrow(d)
+d$tank2 <- as.character(d$tank)
+
+m12.2 <- map2stan(
+  alist(
+    surv ~ dbinom( density , p ) ,
+    logit(p) <- a_tank[tank] ,
+    a_tank[tank] ~ dnorm( a , sigma ) ,
+    a ~ dnorm(0,1) ,
+    sigma ~ dcauchy(0,1)
+  ), data=d , iter=4000 , chains=4 )
+```
+
+```{r}
+plot(m12.2,ask=FALSE)
+precis(m12.2)
+```
+
+Now with Cauchy prior for a intercepts
+```{r, results='hide'}
+m12.2.cauchy <- map2stan(
+  alist(
+    surv ~ dbinom( density , p ) ,
+    logit(p) <- a_tank[tank] ,
+    a_tank[tank] ~ dcauchy( a , sigma ) ,
+    a ~ dnorm(0,1) ,
+    sigma ~ dcauchy(0,1)
+  ), data=d , iter=4000 , chains=4 )
+```
+
+```{r}
+plot(m12.2.cauchy,ask=FALSE)
+precis(m12.2.cauchy,depth=2)
+```
+
+Get posterior estimates of a_tank intercepts
+```{r}
+library(reshape2)
+post.gauss <- extract.samples(m12.2)
+post.cauchy <- extract.samples(m12.2.cauchy)
+d$est.gauss <- logistic(apply(post.gauss$a_tank,2,mean))
+d$est.cauchy <- logistic(apply(post.cauchy$a_tank,2,mean) )
+head(d)
+```
+
+plot it
+```{r}
+library(ggplot2)
+d.melt <- melt(d,measure.vars = c("propsurv","est.gauss","est.cauchy"))
+head(d.melt)
+pl <- ggplot(d.melt,aes(y=value,x=tank,color=variable,shape=variable))
+pl <- pl + geom_point(size=2)
+pl + facet_wrap(~ density, scales = "free_x")
+```
+
+
+
+#12H1
