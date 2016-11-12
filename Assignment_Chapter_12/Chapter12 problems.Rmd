@@ -10,9 +10,7 @@ output:
 ## setup
 
 ```{r}
-knitr::opts_chunk$set(cache = TRUE, autodep = TRUE)
 library(rethinking)
-library(brms)
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 ```
@@ -252,11 +250,12 @@ For the most part, cauchy causes more shrinkage.  This is because it is a fat-ta
 
 #12H1
 
-_Analyze bangladehi data to model contraception use by district.  Model using separate intercepts for each district and pooled information across districts_
+_Analyze bangladeshi data to model contraception use by district.  Model using separate intercepts for each district and pooled information across districts_
 
 get the data
 ```{r}
 data("bangladesh")
+colnames(bangladesh) <- sub(".","_",colnames(bangladesh),fixed=TRUE)
 bangladesh$district_id <- as.numeric(as.factor(bangladesh$district)) 
 summary(bangladesh)
 ```
@@ -264,7 +263,7 @@ summary(bangladesh)
 fixed intercepts model
 ```{r, results='hide'}
 mb1 <- map2stan(alist(
-  use.contraception ~ dbinom(1,p),
+  use_contraception ~ dbinom(1,p),
   logit(p) <- a[district_id],
   a[district_id] <- dnorm(0,5)),
   data=bangladesh,
@@ -278,34 +277,48 @@ precis(mb1,depth = 2)
 
 ```{r, results='hide'}
 mb2 <- map2stan(alist(
-  use.contraception ~ dbinom(1,p),
-  logit(p) <- a[district_id],
-  a[district_id] <- dnorm(a,sigma),
+  use_contraception ~ dbinom(1,p),
+  logit(p) <- a_district[district_id],
+  a_district[district_id] <- dnorm(a,sigma),
   a <- dnorm(0,5),
   sigma <- dcauchy(0,1)),
   data=bangladesh,
   chains = 4)
 ```
+
 ```{r}
 plot(mb2,ask=FALSE)
 precis(mb2,depth=2)
 ```
 
-Not fitting well, try increasing sampling
+3 ways of getting predictions
+```{r}
+library(reshape2)
 
-```{r,results='hide',eval=FALSE}
-# Not run, this doesn't help and is very slow
-mb2a <- map2stan(mb2,iter=5000,data=bangladesh,chains = 4,control=list(adapt_delta=.95))
+pred.df <- data.frame(district_id = unique(bangladesh$district_id))
+link.vary <- link(mb2,data=pred.df,n=4000) 
+pred.df$est.vary.link <- apply(link.vary,2,mean)
+
+pred.df$est.vary.coef <- logistic(coef(mb2)[1:60])
+#these are the posterior means.  See help page for map2stan.
+
+post.vary <- extract.samples(mb2)$a_district
+
+pred.df$est.vary.extract.samples <- logistic(apply(post.vary,2,mean))
+cor(pred.df[,2:4])
 ```
 
-Try with exp prior
-```{r, results='hide'}
-mb3 <- map2stan(alist(
-  use.contraception ~ dbinom(1,p),
-  logit(p) <- a[district_id],
-  a[district_id] <- dnorm(a,sigma),
-  a <- dnorm(0,5),
-  sigma <- dexp(1)),
-  data=bangladesh,
-  chains = 4)
+So coef returns the same numbers as extracting the posterior samples and taking the mean.  Link is every so slightly different.
+
+```{r}
+plot.df <- data.frame(
+  district_id=1:60,
+  fixed=logistic(coef(mb1)),
+  varying=logistic(coef(mb2)[1:60]),
+  observed=tapply(bangladesh$district_id,bangladesh$district_id,function(x) unique(x))
+cor(plot.df[,2:4]) # something is wrong here
+plot.df.m <- melt(plot.df,id.var="district_id")
+pl <- ggplot(plot.df.m,aes(x=district_id,y=value,color=variable,shape=variable))
+pl+geom_point(size=3)+geom_hline(yintercept = logistic(coef(mb2)["a"]))
 ```
+
