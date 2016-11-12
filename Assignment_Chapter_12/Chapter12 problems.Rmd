@@ -10,6 +10,7 @@ output:
 ## setup
 
 ```{r}
+library(brms)
 library(rethinking)
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
@@ -256,8 +257,10 @@ get the data
 ```{r}
 data("bangladesh")
 colnames(bangladesh) <- sub(".","_",colnames(bangladesh),fixed=TRUE)
-bangladesh$district_id <- as.numeric(as.factor(bangladesh$district)) 
+bangladesh$district_id <- coerce_index(bangladesh$district)
+#bangladesh$district_id <- as.factor(as.numeric(bangladesh$district))
 summary(bangladesh)
+head(bangladesh)
 ```
 
 fixed intercepts model
@@ -265,7 +268,7 @@ fixed intercepts model
 mb1 <- map2stan(alist(
   use_contraception ~ dbinom(1,p),
   logit(p) <- a[district_id],
-  a[district_id] <- dnorm(0,5)),
+  a[district_id] ~ dnorm(0,5)),
   data=bangladesh,
   chains = 4)
 ```
@@ -279,9 +282,9 @@ precis(mb1,depth = 2)
 mb2 <- map2stan(alist(
   use_contraception ~ dbinom(1,p),
   logit(p) <- a_district[district_id],
-  a_district[district_id] <- dnorm(a,sigma),
-  a <- dnorm(0,5),
-  sigma <- dcauchy(0,1)),
+  a_district[district_id] ~ dnorm(a,sigma),
+  a ~ dnorm(0,5),
+  sigma ~ dcauchy(0,1)),
   data=bangladesh,
   chains = 4)
 ```
@@ -315,8 +318,7 @@ plot.df <- data.frame(
   district_id=1:60,
   fixed=logistic(coef(mb1)),
   varying=logistic(coef(mb2)[1:60]),
-  observed=tapply(bangladesh$district_id,bangladesh$district_id,function(x) unique(x))
-cor(plot.df[,2:4]) # something is wrong here
+  observed=tapply(bangladesh$use_contraception,bangladesh$district_id,function(x) sum(x)/length(x)))
 plot.df.m <- melt(plot.df,id.var="district_id")
 pl <- ggplot(plot.df.m,aes(x=district_id,y=value,color=variable,shape=variable))
 pl+geom_point(size=3)+geom_hline(yintercept = logistic(coef(mb2)["a"]))
