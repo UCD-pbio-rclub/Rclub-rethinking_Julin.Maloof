@@ -175,7 +175,7 @@ Pr(B|twins) = 1 - Pr(A|twins) = 0.6666667
 
 So now we can sum the probability of twins if A or B
 
-Pr(twins2) = Pr(A,twins) + Pr(twins) = 0.1*1/3 + 0.2*2/3 = 0.1666667
+Pr(twins2) = Pr(A,twins) + Pr(B,twins) = 0.1*1/3 + 0.2*2/3 = 0.1666667
 
 ## 2H2
 

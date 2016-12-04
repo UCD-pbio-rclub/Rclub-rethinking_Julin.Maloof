@@ -1,0 +1,168 @@
+---
+title: "Germination Analysis"
+author: "Julin Maloof"
+date: "10/4/2016"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE, autodep = TRUE)
+library(rethinking)
+library(ggplot2)
+```
+
+```{r subset_data, echo=FALSE, eval=FALSE}
+d <- read.csv("LironData.csv")
+summary(d)
+with(d,table(Germination,Time))
+write.csv(d[d$Time==1,],"LironDataTime1.csv",row.names = FALSE)
+```
+
+```{r read_data}
+d <- read.csv("LironDataTime1.csv")
+summary(d)
+head(d)
+d$Germination2 <- as.numeric(d$Germination)-1 #0 = no, 1 = yes
+d$pen <- as.numeric(d$Species)-1 # 1 = pen
+d$Temperature_b <- d$Temperature-min(d$Temperature) # baselined temperature
+d.stan <- d[,grepl("Germination2|pen|Temperature_b",colnames(d))]
+head(d.stan)
+```
+
+plot the data
+
+```{r plot}
+pl <- ggplot(d,aes(x=Germination,fill=Germination))
+pl + geom_bar() + facet_grid(Species ~ Temperature)
+```
+
+Make an additive model
+
+```{r model1, results='hide'}
+m1 <- map2stan(alist(Germination2 ~ dbinom(1, p),
+                     logit(p) <- a + bPen*pen + bTemp*Temperature_b,
+                     c(a,bPen,bTemp) ~ dnorm(0,5)),
+               data=d.stan,chains = 4)
+```
+
+```{r model1_results}
+plot(m1)
+pairs(m1)
+precis(m1)
+```
+
+The PI for both coefficients are above 0 so it seems that both temperature and species have an effect
+
+### Interaction model
+
+```{r model2, results='hide'}
+m2 <- map2stan(alist(Germination2 ~ dbinom(1, p),
+                     logit(p) <- a + bPen*pen + bTemp*Temperature_b + bPen_Temp*pen*Temperature_b,
+                     c(a,bPen,bTemp,bPen_Temp) ~ dnorm(0,5)),
+               data=d.stan,chains = 4)
+```
+
+```{r model2_results}
+plot(m2)
+pairs(m2)
+precis(m2)
+```
+
+
+### Species only model
+
+```{r model3, results='hide'}
+m3 <- map2stan(alist(Germination2 ~ dbinom(1, p),
+                     logit(p) <- a + bPen*pen,
+                     c(a,bPen) ~ dnorm(0,5)),
+               data=d.stan,chains = 4) 
+```
+
+```{r model3_Results}
+plot(m3)
+pairs(m3)
+precis(m3)
+```
+
+### Temperature only model
+
+```{r model4, results='hide'}
+m4 <- map2stan(alist(Germination2 ~ dbinom(1, p),
+                     logit(p) <- a + bTemp*Temperature_b,
+                     c(a,bTemp) ~ dnorm(0,5)),
+               data=d.stan,chains = 4)
+```
+
+```{r model4_results}
+plot(m4)
+pairs(m4)
+precis(m4)
+```
+
+### Compare models
+
+```{r compare}
+compare(m1,m2,m3,m4)
+coeftab(m1,m2,m3,m4)
+```
+
+The interactive and full additive models have a lot of support; the single factor models do not.
+
+### Get predictions
+
+```{r}
+pred.df <- data.frame(
+  pen=c(0,0,1,1),
+  Temperature_b=c(0,8,0,8))
+pred.df
+p.link <- ensemble(m1,m2,data=pred.df,n=4000)$link #using 4000 to try to get smoother estimates
+pred.df$p.mean <- apply(p.link,2,mean)
+pred.df$p.PI.low <- apply(p.link,2,PI)[1,]
+pred.df$p.PI.high <- apply(p.link,2,PI)[2,]
+
+#add nice plotting columns
+
+pred.df$temperature <- pred.df$Temperature_b+min(d$Temperature)
+pred.df$species <- ifelse(pred.df$pen,"S.pen","S.lyc")
+
+pl <- ggplot(pred.df,aes(y=p.mean,ymin=p.PI.low,ymax=p.PI.high,x=species,fill=as.factor(temperature)))
+pl <- pl + geom_bar(stat = "identity",position="dodge")
+pl <- pl + geom_errorbar(width=0.5, position=position_dodge(width=0.9))
+pl <- pl + scale_fill_discrete(name="temperature")
+pl + ggtitle("predicted germination percentages")
+```
+
+### compare posterior estimates
+
+Temperature difference in S.lyc
+```{r}
+S.lyc.temp <- p.link[,2]-p.link[,1]
+dens(S.lyc.temp,show.HPDI = 0.95, show.zero = TRUE,xlim=c(-.1,.9),main="S.lyc 22 vs. 14")
+```
+Clearly temp influences S.lyc
+
+Temperature difference in S.pen
+```{r}
+S.pen.temp <- p.link[,4]-p.link[,3]
+dens(S.pen.temp,show.HPDI = 0.95, show.zero = TRUE, main="S.pen 22 vs. 14")
+sum(S.pen.temp > 0) / length(S.pen.temp)
+```
+Less clear
+
+S.lyc vs S.pen at 14
+```{r}
+S.pen.lyc.14 <- p.link[,3]-p.link[,1]
+dens(S.pen.lyc.14,show.HPDI = 0.95, show.zero = TRUE, main="S.pen vs. S. lyc at 14˚")
+sum(S.pen.lyc.14 > 0) / length(S.pen.lyc.14)
+```
+Clear difference
+
+S.lyc vs S.pen at 22
+```{r}
+S.pen.lyc.22 <- p.link[,4]-p.link[,2]
+dens(S.pen.lyc.22,show.HPDI = 0.95, show.zero = TRUE, main="S.pen vs. S. lyc at 22˚")
+sum(S.pen.lyc.22 > 0) / length(S.pen.lyc.14)
+```
+No evidence for a difference

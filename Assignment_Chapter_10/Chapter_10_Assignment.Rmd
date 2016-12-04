@@ -1,0 +1,437 @@
+---
+title: "Chapter_10_Assignment"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(cache = TRUE,autodep = TRUE)
+```
+
+```{r}
+library(rethinking)
+library(ggplot2)
+```
+
+
+## 10E1
+_If an event has probability of 0.35 what are the log-odds of this event?_
+
+The log odds are 
+```{r}
+log(.35/(1-.35))
+```
+
+## 10E2
+_If an event has log-odds of 3.2, what is the probability of this event?_
+
+The probability is
+```{r}
+logistic(3.2) # this is p/(1-p)
+```
+
+## 10E3
+_Suppose that a coefficient in a logistic regression has a value of 1.7.  What does this imply about the proportional change in odds ofthe outcome_
+
+There is a proportional increase of
+```{r}
+exp(1.7)
+```
+in the odds of the event
+
+## 10E4
+_Why do Poisson regressons sometimes require an offset?_
+
+An offset is required of the measurement interval is different for different observations.  Perhaps you are comparing transposon insertion rates in two different species and in one the reported rate is per 100kb and the other is per 10kb.
+
+## 10M1
+_Bionomial data can be organized as aggregated or disaggregated without any impact on inference.  The likelihood of the data does change.  Why?_
+
+```{r}
+dbinom(5,10,.5)
+dbinom(rep(c(0,1),each=5),1,.5)
+```
+
+The latter does not take into account all of the different ways that the observations could have occured.
+
+## 10M2
+_If a coefficint in a Poisson regression has a value of 1.7, what does this imply about the change in outcome?_
+
+For this we need to use the inverse function
+```{r}
+exp(1.7)
+```
+each unit of change in the predictor increases the lambda (aka the mean and variance) by 5.47.
+
+## 10M3
+_Explain why the logit link is appropriate for a binomial model_
+
+Because it allows modeling of p, the important parameter for the binomial, as a linear function of the predictors, and limits p to between 0 and 1.
+
+## 10M4
+_Explain why the log link is appropriate for Poisson GLM_
+The log link ensures that the outcome is positive.
+
+## 10M5
+_What would it imply to use a logit link for a Poisson GLM?  Why might you want to_
+IT implies that the mean is between 0 and 1.  This makes sense if it is an impossibilty for the event to occur more than once per unit of measurement.  So if you are measureing the number of balls per widget and each widget can only hold a single ball and you measure every widget.
+
+## 10H1
+
+_Use `map` to construct a quadractic approximation of the posterior distribution for m10.4.  Compare to MCMC and explain the similarities and differences_
+
+### First set up the data and run the MCMC model
+```{r}
+data("chimpanzees")
+d <- chimpanzees
+d2 <- d
+d2$recipient <- NULL
+m10.4.stan <- map2stan(
+  alist(
+    pulled_left ~ dbinom( 1 , p ) ,
+    logit(p) <- a[actor] + (bp + bpC*condition)*prosoc_left ,
+    a[actor] ~ dnorm(0,10),
+    bp ~ dnorm(0,10),
+    bpC ~ dnorm(0,10)
+  ),
+  data=d2 , chains=2 , iter=2500 , warmup=500 )
+```
+
+### Now run the quadratic approximation
+```{r}
+m10.4.map <- map(  alist(
+    pulled_left ~ dbinom( 1 , p ) ,
+    logit(p) <- a[actor] + (bp + bpC*condition)*prosoc_left ,
+    a[actor] ~ dnorm(0,10),
+    bp ~ dnorm(0,10),
+    bpC ~ dnorm(0,10)
+  ),
+  data=d2)
+```
+
+### compare
+```{r}
+precis(m10.4.stan,depth=2)
+precis(m10.4.map,depth=2)
+compare(m10.4.stan,m10.4.map) # not a good idea?
+coeftab(m10.4.map,m10.4.stan)
+plot(coeftab(m10.4.map,m10.4.stan))
+pairs(m10.4.map)
+pairs(m10.4.stan)
+```
+
+The models differ the most in the posterior for a2 and a7.  These posteriors have the most non--Guassian distribution.
+
+## 10H2
+_Use WAIC to compare m10.4 to the simpler models fit to the same data_
+
+So I guess I shoud fit the all with stan
+```{r}
+m10.1.stan <- map2stan(
+  alist(
+    pulled_left ~ dbinom(1,p),
+    logit(p) <- a,
+    a ~ dnorm(0,10)
+  ),
+  data=d2)
+
+m10.2.stan <- map2stan(
+  alist(
+    pulled_left ~ dbinom( 1 , p ) ,
+    logit(p) <- a + bp*prosoc_left ,
+    a ~ dnorm(0,10) ,
+    bp ~ dnorm(0,10)
+  ),
+  data=d2 )
+
+m10.3.stan <- map2stan(
+  alist(
+    pulled_left ~ dbinom( 1 , p ) ,
+    logit(p) <- a + (bp + bpC*condition)*prosoc_left ,
+    a ~ dnorm(0,10) ,
+    bp ~ dnorm(0,10) ,
+    bpC ~ dnorm(0,10)
+  ), data=d2 )
+
+compare(m10.1.stan,m10.2.stan,m10.3.stan,m10.4.stan)
+```
+
+Conclusion: the model with an individual intercept for each actor is strongly favored.
+
+## 10H3
+
+### A
+```{r}
+library(MASS)
+data("eagles")
+eagles
+eagles$PSize <- abs(as.numeric(eagles$P)-2) # 0 is small, 1 is large
+eagles$PAge <- abs(as.numeric(eagles$A)-2) #0 is immature, 1 is adult
+eagles$VSize <- abs(as.numeric(eagles$V)-2) # 0 is small, 1 is large
+M10h3.1 <- map(
+  alist(
+    y ~ dbinom(n, p),
+    logit(p) <- a + b_PS*PSize + b_PA*PAge + b_VS*VSize,
+    a ~ dnorm(0,10),
+    c(b_PS, b_PA, b_VS) ~ dnorm(0,5)),
+  data=eagles)
+precis(M10h3.1)
+
+M10h3.1.stan <- map2stan(M10h3.1,chains=4,cores=2)
+precis(M10h3.1.stan)
+plot(M10h3.1.stan)
+pairs(M10h3.1.stan)
+```
+
+b\_PS and b\_VS show some skew, so better to use STAN
+
+### B
+
+Inerpret the model
+
+```{r}
+precis(M10h3.1.stan)
+```
+
+The means are the log odds associated with the various predictors.  To get the odds change we need to exponentiate these.  For all but alpha the 89% confidence interval does not include 0, indicating that the predictors are important
+
+```{r}
+# Pirate Size
+exp(4.65) #more than 100-fold increase in success if large pirate
+
+# Pirate Age
+exp(1.13) # 3-fold increase in success if adult pirate
+
+# Victim Size
+exp(-5.06) # much less chance of success if large victim
+```
+
+We can look at the probabilty of success by using the logistic function
+
+```{r}
+#baseline (small victim, small pirate, immature pirate)
+logistic(0.66)
+
+#probability with large pirate
+logistic(0.66+4.65)
+
+#probability with adult pirate
+logistic(0.66+1.13)
+
+#probability with large, adult pirate
+logistic(0.66 + 4.65 + 1.13)
+
+#probability with large victim (and small, immature pirate)
+logistic(0.66 -5.06)
+
+#probability with large victim and large, adult pirate)
+logistic(0.66 + 4.65 + 1.13 -5.06)
+```
+
+Some predictions...
+
+First get the probability predictions
+```{r}
+pred.df <- eagles[,-1]
+
+eagle.link <- link(fit = M10h3.1.stan, data = pred.df)
+
+dim(eagle.link)
+head(eagle.link) #these are probabilities
+
+pred.df$p.mean <- apply(eagle.link,2,mean)
+pred.df$p.PI.low <- apply(eagle.link,2,PI)[1,]
+pred.df$p.PI.high <- apply(eagle.link,2,PI)[2,]
+```
+
+Calculate count predictions
+
+```{r}
+pred.df$counts.mean <- pred.df$n * pred.df$p.mean
+pred.df$counts.PI.low <- pred.df$n * pred.df$p.PI.low
+pred.df$counts.PI.high <- pred.df$n * pred.df$p.PI.high
+```
+
+Plot the predictions
+
+```{r}
+#make some intellegent names for plotting
+pred.df$pirate_size <- factor(pred.df$P,levels=c("S","L"),labels = c("small","large"))
+pred.df$pirate_age <- factor(pred.df$A,levels=c("I","A"),labels = c("immature","adult"))
+pred.df$victim_size <- factor(pred.df$V,levels=c("S","L"),labels = c("small_victim","large_victim"))
+
+pl <- ggplot(pred.df,aes(x=pirate_size,fill=pirate_age))
+pl <- pl + geom_bar(stat="identity",position="dodge")
+pl <- pl + geom_errorbar(position=position_dodge(width=0.9),width=0.5)
+pl <- pl + facet_grid(. ~ victim_size)
+pl + aes(y=p.mean,ymax=p.PI.high,ymin=p.PI.low) + ggtitle("probability of pirating success")
+
+pl + aes(y=counts.mean,ymax=counts.PI.high,ymin=counts.PI.low) + ggtitle("count of successful pirating attempts")
+```
+
+### C
+
+```{r}
+M10h3.2.stan <- map2stan(
+  alist(
+    y ~ dbinom(n, p),
+    logit(p) <- a + b_PS*PSize + b_PA*PAge + b_VS*VSize + b_PA_PS*PSize*PAge,
+    a ~ dnorm(0,10),
+    c(b_PS, b_PA, b_VS, b_PA_PS) ~ dnorm(0,5)),
+  data=eagles,chains = 4, cores=2)
+
+plot(M10h3.2.stan)
+pairs(M10h3.2.stan)
+precis(M10h3.2.stan)
+compare(M10h3.1.stan,M10h3.2.stan)
+coeftab(M10h3.1.stan,M10h3.2.stan)
+par(mfrow=c(1,1))
+plot(coeftab(M10h3.1.stan,M10h3.2.stan))
+```
+
+Redo plots
+
+First get the probability predictions
+```{r}
+pred.df.int <- eagles[,-1]
+
+eagle.link.int <- link(fit = M10h3.2.stan, data = pred.df.int)
+
+dim(eagle.link.int)
+head(eagle.link.int) #these are probabilities
+
+pred.df.int$p.mean <- apply(eagle.link.int,2,mean)
+pred.df.int$p.PI.low <- apply(eagle.link.int,2,PI)[1,]
+pred.df.int$p.PI.high <- apply(eagle.link.int,2,PI)[2,]
+```
+
+Calculate count predictions
+
+```{r}
+pred.df.int$counts.mean <- pred.df.int$n * pred.df.int$p.mean
+pred.df.int$counts.PI.low <- pred.df.int$n * pred.df.int$p.PI.low
+pred.df.int$counts.PI.high <- pred.df.int$n * pred.df.int$p.PI.high
+```
+
+Plot the predictions
+
+```{r}
+#make some intellegent names for plotting
+pred.df.int$pirate_size <- factor(pred.df.int$P,levels=c("S","L"),labels = c("small","large"))
+pred.df.int$pirate_age <- factor(pred.df.int$A,levels=c("I","A"),labels = c("immature","adult"))
+pred.df.int$victim_size <- factor(pred.df.int$V,levels=c("S","L"),labels = c("small_victim","large_victim"))
+
+pl.int <- ggplot(pred.df.int,aes(x=pirate_size,fill=pirate_age))
+pl.int <- pl.int + geom_bar(stat="identity",position="dodge")
+pl.int <- pl.int + geom_errorbar(position=position_dodge(width=0.9),width=0.5)
+pl.int <- pl.int + facet_grid(. ~ victim_size)
+pl.int + aes(y=p.mean,ymax=p.PI.high,ymin=p.PI.low) + ggtitle("probability of pirating success, interaction model")
+
+pl + aes(y=p.mean,ymax=p.PI.high,ymin=p.PI.low) + ggtitle("probability of pirating success, additive model")
+
+pl.int + aes(y=counts.mean,ymax=counts.PI.high,ymin=counts.PI.low) + ggtitle("count of successful pirating attempts, interaction model")
+
+pl + aes(y=counts.mean,ymax=counts.PI.high,ymin=counts.PI.low) + ggtitle("count of successful pirating attempts, additive model")
+```
+
+
+## 10H4
+
+__(a)__ _Model the relationship between density and percent cover.  In what way does the model do a good and bad job?_
+
+```{r}
+library(rethinking)
+library(ggplot2)
+data(salamanders)
+head(salamanders)
+qplot(x=PCTCOVER,y=SALAMAN,geom="point",data=salamanders)
+msal1 <- map(alist( SALAMAN ~ dpois(lambda),
+                    log(lambda) <- a + b_c*PCTCOVER,
+                    a ~ dnorm(0,2),
+                    b_c ~ dnorm(0,1)),
+             data=salamanders)
+precis(msal1,corr = TRUE)
+plot(precis(msal1))                    
+```
+
+```{r}
+pred.df <- data.frame(PCTCOVER=seq(0,100,1))
+lambda.link <- link(msal1,pred.df)
+pred.df$lambda.med <- apply(lambda.link,2,median)
+pred.df <- cbind(pred.df,t(apply(lambda.link,2,PI)))
+colnames(pred.df)[c(3,4)] <- c("PI.low","PI.high")
+pl <- ggplot(pred.df,aes(x=PCTCOVER,y=lambda.med))
+pl <- pl + geom_line()
+pl <- pl + geom_ribbon(aes_string(ymin="PI.low",ymax="PI.high"),alpha=.1)
+pl <- pl + geom_point(data=salamanders,aes(y=SALAMAN)) 
+pl + ylab("Salamander density")
+```
+
+
+```{r}
+msal1.stan <- map2stan(msal1,chains=4,iter=4000)
+precis(msal1.stan) #pretty poor sampling, really.  Due to correlation I assume.
+pairs(msal1.stan)
+```
+
+
+The model does a good job at low PCTCOVER and captures the average increase but does not account for the variability at high PCTCOVER.
+
+
+__(b)__ _Can you improve the model by using the FORESTAGE predictor?  Try any models that may be useful.  Explain why FORESTAGE helps or does not help_
+
+Additive model 
+
+```{r}
+qplot(x=FORESTAGE,y=SALAMAN,geom="point",data=salamanders)
+qplot(x=FORESTAGE,y=PCTCOVER,geom="point",data=salamanders)
+msal.add <- map(alist( SALAMAN ~ dpois(lambda),
+                    log(lambda) <- a + b_c*PCTCOVER + b_age*FORESTAGE,
+                    a ~ dnorm(0,2),
+                    c(b_c,b_age) ~ dnorm(0,1)),
+                method="Nelder-Mead",
+                start = list(a=0,b_c=0,b_age=0),
+             data=salamanders)
+precis(msal.add,corr = TRUE) #note : this can be really variable!
+plot(precis(msal.add))  
+
+(compare.out <- compare(msal1,msal.add)) #model with FORESTAGE is a bit worse
+plot(compare.out)
+```
+
+Model that includes FORESTAGE is a bit worse than only with PCTCOVER and FORESTAGE is not predicting anything.  (note that the coefficient estimates can vary a lot with different runs; this also makes me think that we are over-paramterized here).  Bottom line, this additive model does not help.
+
+What about FORESTAGE on its own?
+
+```{r}
+msal.age <- map(alist( SALAMAN ~ dpois(lambda),
+                    log(lambda) <- a +  b_age*FORESTAGE,
+                    a ~ dnorm(0,2),
+                    c(b_age) ~ dnorm(0,1)),
+                method="Nelder-Mead",
+             data=salamanders)
+precis(msal.age,corr = TRUE)
+plot(precis(msal.age))  
+
+(compare.out <- compare(msal1,msal.add,msal.age)) 
+plot(compare.out)
+```
+
+Model with FORESTAGE alone is much worse.
+
+Model with interaction
+
+```{r eval=FALSE}
+msal.int <- map(alist( SALAMAN ~ dpois(lambda),
+                    log(lambda) <- a + b_c*PCTCOVER + b_age*FORESTAGE + b_c_age*PCTCOVER * FORESTAGE,
+                    a ~ dnorm(0,2),
+                    c(b_c,b_age,b_c_age) ~ dnorm(0,1)),
+             data=salamanders,
+             method="Nelder-Mead",
+             start=list(a=0,b_c=0,b_age=0,b_c_age=0))
+precis(msal1,corr = TRUE)
+plot(precis(msal1)) 
+```
+
+I cannot get this to work.

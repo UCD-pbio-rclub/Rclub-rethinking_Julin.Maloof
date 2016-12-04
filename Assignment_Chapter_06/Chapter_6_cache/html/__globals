@@ -1,0 +1,15 @@
+unnamed-chunk-2	c	log	sum
+unnamed-chunk-3	c	log	sum
+unnamed-chunk-4	log	rep	sum
+unnamed-chunk-5	~	a	alist	b	cars	data	DIC	library	map	nrow	sample	speed	WAIC
+unnamed-chunk-6	~	a	alist	attr	b	cars	DIC	m	map	speed	WAIC
+unnamed-chunk-7	~	a	alist	attr	b	cars	DIC	m	m.narrow	map	speed	WAIC
+unnamed-chunk-8	^	~	$	$<-	a	age	alist	b1	b2	b3	b4	b5	b6	compare	data	head	Howell1	library	map	mean	nrow	plot	precis	sample	sd	set.seed
+unnamed-chunk-9	~	$	apply	c	d1	data.frame	for	get	lines	link	ls	mean	PI	plot	print	range	rangi2	seq
+unnamed-chunk-10	~	$	apply	c	d1	ensemble	lines	M1	M2	M3	M4	M5	M6	mean	PI	plot	pred.df	range	rangi2	shade
+unnamed-chunk-11	[[	@	$	$<-	as.list	coef	d2	dnorm	eval	get	ls	parse	sapply	sum	T
+unnamed-chunk-12	::	get	min	models	rbind	sapply	test.dev	WAIC
+unnamed-chunk-13	^	~	a	age	alist	b1	b2	b3	b4	b5	b6	d1	map
+unnamed-chunk-14	~	$	apply	c	d1	data.frame	lines	link	M7	mean	PI	plot	range	rangi2	seq
+unnamed-chunk-15	coeftab	M6	M7	plot
+unnamed-chunk-16	[[	@	$	$<-	as.list	coef	d2	dnorm	eval	M7	parse	sum	T	test.dev

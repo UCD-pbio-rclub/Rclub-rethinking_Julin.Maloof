@@ -1,0 +1,933 @@
+---
+title: "Chapter 8"
+output: 
+html_document: 
+keep_md: yes
+---
+
+# Chapter 8
+
+```{r}
+knitr::opts_chunk$set(cache = TRUE,autodep = TRUE)
+library(rethinking)
+library(ggplot2)
+library(reshape2)
+```
+
+
+## 8E1
+
+The simple Metropolis algorhithim requires that the proposal distribution be symmetric
+
+## 8E2
+
+Gibbs sampling achieves its efficiency by using conjugate priors.  Maybe you don't want to use conjugate priors. Also becomes very ineffecient with large numbers of parameters.
+
+## 8E3
+
+HMC requires cannot handle discrete parameters.  This is because it is sampling the probability space by gliding through it, and it is unclear how to glide between discrete points.
+
+## 8E4
+
+Because there is autocorrelation in MCMC chains samples are not independent and the effective number of samples is reduced.  Neff estimates this.
+
+## 8E5
+
+Rhat should approach 1 (from above)
+
+## 8E6
+
+Should stabilize
+
+## 8M1
+
+Re-estimate the terrain ruggedness model from the chapter but now using a uniform prior and an exponential prior for sigma.  Any difference in postieror distribition?
+
+```{r 8m1}
+library(rethinking)
+data(rugged)
+d <- rugged
+d$log_gdp <- log(d$rgdppc_2000)
+dd <- d[ complete.cases(d$rgdppc_2000) , ]
+
+dd.trim <- dd[ , c("log_gdp","rugged","cont_africa") ]
+
+m8m1A.stan <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dcauchy(0,2)
+  ), data=dd.trim )
+
+
+m8m1_dunif.stan <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dunif(0,10)
+  ), data=dd.trim )
+
+
+m8m1_exp.stan <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dexp(1)
+  ), data=dd.trim )
+
+precis(m8m1A.stan)
+precis(m8m1_dunif.stan)
+precis(m8m1_exp.stan)
+
+sigmas <- data.frame(
+  cauchy=extract.samples(m8m1A.stan)$sigma,
+  unif=extract.samples(m8m1_dunif.stan)$sigma,
+  exp=extract.samples(m8m1_exp.stan)$sigma)
+
+sigmas.m <- melt(sigmas,variable.name="prior.function",value.name="sigma")
+# summary(sigmas.m)
+dim(sigmas.m$sigma) <- 3000 #strange that I need to do this!!
+summary(sigmas.m)
+
+pl <- ggplot(sigmas.m, aes(sigma,color=prior.function,fill=prior.function))
+pl + geom_density(alpha=.2)
+pl + geom_density() + facet_grid(prior.function ~ .)
+```
+
+Look very similar.  I *assume* the differences are due to sampling.
+
+## 8M2 Use smaller values of scaling parameter for sigma prior to see how that changes things...
+
+### First the cauchy model
+
+What happends to cauchy distribution at different scales?
+```{r}
+x <- seq(-10,10,.1)
+scale <- c(2,1,.5,.2)
+cauchy.dist <- as.data.frame(cbind(x,sapply(scale,function(s) dcauchy(x,location=0,scale = s))))
+colnames(cauchy.dist)[2:5] <- as.character(scale)
+head(cauchy.dist)
+cauchy.dist.m <- melt(cauchy.dist,id.vars="x",variable.name="scale.value",value.name="y")
+head(cauchy.dist.m)
+pl <- ggplot(cauchy.dist.m,aes(x=x,y=y,fill=scale.value,color=scale.value))
+pl <- pl + geom_density(stat="identity",alpha=0.1)
+pl + ggtitle("cauchy distribution at different scales")
+```
+
+What happends to exp distribution at different rates?
+```{r}
+x <- seq(-10,10,.1)
+rate <- c(2,1,.5,.2)
+exp.dist <- as.data.frame(cbind(x,sapply(rate,function(r) dexp(x,rate = r))))
+colnames(exp.dist)[2:5] <- as.character(rate)
+head(exp.dist)
+exp.dist.m <- melt(exp.dist,id.vars="x",variable.name="rate.value",value.name="y")
+head(exp.dist.m)
+pl <- ggplot(exp.dist.m,aes(x=x,y=y,fill=rate.value,color=rate.value))
+pl <- pl + geom_density(stat="identity",alpha=0.1)
+pl + ggtitle("exponential distribution at different rates")
+```
+
+
+Fit a series of cauchy models with smaller scales
+```{r}
+m8M2.stan.cauchy2 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dcauchy(0,2)
+  ), data=dd.trim )
+
+m8M2.stan.cauchy1 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dcauchy(0,1)
+  ), data=dd.trim )
+
+m8M2.stan.cauchy.5 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dcauchy(0,.5)
+  ), data=dd.trim )
+
+m8M2.stan.cauchy.2 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dcauchy(0,.2)
+  ), data=dd.trim )
+```
+
+look at posteriors
+```{r}
+precis(m8M2.stan.cauchy2)
+precis(m8M2.stan.cauchy1)
+precis(m8M2.stan.cauchy.5)
+precis(m8M2.stan.cauchy.2)
+```
+
+plot posteriors
+```{r}
+fits <- ls(pattern="m8M2.stan.cauch")
+sigmas <- sapply(fits, function(x) extract.samples(get(x))$sigma)
+colnames(sigmas) <- fits
+sigmas.m <- melt(sigmas)
+pl <- ggplot(sigmas.m,aes(x=value,color=Var2,fill=Var2))
+pl <- pl + geom_density(alpha=0.1)
+pl
+```
+
+exp models with smaller scales:
+
+```{r}
+m8M2.stan.exp1 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dexp(1)
+  ), data=dd.trim )
+
+m8M2.stan.exp.5 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dexp(.5)
+  ), data=dd.trim )
+
+m8M2.stan.exp.2 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dexp(.2)
+  ), data=dd.trim )
+
+m8M2.stan.exp.1 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dexp(.1)
+  ), data=dd.trim )
+
+m8M2.stan.exp.001 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dexp(.001)
+  ), data=dd.trim )
+```
+
+look at posteriors
+```{r}
+precis(m8M2.stan.exp1)
+precis(m8M2.stan.exp.5)
+precis(m8M2.stan.exp.2)
+precis(m8M2.stan.exp.1)
+precis(m8M2.stan.exp.001) #rhat going up?
+```
+
+plot posteriors
+```{r}
+fits <- ls(pattern="m8M2.stan.exp")
+sigmas <- sapply(fits, function(x) extract.samples(get(x))$sigma)
+colnames(sigmas) <- fits
+sigmas.m <- melt(sigmas)
+pl <- ggplot(sigmas.m,aes(x=value,color=Var2,fill=Var2))
+pl <- pl + geom_density(alpha=0.1)
+pl
+```
+
+## 8M3
+
+Restimate a stan model at different number of warm up samples.
+
+```{r}
+m8m3.stan.warm1000 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dcauchy(0,2)
+  ), data=dd.trim )
+
+m8m3.stan.warm100 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dcauchy(0,2)
+  ), data=dd.trim, warmup = 100, iter = 1100 )
+
+m8m3.stan.warm50 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dcauchy(0,2)
+  ), data=dd.trim, warmup = 50, iter = 1050 )
+
+m8m3.stan.warm10 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dcauchy(0,2)
+  ), data=dd.trim, warmup = 10, iter = 1010 )
+
+m8m3.stan.warm2 <- map2stan(
+  alist(
+    log_gdp ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*rugged + bA*cont_africa + bAR*rugged*cont_africa ,
+    a ~ dnorm(0,100),
+    bR ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bAR ~ dnorm(0,10),
+    sigma ~ dcauchy(0,2)
+  ), data=dd.trim, warmup = 2, iter = 1002 )
+```
+
+
+```{r}
+precis(m8m3.stan.warm1000)
+precis(m8m3.stan.warm100)
+precis(m8m3.stan.warm50)
+precis(m8m3.stan.warm10)
+precis(m8m3.stan.warm2)
+
+plot(m8m3.stan.warm1000)
+plot(m8m3.stan.warm100)
+plot(m8m3.stan.warm50)
+plot(m8m3.stan.warm10)
+plot(m8m3.stan.warm2)
+```
+
+```{r}
+compare(m8m3.stan.warm1000,m8m3.stan.warm100,m8m3.stan.warm50,m8m3.stan.warm10,m8m3.stan.warm2)
+```
+
+
+Things seem good with 100 warmups and even 50 but certinly not with 10 or 2; the number of effective samples drops to 1 and this is also clear from the chain traces
+
+
+## 8H1
+
+Run the model below and then inspect the posterior distubition and explain what it is accomplishing.  Compare the samples for the parameters a and b.  Can you explain the difference given what you know about the Cauchy distribution.
+
+```{r 8H1.1}
+mp <- map2stan(
+  alist(
+    a ~ dnorm(0,1),
+    b ~ dcauchy(0,1)
+  ),
+  data=list(y=1),
+  start=list(a=0,b=0),
+  iter=1e4, warmup=100 , WAIC=FALSE )
+```
+
+For starters this is a wierd little setup.  data is define as y=1 but this is not references in a formula.  I assume that the value of y does not actually matter.  So I think this is just giving us the normal and Cauchy distributions for a and b.  Will check...
+
+```{r}
+precis(mp)
+plot(precis(mp))
+```
+
+These show us that a has a mean of ~0 and a SD of ~1, as expected from the normal distribution.  b also has a mean of 0 but a much broader SD. This fits with Cauchy being a "thick-tailed" distribution.
+
+Looking at the traces...
+
+```{r}
+plot(mp)
+```
+
+We see that the Cauchy distribution has some very extreme values.  This fits of it being equivalent to the ratio of random draws from two Guassian distributions.  It is easy to obtain an "extreme" value.
+
+Compare to the respective random functions.
+```{r}
+
+norm.df <- melt(data.frame(posterior=extract.samples(mp)$a,
+                           rnorm=rnorm(9900,0,1)))
+qplot(x=value,fill=variable,alpha=0.1,data=norm.df,geom="density",main="normal")
+
+cauchy.df <- melt(data.frame(posterior=extract.samples(mp)$b,
+                             rcauchy=rcauchy(9900,0,1)))
+qplot(x=value,fill=variable,alpha=0.1,data=cauchy.df,geom="density",main="normal")
+
+qplot(x=value,fill=variable,alpha=0.1,data=cauchy.df,geom="density",main="cauchy") + scale_x_log10()
+```
+
+Note that the last plot is not really correct; samples near 0 were dropped due to the log transformation.
+
+## 8H2
+
+Recall the Divorce Rate data set.  Repeat the analyses of models 5.1, 5.2, and 5.3, but with map2stan.  Use compare to compare the fits on WAIC.  Explain.
+
+```{r}
+data(WaffleDivorce)
+d <- WaffleDivorce
+# standardize predictor
+d$MedianAgeMarriage.s <- (d$MedianAgeMarriage-mean(d$MedianAgeMarriage))/
+  sd(d$MedianAgeMarriage)
+d$Marriage.s <- (d$Marriage - mean(d$Marriage))/sd(d$Marriage)
+```
+
+
+fit model map models
+```{r}
+m5.1 <- map(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bA * MedianAgeMarriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bA ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ) , data = d )
+
+m5.2 <- map(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bR * Marriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bR ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ) , data = d )
+
+m5.3 <- map(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*Marriage.s + bA*MedianAgeMarriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bR ~ dnorm( 0 , 1 ) ,
+    bA ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ),
+  data = d )
+```
+
+fit stan models
+```{r}
+m5.1.stan <- map2stan(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bA * MedianAgeMarriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bA ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ) , data = d, chains=4 )
+
+m5.2.stan <- map2stan(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bR * Marriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bR ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ) , data = d, chains=4 )
+
+m5.3.stan <- map2stan(
+  alist(
+    Divorce ~ dnorm( mu , sigma ) ,
+    mu <- a + bR*Marriage.s + bA*MedianAgeMarriage.s ,
+    a ~ dnorm( 10 , 10 ) ,
+    bR ~ dnorm( 0 , 1 ) ,
+    bA ~ dnorm( 0 , 1 ) ,
+    sigma ~ dunif( 0 , 10 )
+  ),
+  data = d,chains=4 )
+```
+
+Not clear if the problem asks us to compare from stan to map or to compare within each engine type.  Do both.
+
+map vs stan
+```{r}
+compare(m5.1,m5.1.stan)
+compare(m5.2,m5.2.stan)
+compare(m5.3,m5.3.stan)
+```
+
+different models
+```{r}
+compare(m5.1,m5.2,m5.3)
+compare(m5.1.stan,m5.2.stan,m5.3.stan)
+```
+
+Either way the fits and conclusions are pretty comparable.  Is this what the point was?
+
+## 8H3
+
+Sometimes changes a prior for one parameter has unanticipated effects on other parameters. This can occur when the parameters are highly correlated in the posterior. Work and think through the following example.
+
+Simulate leg length and height for 100 individuals
+```{r}
+N <- 100
+height <- rnorm(N,10,2)
+leg_prop <- runif(N,0.4,0.5)
+leg_left <- leg_prop*height +
+  rnorm( N , 0 , 0.02 )
+leg_right <- leg_prop*height +
+  rnorm( N , 0 , 0.02 )
+d <- data.frame(height,leg_left,leg_right)
+```
+
+Original priors, now fit with Stan
+```{r}
+m5.8s <- map2stan(
+  alist(
+    height ~ dnorm( mu , sigma ) ,
+    mu <- a + bl*leg_left + br*leg_right ,
+    a ~ dnorm( 10 , 100 ) ,
+    bl ~ dnorm( 2 , 10 ) ,
+    br ~ dnorm( 2 , 10 ) ,
+    sigma ~ dcauchy( 0 , 1 )
+  ),
+  data=d, chains=4, start=list(a=10,bl=0,br=0,sigma=1) )
+```
+
+Change prior for bR so that it is alway positive:
+
+```{r}
+m5.8s2 <- map2stan(
+  alist(
+    height ~ dnorm( mu , sigma ) ,
+    mu <- a + bl*leg_left + br*leg_right ,
+    a ~ dnorm( 10 , 100 ) ,
+    bl ~ dnorm( 2 , 10 ) ,
+    br ~ dnorm( 2 , 10 ) & T[0,] ,
+    sigma ~ dcauchy( 0 , 1 )
+  ),
+  data=d, chains=4, start=list(a=10,bl=0,br=0,sigma=1) )
+```
+
+A bunch of warnings for m5.8s2...
+
+Take a look
+```{r}
+precis(m5.8s)
+precis(m5.8s2)
+
+op <- par(mfrow=c(1,2))
+plot(precis(m5.8s))
+plot(precis(m5.8s2))
+par(op)
+```
+
+The paramter estimates and SD are really quite similar.  Of course bR remains positive on the right.  I suspect that the sampling problem in the second version arises when bl is proposed to be positive, then br can not be negative.
+
+I also do not understand why, in the first model, bl is mostly negative.
+
+more diagnostics
+
+```{r}
+plot(m5.8s)
+plot(m5.8s2)
+```
+Here it is more clear that the fits are behaving differently, with the posterior sampleing bR and bL differently in the second version.
+
+```{r}
+pairs(m5.8s)
+pairs(m5.8s2)
+```
+This shows that the posterior for bl and br are skewed in the second fit but not in the first.
+
+Comparing the distributions...
+```{r}
+post.df <- melt(data.frame(bl.m1=extract.samples(m5.8s)$bl,
+                           br.m1=extract.samples(m5.8s)$br,
+                           bl.m2=extract.samples(m5.8s2)$bl,
+                           br.m2=extract.samples(m5.8s2)$br))
+post.df$model=substr(post.df$variable,4,5)
+post.df$parameter=substr(post.df$variable,1,2)
+pl <- ggplot(post.df,aes(x=value,fill=model))
+pl <- pl + geom_density(alpha=0.2)
+pl <- pl + facet_wrap(~ parameter,ncol=2)
+pl
+```
+
+## 8H4
+Use DIC or WAIC to compare the effective parameters.
+
+```{r}
+compare(m5.8s,m5.8s2)
+compare(m5.8s,m5.8s2,func=DIC)
+```
+By both WAIC and DIC the model with the constrained bR has a somewhat smaller number of parameters.  Would we really expect this to be the case?  In both cases they are completely correlated so should only really be 1 parameter.  But it muse be that since now they are constrained they are sampling yet less space.
+
+
+## 8H5
+
+Modify the _Metropolis_ code so that it works even it labels do not corredpond to population sizes
+
+First version
+```{r}
+num_weeks <- 1e5
+pop.sizes <- sample(c(1:10)*100,replace = FALSE)
+positions <- rep(0,num_weeks)
+current <- 10
+for ( i in 1:num_weeks ) {
+  # record current position
+  positions[i] <- current
+  # flip coin to generate proposal
+  proposal <- current + sample( c(-1,1) , size=1 )
+  # now make sure he loops around the archipelago
+  if ( proposal < 1 ) proposal <- 10
+  if ( proposal > 10 ) proposal <- 1
+  # move?
+  prob_move <- pop.sizes[proposal]/pop.sizes[current]
+  current <- ifelse( runif(1) < prob_move , proposal , current )
+}
+```
+
+```{r}
+visits <- as.vector(table(positions))
+names(visits) <- pop.sizes
+visits <- visits[order(as.numeric(names(visits)))]
+barplot(visits)
+```
+Works!
+
+It would be nice to have a version where the island names are arbitrary
+
+Second version
+```{r}
+num_weeks <- 1e5
+
+islands <- data.frame(
+  name=LETTERS[1:10],
+  pop.size=sample(c(1:10)*100,replace = FALSE),stringsAsFactors = FALSE)
+
+positions <- rep(0,num_weeks)
+current <- 10
+for ( i in 1:num_weeks ) {
+  # record current position
+  positions[i] <- islands$name[current]
+  # flip coin to generate proposal
+  proposal <- current + sample( c(-1,1) , size=1 )
+  # now make sure he loops around the archipelago
+  if ( proposal < 1 ) proposal <- 10
+  if ( proposal > 10 ) proposal <- 1
+  # move?
+  prob_move <- islands$pop.size[proposal]/islands$pop.size[current]
+  current <- ifelse( runif(1) < prob_move , proposal , current )
+}
+```
+
+```{r}
+visits <- table(positions)
+names(visits) <- paste(names(visits),islands$pop.size)
+visits <- as.data.frame(visits[order(islands$pop.size)])
+names(visits) <- c("name","visits")
+ggplot(visits,aes(x=name,y=visits)) + geom_bar(stat="identity",fill="skyblue")
+```
+Works!
+
+## 8H6
+
+Modify the _Metropolis_ code to write your own MCMC estimate for the globe tossing data and model from Chapter 2.
+
+Lets think about this.  We have one parameter that we are trying to estimate, the proportion of water on the globe.  We can propose different values of this parameter from 0 to 1.  The probability of accepting the proposal corresponds to the likelihood of the new proposal compared to the likelihood of the current parameter.
+
+I wonder if my proposals can come from `runif` or if they should come from a grid?  One way to find out...
+
+### Random proposals, chain length of 10,000
+
+```{r}
+tosses <- c("W","L","W","W","W","L","W","L","W")
+water <- sum(tosses=="W")
+land <- sum(tosses=="L")
+
+chain.length <- 10000
+
+posterior <- matrix(NA,nrow=chain.length,ncol = 2)
+
+colnames(posterior) <- c("p","log.lik")
+
+p <- runif(1,0,1)
+
+posterior[1,] <- c(p,dbinom(water,water+land,prob=p,log=TRUE))
+
+for(i in 2:chain.length) {
+  proposal <- runif(1,0,1)
+  log.lik <- dbinom(water,water+land,prob=proposal,log=TRUE)
+  prob.move <- exp(log.lik - posterior[i-1,"log.lik"])
+  if (runif(1,0,1) < prob.move) {
+    posterior[i,] <- c(proposal,log.lik)
+  } else {
+    posterior[i,] <- posterior[i-1,]
+  }
+}
+
+posterior <- as.data.frame(posterior)
+
+plot(posterior$p,type="l")
+
+bin <- data.frame(x=seq(0,1,length.out = 100),y=dbinom(water,water+land,seq(0,1,length.out = 100)))
+bin$y <- bin$y/max(bin$y)
+
+pl <- ggplot(posterior,aes(x=p,y=..scaled..))
+pl <- pl + geom_density(fill="blue",alpha=.1)
+pl + geom_line(aes(x=x,y=y),data=bin,lty=2) + ggtitle("Random propsals from runif().  Chain length 10,000")
+
+precis(posterior$p)
+```
+
+### Random proposals, chain length of 100,000
+
+```{r}
+tosses <- c("W","L","W","W","W","L","W","L","W")
+water <- sum(tosses=="W")
+land <- sum(tosses=="L")
+
+chain.length <- 100000
+
+posterior <- matrix(NA,nrow=chain.length,ncol = 2)
+
+colnames(posterior) <- c("p","log.lik")
+
+p <- runif(1,0,1)
+
+posterior[1,] <- c(p,dbinom(water,water+land,prob=p,log=TRUE))
+
+for(i in 2:chain.length) {
+  proposal <- runif(1,0,1)
+  log.lik <- dbinom(water,water+land,prob=proposal,log=TRUE)
+  prob.move <- exp(log.lik - posterior[i-1,"log.lik"])
+  if (runif(1,0,1) < prob.move) {
+    posterior[i,] <- c(proposal,log.lik)
+  } else {
+    posterior[i,] <- posterior[i-1,]
+  }
+}
+
+posterior <- as.data.frame(posterior)
+
+plot(posterior$p,type="l")
+
+bin <- data.frame(x=seq(0,1,length.out = 100),y=dbinom(water,water+land,seq(0,1,length.out = 100)))
+bin$y <- bin$y/max(bin$y)
+
+pl <- ggplot(posterior,aes(x=p,y=..scaled..))
+pl <- pl + geom_density(fill="blue",alpha=.1)
+pl + geom_line(aes(x=x,y=y),data=bin,lty=2) + ggtitle("Random propsals from runif().  Chain length 100,000")
+
+precis(posterior$p)
+```
+
+### A grid of proposals, walk to adjacent values (like the islands).  Chain length 10,000
+
+```{r}
+parameter.table <- data.frame(
+  p = seq(0,1,length.out = 100)) #note: if the steps are small then it takes a LOT of time to sample well.
+parameter.table$log.lik <- dbinom(water,water+land,prob=parameter.table$p,log=TRUE)
+
+chain.length <- 10000
+
+posterior <- matrix(NA,nrow=chain.length,ncol = 2)
+
+colnames(posterior) <- c("p","log.lik")
+
+current <- sample(1:nrow(parameter.table),size = 1)
+
+for (i in 1:chain.length) {
+  posterior[i,] <- as.matrix(parameter.table[current,])
+  proposal <- current + sample( c(-1,1) , size=1 )
+  # now make sure we loop around
+  if ( proposal < 1 ) proposal <- nrow(parameter.table)
+  if ( proposal > nrow(parameter.table) ) proposal <- 1
+  # move?
+  prob.move <- exp(parameter.table$log.lik[proposal] - parameter.table$log.lik[current])
+  #print(paste("current",current,"proposal",proposal,"prob.move",prob.move,sep=": "))
+  current <- ifelse( runif(1) < prob.move , proposal , current ) 
+  #print(paste("new current",current))
+}
+
+posterior <- as.data.frame(posterior)
+
+plot(posterior$p,type="l")
+
+bin <- data.frame(x=seq(0,1,length.out = 100),
+                  y=dbinom(water,water+land,seq(0,1,length.out = 100)))
+bin$y <- bin$y/max(bin$y)
+
+pl <- ggplot(posterior,aes(x=p,y=..scaled..))
+pl <- pl + geom_density(fill="blue",alpha=.1)
+pl + geom_line(aes(x=x,y=y),data=bin,lty=2) + ggtitle("Walk along grid of 100 possibilities.  Chain length 10,000")
+precis(posterior$p)
+```
+
+### A grid of proposals, walk to adjacent values (like the islands).  Chain length 100,000
+
+```{r}
+parameter.table <- data.frame(
+  p = seq(0,1,length.out = 100)) #note: if the steps are small then it takes a LOT of time to sample well.
+parameter.table$log.lik <- dbinom(water,water+land,prob=parameter.table$p,log=TRUE)
+
+chain.length <- 100000
+
+posterior <- matrix(NA,nrow=chain.length,ncol = 2)
+
+colnames(posterior) <- c("p","log.lik")
+
+current <- sample(1:nrow(parameter.table),size = 1)
+
+for (i in 1:chain.length) {
+  posterior[i,] <- as.matrix(parameter.table[current,])
+  proposal <- current + sample( c(-1,1) , size=1 )
+  # now make sure we loop around
+  if ( proposal < 1 ) proposal <- nrow(parameter.table)
+  if ( proposal > nrow(parameter.table) ) proposal <- 1
+  # move?
+  prob.move <- exp(parameter.table$log.lik[proposal] - parameter.table$log.lik[current])
+  #print(paste("current",current,"proposal",proposal,"prob.move",prob.move,sep=": "))
+  current <- ifelse( runif(1) < prob.move , proposal , current ) 
+  #print(paste("new current",current))
+}
+
+posterior <- as.data.frame(posterior)
+
+plot(posterior$p,type="l")
+
+bin <- data.frame(x=seq(0,1,length.out = 100),y=dbinom(water,water+land,seq(0,1,length.out = 100)))
+bin$y <- bin$y/max(bin$y)
+
+pl <- ggplot(posterior,aes(x=p,y=..scaled..))
+pl <- pl + geom_density(fill="blue",alpha=.1)
+pl + geom_line(aes(x=x,y=y),data=bin,lty=2) + ggtitle("Walk along grid of 100 possibilities.  Chain length 100,000")
+precis(posterior$p)
+```
+
+### A grid of proposals, but choose the proposal randomly.  Chain Length 10,000
+```{r}
+parameter.table <- data.frame(
+  p = seq(0,1,length.out = 100)) #note: if the steps are small then it takes a LOT of time to sample well.
+parameter.table$log.lik <- dbinom(water,water+land,prob=parameter.table$p,log=TRUE)
+
+chain.length <- 10000
+
+posterior <- matrix(NA,nrow=chain.length,ncol = 2)
+
+colnames(posterior) <- c("p","log.lik")
+
+current <- sample(1:nrow(parameter.table),size = 1)
+
+for (i in 1:chain.length) {
+  posterior[i,] <- as.matrix(parameter.table[current,])
+  proposal <- sample(1:nrow(parameter.table),size = 1)
+ 
+  # move?
+  prob.move <- exp(parameter.table$log.lik[proposal] - parameter.table$log.lik[current])
+  #print(paste("current",current,"proposal",proposal,"prob.move",prob.move,sep=": "))
+  current <- ifelse( runif(1) < prob.move , proposal , current ) 
+  #print(paste("new current",current))
+}
+
+posterior <- as.data.frame(posterior)
+
+plot(posterior$p,type="l")
+
+bin <- data.frame(x=seq(0,1,length.out = 100),y=dbinom(water,water+land,seq(0,1,length.out = 100)))
+bin$y <- bin$y/max(bin$y)
+
+pl <- ggplot(posterior,aes(x=p,y=..scaled..))
+pl <- pl + geom_density(fill="blue",alpha=.1)
+pl + geom_line(aes(x=x,y=y),data=bin,lty=2)  + ggtitle("Random proposal from grid of 100 possibilities.  Chain length 10,000")
+precis(posterior$p)
+```
+
+### A grid of proposals, but choose the proposal randomly.  Chain Length 100,000
+
+```{r}
+parameter.table <- data.frame(
+  p = seq(0,1,length.out = 100)) #note: if the steps are small then it takes a LOT of time to sample well.
+parameter.table$log.lik <- dbinom(water,water+land,prob=parameter.table$p,log=TRUE)
+
+chain.length <- 100000
+
+posterior <- matrix(NA,nrow=chain.length,ncol = 2)
+
+colnames(posterior) <- c("p","log.lik")
+
+current <- sample(1:nrow(parameter.table),size = 1)
+
+for (i in 1:chain.length) {
+  posterior[i,] <- as.matrix(parameter.table[current,])
+  proposal <- sample(1:nrow(parameter.table),size = 1)
+ 
+  # move?
+  prob.move <- exp(parameter.table$log.lik[proposal] - parameter.table$log.lik[current])
+  #print(paste("current",current,"proposal",proposal,"prob.move",prob.move,sep=": "))
+  current <- ifelse( runif(1) < prob.move , proposal , current ) 
+  #print(paste("new current",current))
+}
+
+posterior <- as.data.frame(posterior)
+
+plot(posterior$p,type="l")
+
+bin <- data.frame(x=seq(0,1,length.out = 100),y=dbinom(water,water+land,seq(0,1,length.out = 100)))
+bin$y <- bin$y/max(bin$y)
+
+pl <- ggplot(posterior,aes(x=p,y=..scaled..))
+pl <- pl + geom_density(fill="blue",alpha=.1)
+pl + geom_line(aes(x=x,y=y),data=bin,lty=2) + ggtitle("Random proposal from grid of 100 possibilities.  Chain length 100,000")
+precis(posterior$p)
+```
