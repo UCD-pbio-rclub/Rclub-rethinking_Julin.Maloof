@@ -115,3 +115,203 @@ partpool_error <- abs( dsim$p_partpool - dsim$p_true )
 plot( 1:60 , nopool_error , xlab="pond" , ylab="absolute error" ,
       col=rangi2 , pch=16 )
 points( 1:60 , partpool_error )
+
+#12.20
+
+
+y1 <- rnorm( 1e4 , 10 , 1 )
+y2 <- 10 + rnorm( 1e4 , 0 , 1 )
+
+#12.21
+
+library(rethinking)
+data(chimpanzees)
+d <- chimpanzees
+d$recipient <- NULL
+m12.4 <- map2stan(
+  alist(
+    # get rid of NAs
+    pulled_left ~ dbinom( 1 , p ) ,
+    logit(p) <- a + a_actor[actor] + (bp + bpC*condition)*prosoc_left ,
+    a_actor[actor] ~ dnorm( 0 , sigma_actor ),
+    a ~ dnorm(0,10),
+    bp ~ dnorm(0,10),
+    bpC ~ dnorm(0,10),
+    sigma_actor ~ dcauchy(0,1)
+  ),
+  data=d , warmup=1000 , iter=5000 , chains=4 , cores=3 )
+
+plot(m12.4)
+summary(m12.4)
+precis(m12.4,depth=2)
+
+#12.22
+post <- extract.samples(m12.4)
+str(post)
+total_a_actor <- sapply( 1:7 , function(actor) post$a + post$a_actor[,actor] )
+round( apply(total_a_actor,2,mean) , 2 )
+
+#12.23
+# prep data
+d$block_id <- d$block  # name 'block' is reserved by Stan
+m12.5 <- map2stan(
+  alist(
+    pulled_left ~ dbinom( 1 , p ),
+    logit(p) <- a + a_actor[actor] + a_block[block_id] +
+      (bp + bpc*condition)*prosoc_left,
+    a_actor[actor] ~ dnorm( 0 , sigma_actor ),
+    a_block[block_id] ~ dnorm( 0 , sigma_block ),
+    c(a,bp,bpc) ~ dnorm(0,10),
+    sigma_actor ~ dcauchy(0,1),
+    sigma_block ~ dcauchy(0,1)
+  ),
+  data=d, warmup=1000 , iter=6000 , chains=4 , cores=3 )
+plot(m12.5)
+precis(m12.5,depth = 2)
+
+#12.25
+post <- extract.samples(m12.5)
+dens( post$sigma_block , xlab="sigma" , xlim=c(0,4) )
+dens( post$sigma_actor , col=rangi2 , lwd=2 , add=TRUE )
+text( 2 , 0.85 , "actor" , col=rangi2 )
+text( 0.75 , 2 , "block" )
+
+compare(m12.4,m12.5) 
+
+#12.27
+
+chimp <- 2
+d.pred <- list(
+  prosoc_left = c(0,1,0,1),
+  condition = c(0,0,1,1),
+  actor = rep(chimp,4)
+  # right/left/right/left
+  # control/control/partner/partner
+)
+link.m12.4 <- link( m12.4 , data=d.pred )
+pred.p <- apply( link.m12.4 , 2 , mean )
+pred.p.PI <- apply( link.m12.4 , 2 , PI )
+
+pred.p
+
+post <- extract.samples(m12.4)
+str(post)
+dens( post$a_actor[,5] )
+
+p.link <- function( prosoc_left , condition , actor ) {
+  logodds <- with( post ,
+                   a + a_actor[,actor] + (bp + bpC * condition) * prosoc_left
+  )
+  return( logistic(logodds) )
+}
+
+prosoc_left <- c(0,1,0,1)
+condition <- c(0,0,1,1)
+pred.raw <- sapply( 1:4 , function(i) p.link(prosoc_left[i],condition[i],2) )
+pred.p <- apply( pred.raw , 2 , mean )
+pred.p.PI <- apply( pred.raw , 2 , PI )
+
+#12.32
+d.pred <- list(
+  prosoc_left = c(0,1,0,1),
+  condition = c(0,0,1,1),
+  actor = rep(2,4) )
+
+
+
+# replace varying intercept samples with zeros
+# 1000 samples by 7 actors
+a_actor_zeros <- matrix(0,1000,7)
+
+# fire up link
+# note use of replace list
+link.m12.4 <- link( m12.4 , n=1000 , data=d.pred ,
+                    replace=list(a_actor=a_actor_zeros) )
+# summarize and plot
+pred.p.mean <- apply( link.m12.4 , 2 , mean )
+pred.p.PI <- apply( link.m12.4 , 2 , PI , prob=0.8 )
+plot( 0 , 0 , type="n" , xlab="prosoc_left/condition" ,
+      ylab="proportion pulled left" , ylim=c(0,1) , xaxt="n" ,
+      xlim=c(1,4) )
+axis( 1 , at=1:4 , labels=c("0/0","1/0","0/1","1/1") )
+lines( 1:4 , pred.p.mean )
+shade( pred.p.PI , 1:4 )
+
+# replace varying intercept samples with simulations
+post <- extract.samples(m12.4)
+a_actor_sims <- rnorm(7000,0,post$sigma_actor)
+a_actor_sims <- matrix(a_actor_sims,1000,7)
+
+link.m12.4 <- link( m12.4 , n=1000 , data=d.pred ,
+                    replace=list(a_actor=a_actor_sims) )
+
+#12,37
+post <- extract.samples(m12.4)
+sim.actor <- function(i) {
+  sim_a_actor <- rnorm( 1 , 0 , post$sigma_actor[i] )
+  P <- c(0,1,0,1)
+  C <- c(0,0,1,1)
+  p <- logistic(
+    post$a[i] +
+      sim_a_actor +
+      (post$bp[i] + post$bpC[i]*C)*P
+  )
+  return(p) }
+
+#12.38
+# empty plot
+plot( 0 , 0 , type="n" , xlab="prosoc_left/condition" ,
+      ylab="proportion pulled left" , ylim=c(0,1) , xaxt="n" , xlim=c(1,4) )
+axis( 1 , at=1:4 , labels=c("0/0","1/0","0/1","1/1") )
+# plot 50 simulated actors
+for ( i in 1:50 ) lines( 1:4 , sim.actor(i) , col=col.alpha("black",0.5) )
+
+#12.39
+# prep data
+library(rethinking)
+data(Kline)
+d <- Kline
+d$logpop <- log(d$population)
+d$society <- 1:10
+# fit model
+m12.6 <- map2stan(
+  alist(
+    total_tools ~ dpois(mu),
+    log(mu) <- a + a_society[society] + bp*logpop,
+    a ~ dnorm(0,10),
+    bp ~ dnorm(0,1),
+    a_society[society] ~ dnorm(0,sigma_society),
+    sigma_society ~ dcauchy(0,1)
+  ),
+  data=d ,
+  iter=4000 , chains=3 )
+
+plot(m12.6)
+par(mfrow=c(1,1))
+precis(m12.6,depth=2)
+postcheck(m12.6)
+
+#12.40
+post <- extract.samples(m12.6)
+d.pred <- list(
+  logpop = seq(from=6,to=14,length.out=30),
+  society = rep(1,30)
+)
+a_society_sims <- rnorm(20000,0,post$sigma_society)
+a_society_sims <- matrix(a_society_sims,2000,10)
+link.m12.6 <- link( m12.6 , n=2000 , data=d.pred ,
+                    replace=list(a_society=a_society_sims) )
+
+# plot raw data
+plot( d$logpop , d$total_tools , col=rangi2 , pch=16 ,
+      xlab="log population" , ylab="total tools" )
+# plot posterior median
+mu.median <- apply( link.m12.6 , 2 , median )
+lines( d.pred$logpop , mu.median )
+# plot 97%, 89%, and 67% intervals (all prime numbers)
+mu.PI <- apply( link.m12.6 , 2 , PI , prob=0.97 )
+shade( mu.PI , d.pred$logpop )
+mu.PI <- apply( link.m12.6 , 2 , PI , prob=0.89 )
+shade( mu.PI , d.pred$logpop )
+mu.PI <- apply( link.m12.6 , 2 , PI , prob=0.67 )
+shade( mu.PI , d.pred$logpop )

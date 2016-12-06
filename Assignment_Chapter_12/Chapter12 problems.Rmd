@@ -10,9 +10,8 @@ output:
 ## setup
 
 ```{r}
-knitr::opts_chunk$set(cache = TRUE, autodep = TRUE)
-library(rethinking)
 library(brms)
+library(rethinking)
 rstan_options(auto_write = TRUE)
 options(mc.cores = parallel::detectCores())
 ```
@@ -37,8 +36,8 @@ sigma ~ cacuhy(0,1)
 
 alpha only
 
-```{r}
-data(reedfrogs, results='hide')
+```{r, results='hide'}
+data(reedfrogs)
 d <- reedfrogs
 d$tank <- 1:nrow(d)
 m12m1.tank <- map2stan(
@@ -175,5 +174,212 @@ m12m1.tank.pred.size.int.b <-
 plot(m12m1.tank.pred.size.int.b)
 m12m1.tank.pred.size.int.b
 precis(m12m1.tank.pred.size.int)
+```
+
+## 12M3
+
+_Refit reed frog data but use Cauchy prior for the varying intercepts.  Compare to Gaussian prior.  Explain._
+
+First, with Gausian
+
+```{r, results='hide'}
+data(reedfrogs)
+
+d <- reedfrogs
+
+str(d)
+
+# make the tank cluster variable
+d$tank <- 1:nrow(d)
+d$tank2 <- as.character(d$tank)
+
+m12.2 <- map2stan(
+  alist(
+    surv ~ dbinom( density , p ) ,
+    logit(p) <- a_tank[tank] ,
+    a_tank[tank] ~ dnorm( a , sigma ) ,
+    a ~ dnorm(0,1) ,
+    sigma ~ dcauchy(0,1)
+  ), data=d , iter=4000 , chains=4 )
+```
+
+```{r}
+plot(m12.2,ask=FALSE)
+precis(m12.2)
+```
+
+Now with Cauchy prior for a intercepts
+```{r, results='hide'}
+m12.2.cauchy <- map2stan(
+  alist(
+    surv ~ dbinom( density , p ) ,
+    logit(p) <- a_tank[tank] ,
+    a_tank[tank] ~ dcauchy( a , sigma ) ,
+    a ~ dnorm(0,1) ,
+    sigma ~ dcauchy(0,1)
+  ), data=d , iter=4000 , chains=4 )
+```
+
+```{r}
+plot(m12.2.cauchy,ask=FALSE)
+precis(m12.2.cauchy,depth=2)
+```
+
+Get posterior estimates of a_tank intercepts
+```{r}
+library(reshape2)
+post.gauss <- extract.samples(m12.2)
+post.cauchy <- extract.samples(m12.2.cauchy)
+d$est.gauss <- logistic(apply(post.gauss$a_tank,2,mean))
+d$est.cauchy <- logistic(apply(post.cauchy$a_tank,2,mean) )
+head(d)
+```
+
+plot it
+```{r}
+library(ggplot2)
+d.melt <- melt(d,measure.vars = c("propsurv","est.gauss","est.cauchy"))
+head(d.melt)
+pl <- ggplot(d.melt,aes(y=value,x=tank,color=variable,shape=variable))
+pl <- pl + geom_point(size=2)
+pl <- pl + facet_wrap(~ density, scales = "free_x")
+pl <- pl + geom_hline(yintercept=logistic(mean(post.gauss$a)),lty=2)
+pl
+```
+For the most part, cauchy causes more shrinkage.  This is because it is a fat-tailed distrubution.  It does not shrink the most extreme tanks as much, however, and I do not understand why.
+
+## 12M4
+
+Fit the following model to the chimpanzee data.  Compare to what is fit in chapter.  (This model does not have an overall mean)
+
+original model
+```{r}
+library(rethinking)
+data(chimpanzees)
+d <- chimpanzees
+d$recipient <- NULL
+d$block_id <- d$block  # name 'block' is reserved by Stan
+m12.5 <- map2stan(
+  alist(
+    pulled_left ~ dbinom( 1 , p ),
+    logit(p) <- a + a_actor[actor] + a_block[block_id] +
+      (bp + bpc*condition)*prosoc_left,
+    a_actor[actor] ~ dnorm( 0 , sigma_actor ),
+    a_block[block_id] ~ dnorm( 0 , sigma_block ),
+    c(a,bp,bpc) ~ dnorm(0,10),
+    sigma_actor ~ dcauchy(0,1),
+    sigma_block ~ dcauchy(0,1)
+  ),
+  data=d, warmup=1000 , iter=6000 , chains=4, cores=4)
+```
+
+
+```{r}
+m12m4.1 <- map2stan(
+  alist(
+    pulled_left ~ dbinom( 1 , p ),
+    logit(p) <- a_actor[actor] + a_block[block_id] +
+      (bp + bpc*condition)*prosoc_left,
+    a_actor[actor] ~ dnorm( a1 , sigma_actor ),
+    a_block[block_id] ~ dnorm( a2 , sigma_block ),
+    c(a1,a2,bp,bpc) ~ dnorm(0,10),
+    sigma_actor ~ dcauchy(0,1),
+    sigma_block ~ dcauchy(0,1)
+  ),
+  data=d, warmup=1000 , iter=6000 , chains=4, cores=4)
+```
+
+```{r}
+par(mfrow=c(1,1))
+plot(m12.5,ask=FALSE)
+plot(m12m4.1,ask=FALSE)
+par(mfrow=c(1,1))
+precis(m12.5,depth=2)
+precis(m12m4.1,depth=2)
+plot(precis(m12.5,depth=2))
+plot(precis(m12m4.1,depth=2))
+```
+The model without a main intercept does not converge well and posterior estimates for the alphas are very wide.  This is because any given observation could be fit with a small a_actor and large a_block or vice versa.
+
+
+## 12H1
+
+_Analyze bangladeshi data to model contraception use by district.  Model using separate intercepts for each district and pooled information across districts_
+
+get the data
+```{r}
+data("bangladesh")
+colnames(bangladesh) <- sub(".","_",colnames(bangladesh),fixed=TRUE)
+bangladesh$district_id <- coerce_index(bangladesh$district)
+#bangladesh$district_id <- as.factor(as.numeric(bangladesh$district))
+summary(bangladesh)
+head(bangladesh)
+```
+
+fixed intercepts model
+```{r, results='hide'}
+mb1 <- map2stan(alist(
+  use_contraception ~ dbinom(1,p),
+  logit(p) <- a[district_id],
+  a[district_id] ~ dnorm(0,5)),
+  data=bangladesh,
+  chains = 4)
+```
+
+```{r}
+plot(mb1,ask=FALSE)
+precis(mb1,depth = 2)
+```
+
+```{r, results='hide'}
+mb2 <- map2stan(alist(
+  use_contraception ~ dbinom(1,p),
+  logit(p) <- a_district[district_id],
+  a_district[district_id] ~ dnorm(a,sigma),
+  a ~ dnorm(0,5),
+  sigma ~ dcauchy(0,1)),
+  data=bangladesh,
+  chains = 4)
+```
+
+```{r}
+plot(mb2,ask=FALSE)
+precis(mb2,depth=2)
+```
+
+3 ways of getting predictions
+```{r}
+library(reshape2)
+
+pred.df <- data.frame(district_id = unique(bangladesh$district_id))
+link.vary <- link(mb2,data=pred.df,n=4000) 
+pred.df$est.vary.link <- apply(link.vary,2,mean)
+
+pred.df$est.vary.coef <- logistic(coef(mb2)[1:60])
+#these are the posterior means.  See help page for map2stan.
+
+post.vary <- extract.samples(mb2)$a_district
+
+pred.df$est.vary.extract.samples <- logistic(apply(post.vary,2,mean))
+cor(pred.df[,2:4])
+```
+
+So coef returns the same numbers as extracting the posterior samples and taking the mean.  Link is ever so slightly different.
+
+```{r}
+plot.df <- data.frame(
+  district_id=1:60,
+  fixed=logistic(coef(mb1)),
+  varying=logistic(coef(mb2)[1:60]),
+  observed=tapply(bangladesh$use_contraception,bangladesh$district_id,function(x) sum(x)/length(x)))
+plot.df.m <- melt(plot.df,id.var="district_id")
+pl <- ggplot(plot.df.m,aes(x=district_id,y=value,color=variable,shape=variable))
+pl+geom_point(size=3)+geom_hline(yintercept = logistic(coef(mb2)["a"]))
+```
+
+## 12H2
+
+```{r}
+data("Trolley")
 ```
 
