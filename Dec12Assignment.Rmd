@@ -96,7 +96,7 @@ m.shade.species.int <- map2stan(
   ),
   data = tomato.small,
   chains=4,
-  cores=4
+  cores=2
 )
 ```
 
@@ -131,7 +131,7 @@ m.shade.species.int.acs <- map2stan(
   iter = 4000, # Rhat a bit high with defaults
   warmup = 1000,
   chains=4,
-  cores=4
+  cores=2
 )
 ```
 
@@ -167,7 +167,7 @@ m.shade.species.int.acs.shelf <- map2stan(
   iter = 4000, # Rhat a bit high with defaults
   warmup = 1000,
   chains=4,
-  cores=4
+  cores=2
 )
 ```
 
@@ -177,7 +177,80 @@ par(mfrow=c(1,1))
 precis(m.shade.species.int.acs.shelf,depth = 2)
 compare(m.shade.species.int.acs,m.shade.species.int.acs.shelf)
 coeftab(m.shade.species.int.acs,m.shade.species.int.acs.shelf)
-plot(coeftab(m.shade.species.int.acs,m.shade.species.int.acs.shelf),pars=1:13)
+plot(coeftab(m.shade.species.int.acs,m.shade.species.int.acs.shelf),pars=c(1,38:50))
+```
+
+```{r}
+m.shade.species.int.acs.shelf.flat <- map2stan(
+  alist(
+    totleng ~ dnorm(mu,sigma),
+    mu <- alpha + 
+      alpha_acs[acs_id] +
+      alpha_shelf[shelf_id]  +
+      alpha_flat[flat_id] +
+      beta_sp[species_id] + 
+      beta_shade*shade + 
+      beta_sp_shade[species_id]*shade,
+    alpha ~ dnorm(53,20),
+    alpha_acs[acs_id] ~ dnorm(0,sigma_acs),
+    alpha_shelf[shelf_id] ~ dnorm(0,sigma_shelf),
+    alpha_flat[flat_id] ~ dnorm(0,sigma_flat),
+    beta_sp[species_id] ~ dnorm(0,10),
+    beta_shade ~ dnorm(0,20),
+    beta_sp_shade[species_id] ~ dnorm(0,10),
+    c(sigma,sigma_acs,sigma_shelf,sigma_flat) ~ dcauchy(0,1)
+  ),
+  data = tomato.small,
+  iter = 4000, # Rhat a bit high with defaults
+  warmup = 1000,
+  chains=4,
+  cores=2
+)
+```
+
+```{r}
+plot(m.shade.species.int.acs.shelf.flat,ask=FALSE)
+par(mfrow=c(1,1))
+precis(m.shade.species.int.acs.shelf.flat,depth = 2)
+compare(m.shade.species.int.acs.shelf.flat,m.shade.species.int.acs.shelf)
+coeftab(m.shade.species.int.acs.shelf.flat,m.shade.species.int.acs.shelf)
+plot(coeftab(m.shade.species.int.acs.shelf.flat,m.shade.species.int.acs.shelf),pars=c(1,79:91))
+```
+
+So is the interaction still important?
+
+```{r}
+m.shade.species.acs.shelf.flat <- map2stan(
+  alist(
+    totleng ~ dnorm(mu,sigma),
+    mu <- alpha + 
+      alpha_acs[acs_id] +
+      alpha_shelf[shelf_id]  +
+      alpha_flat[flat_id] +
+      beta_sp[species_id] + 
+      beta_shade*shade,
+    alpha ~ dnorm(53,20),
+    alpha_acs[acs_id] ~ dnorm(0,sigma_acs),
+    alpha_shelf[shelf_id] ~ dnorm(0,sigma_shelf),
+    alpha_flat[flat_id] ~ dnorm(0,sigma_flat),
+    beta_sp[species_id] ~ dnorm(0,10),
+    beta_shade ~ dnorm(0,20),
+    c(sigma,sigma_acs,sigma_shelf,sigma_flat) ~ dcauchy(0,1)
+  ),
+  data = tomato.small,
+  iter = 4000, # Rhat a bit high with defaults
+  warmup = 1000,
+  chains=4,
+  cores=2
+)
+```
+```{r}
+plot(m.shade.species.acs.shelf.flat,ask=FALSE)
+par(mfrow=c(1,1))
+precis(m.shade.species.acs.shelf.flat,depth = 2)
+compare(m.shade.species.int.acs.shelf.flat,m.shade.species.acs.shelf.flat)
+coeftab(m.shade.species.int.acs.shelf.flat,m.shade.species.acs.shelf.flat)
+plot(coeftab(m.shade.species.int.acs.shelf.flat,m.shade.species.int.acs.shelf),pars=c(1,79:91))
 ```
 
 
