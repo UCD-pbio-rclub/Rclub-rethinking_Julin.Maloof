@@ -229,25 +229,12 @@ m.shade.species.sep.acs.shelf <- map2stan(
   iter = 4000, # Rhat a bit high with defaults
   warmup = 1000,
   chains=4,
-<<<<<<< HEAD
   cores=4
 )
 ```
 
 ```{r}
 save.image(file="tomato1212.Rdata")
-=======
-  cores=2
-)
-```
-```{r}
-plot(m.shade.species.acs.shelf.flat,ask=FALSE)
-par(mfrow=c(1,1))
-precis(m.shade.species.acs.shelf.flat,depth = 2)
-compare(m.shade.species.int.acs.shelf.flat,m.shade.species.acs.shelf.flat)
-coeftab(m.shade.species.int.acs.shelf.flat,m.shade.species.acs.shelf.flat)
-plot(coeftab(m.shade.species.int.acs.shelf.flat,m.shade.species.int.acs.shelf),pars=c(1,79:91))
->>>>>>> 5823e3d78c15b8dc2fc5485be090e1a481b20a0e
 ```
 
 ```{r}
@@ -406,7 +393,42 @@ breslow
 You can think of "person-years" as the number of observations
 
 ```{r}
+breslow$n <- as.integer(breslow$n)
+m.smoke <- map2stan(alist(
+                    y~dbinom(n,p),
+                    logit(p) <- alpha + beta_smoke * smoke,
+                    alpha ~ dnorm(0,5),
+                    beta_smoke ~ dnorm(0,5)),
+                    data=breslow,
+                    chains = 4,
+                    cores = 2)
+```
 
+```{r}
+plot(m.smoke)
+pairs(m.smoke)
+precis(m.smoke)
+logistic(-5.97)
+logistic(-5.97 + 0.55)
+```
+
+```{r}
+breslow$age_id <- coerce_index(breslow$age)
+m.age <- map2stan(alist(
+                    y~dbinom(n,p),
+                    logit(p) <- alpha_age[age_id],
+                    alpha_age[age_id] ~ dnorm(0,5)),
+                    data=breslow,
+                    chains = 4,
+                    cores = 2)
+```
+
+```{r}
+plot(m.age)
+precis(m.age,depth=2)
+logistic(precis(m.age,depth=2)@output$Mean)
+pairs(m.age)
+compare(m.age,m.smoke)
 ```
 
 
