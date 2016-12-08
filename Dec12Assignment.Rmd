@@ -100,7 +100,7 @@ m.shade.species.int <- map2stan(
   ),
   data = tomato.small,
   chains=4,
-  cores=4
+  cores=2
 )
 ```
 
@@ -137,7 +137,7 @@ m.shade.species.int.acs <- map2stan(
   iter = 4000, # Rhat a bit high with defaults
   warmup = 1000,
   chains=4,
-  cores=4
+  cores=2
 )
 ```
 
@@ -185,7 +185,7 @@ m.shade.species.int.acs.shelf <- map2stan(
   iter = 4000, # Rhat a bit high with defaults
   warmup = 1000,
   chains=4,
-  cores=4
+  cores=2
 )
 ```
 
@@ -229,12 +229,25 @@ m.shade.species.sep.acs.shelf <- map2stan(
   iter = 4000, # Rhat a bit high with defaults
   warmup = 1000,
   chains=4,
+<<<<<<< HEAD
   cores=4
 )
 ```
 
 ```{r}
 save.image(file="tomato1212.Rdata")
+=======
+  cores=2
+)
+```
+```{r}
+plot(m.shade.species.acs.shelf.flat,ask=FALSE)
+par(mfrow=c(1,1))
+precis(m.shade.species.acs.shelf.flat,depth = 2)
+compare(m.shade.species.int.acs.shelf.flat,m.shade.species.acs.shelf.flat)
+coeftab(m.shade.species.int.acs.shelf.flat,m.shade.species.acs.shelf.flat)
+plot(coeftab(m.shade.species.int.acs.shelf.flat,m.shade.species.int.acs.shelf),pars=c(1,79:91))
+>>>>>>> 5823e3d78c15b8dc2fc5485be090e1a481b20a0e
 ```
 
 ```{r}
