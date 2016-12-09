@@ -395,13 +395,14 @@ You can think of "person-years" as the number of observations
 ```{r}
 breslow$n <- as.integer(breslow$n)
 m.smoke <- map2stan(alist(
-                    y~dbinom(n,p),
-                    logit(p) <- alpha + beta_smoke * smoke,
-                    alpha ~ dnorm(0,5),
-                    beta_smoke ~ dnorm(0,5)),
-                    data=breslow,
-                    chains = 4,
-                    cores = 2)
+  y~dbinom(n,p),
+  logit(p) <- alpha + beta_smoke * smoke,
+  alpha ~ dnorm(0,5),
+  beta_smoke ~ dnorm(0,5)),
+  data=breslow,
+  chains = 4,
+  cores = 2)
+save.image("tomato1212.Rdata")
 ```
 
 ```{r}
@@ -415,12 +416,13 @@ logistic(-5.97 + 0.55)
 ```{r}
 breslow$age_id <- coerce_index(breslow$age)
 m.age <- map2stan(alist(
-                    y~dbinom(n,p),
-                    logit(p) <- alpha_age[age_id],
-                    alpha_age[age_id] ~ dnorm(0,5)),
-                    data=breslow,
-                    chains = 4,
-                    cores = 2)
+  y~dbinom(n,p),
+  logit(p) <- alpha_age[age_id],
+  alpha_age[age_id] ~ dnorm(0,5)),
+  data=breslow,
+  chains = 4,
+  cores = 2)
+save.image("tomato1212.Rdata")
 ```
 
 ```{r}
@@ -429,6 +431,84 @@ precis(m.age,depth=2)
 logistic(precis(m.age,depth=2)@output$Mean)
 pairs(m.age)
 compare(m.age,m.smoke)
+```
+
+```{r}
+m.smoke.age <- map2stan(
+  alist(y~dbinom(n,p),
+        logit(p) <- alpha_age[age_id] + beta_smoke*smoke,
+        alpha_age[age_id] ~ dnorm(0,5),
+        beta_smoke ~ dnorm(0,5)),
+  data=breslow,
+  chains = 4,
+  cores = 2)
+save.image("tomato1212.Rdata")
+```
+
+```{r}
+plot(m.smoke.age)
+pairs(m.smoke.age)
+precis(m.smoke.age,depth=2)
+compare(m.age,m.smoke,m.smoke.age)
+```
+
+```{r}
+m.smoke.age.int <- map2stan(
+  alist(y~dbinom(n,p),
+        logit(p) <- alpha_age[age_id] + 
+          beta_smoke*smoke + 
+          beta_smoke_age[age_id]*smoke,
+        alpha_age[age_id] ~ dnorm(0,5),
+        beta_smoke ~ dnorm(0,5),
+        beta_smoke_age[age_id] ~ dnorm(0,5)),
+  data=breslow,
+  chains = 4,
+  cores = 2)
+save.image("tomato1212.Rdata")
+```
+
+```{r}
+plot(m.smoke.age.int)
+precis(m.smoke.age.int,depth=2)
+compare(m.smoke,m.age,m.smoke.age,m.smoke.age.int)
+```
+
+```{r}
+pred <- ensemble(m.smoke.age,m.smoke.age.int)
+mu <- apply(pred$link,2,mean)
+PI <- apply(pred$link,2,PI)
+plot.frame <- data.frame(age=breslow$age,smoke=as.factor(breslow$smoke),mean=mu,low=PI[1,],high=PI[2,])
+plot.frame
+pl <- ggplot(plot.frame,aes(x=age,y=mean,ymax=high,ymin=low,fill=smoke))
+pl <- pl + geom_bar(position = "dodge",stat = "identity")
+pl + geom_errorbar(position = position_dodge(width=0.9),width=0.5)
+```
+
+```{r}
+breslow$age_num <- as.numeric(as.character(breslow$age))
+m.smoke.age.int.numeric <- map2stan(
+  alist(y~dbinom(n,p),
+        logit(p) <- alpha +
+          beta_age * age_num +
+          beta_smoke*smoke + 
+          beta_smoke_age*smoke*age_num,
+        alpha ~ dnorm(0,10),
+        c(beta_smoke,beta_age) ~ dnorm(0,5),
+        beta_smoke_age ~ dnorm(0,1)),
+  data=breslow,
+  chains = 4,
+  cores = 2)
+save.image("tomato1212.Rdata")
+```
+
+```{r}
+plot(m.smoke.age.int.numeric)
+precis(m.smoke.age.int.numeric)
+compare(m.smoke.age.int, m.smoke.age.int.numeric)
+```
+
+```{r}
+
 ```
 
 
