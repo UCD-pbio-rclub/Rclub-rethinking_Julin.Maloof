@@ -364,11 +364,10 @@ save.image("tomato1212.Rdata")
 plot(m.shade.species.acs.int.shelf,ask=FALSE)
 par(mfrow=c(1,1))
 precis(m.shade.species.acs.int.shelf,depth = 2)
-compare(m.shade.species.int.acs.shelf,m.shade.species.int.acs.int.shelf,m.shade.species.acs.int.shelf)
-coeftab(m.shade.species.int.acs.int.shelf,m.shade.species.acs.int.shelf)
-plot(coeftab(m.shade.species.int.acs.int.shelf,m.shade.species.acs.int.shelf),pars=c(1,44:56))
-plot(coeftab(m.shade.species.acs.int.shelf),pars=c(1:37))
-plot(coeftab(m.shade.species.acs.int.shelf),pars=c(79:120))
+compare(m.shade.species.int.acs.shelf,m.shade.species.acs.int.shelf)
+coeftab(m.shade.species.acs.int.shelf)
+plot(coeftab(m.shade.species.acs.int.shelf),pars=c(1:42))
+plot(coeftab(m.shade.species.acs.int.shelf),pars=c(43:86))
 ```
 
 We don't need both a species response and an accession response (interaction) term.  If we are only keeping one of the terms then the accession interaction model is preferred.
@@ -527,3 +526,70 @@ summary(cane)
 
 
 Is there evidence of differences in disease resistance in the different varieties?  Does including an adaptive prior for Block improve the model fit?
+
+```{r}
+mean(cane$r/cane$n)
+logit(mean(cane$r/cane$n))
+cane$var_id <- coerce_index(cane$var)
+cane$block_id <- coerce_index(cane$block)
+cane$n <- as.integer(cane$n)
+m.cane.alpha <- map2stan(
+  alist(
+    r ~ dbinom(n,p),
+    logit(p) <- alpha,
+    alpha <- dnorm(-1.55,1)
+  ),
+  data=cane,
+  chains = 4,
+  cores = 2
+)
+```
+```{r}
+plot(m.cane.alpha)
+precis(m.cane.alpha)
+logistic(-1.58)
+```
+
+
+```{r}
+m.var <- map2stan(
+  alist(
+    r ~ dbinom(n,p),
+    logit(p) <- alpha + alpha_var[var_id],
+    alpha <- dnorm(-1.55,1),
+    alpha_var[var_id] ~ dnorm(0,5)
+  ),
+  data=cane,
+  chains = 4,
+  cores = 2,
+  iter=10000,
+  warmup = 1000
+)
+save.image("tomato1212.Rdata")
+```
+
+```{r}
+plot(m.var,ask=FALSE)
+precis(m.var,depth=2)
+compare(m.cane.alpha,m.var)
+```
+
+```{r}
+m.var.block <- map2stan(
+    alist(
+      r ~ dbinom(n,p),
+      logit(p) <- alpha + alpha_var[var_id] + alpha_block[block_id],
+      alpha <- dnorm(-1.55,1),
+      alpha_var[var_id] ~ dnorm(0,5),
+      alpha_block[block_id] ~ dnorm(0,sigma_block),
+      sigma_block ~ dcauchy(0,1)
+    ),
+    data=cane,
+    chains = 4,
+    cores = 2,
+    iter=10000,
+    warmup=4000
+  )
+save.image("tomato1212.Rdata")
+```
+
