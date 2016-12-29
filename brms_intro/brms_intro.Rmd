@@ -1,0 +1,79 @@
+---
+title: "BRMS Intro and practice"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = TRUE, autodep = TRUE)
+```
+
+## BRMS background
+
+An alternative to map2stan for interfacting with [`Stan`](http://mc-stan.org/) is the [`brms`](https://github.com/paul-buerkner/brms) (Bayesian Regression Modelling using Stan) package.  While `map2stan` is a fantastic tool for learning model specification and being very explicit about the models being fit, `brms` has a more intuitive model specification and requires less data reformatting.  `brms` will be particularly familiar to those used to fitting models with `lmer`.
+
+If you want to read someone else's introduction to `brms` you can do so [here](https://thinkinator.com/2016/01/12/r-users-will-now-inevitably-become-bayesians/).
+
+You can also read the package author's README by scrolling down at the [github repo](https://github.com/paul-buerkner/brms)
+
+Finally, the author provides a very detailed description available [here](https://cran.r-project.org/web/packages/brms/vignettes/brms_overview.pdf) or by typing `vignette("brms_overview")` after you have brms installed.
+
+## Installation
+
+Because `brms` is in rapid development I prefer to install the most recent version from github:
+
+```{r install, eval=FALSE}
+library(devtools)
+install_github("paul-buerkner/brms")
+```
+
+(If you don't have `devtools` installed then you will first need to run `install.packages("devtools")`)
+
+## Model specification in brms
+
+Model specification is very similar to that in lmer, namely,
+
+```{r model, eval=FALSE}
+repsonse ~ predictor1 + (1|random_predictor2) ...
+```
+
+So to use the familiar `Tomato` dataset
+
+```{r get_tomato}
+library(brms)
+tomato <- read.csv("../Assignment_Chapter_09/TomatoR2CSHL.csv") #adjust path as necesary
+summary(tomato)
+head(tomato)
+```
+
+```{r fit_brms_example1}
+mean(tomato$hyp)
+hyp1 <- brm(hyp ~ trt + species + (1|shelf),
+            data = tomato,
+            prior = c(set_prior("normal(0,10)",class="b"), # I'll explain priors in the next section
+                      set_prior("normal(33,5)",class="Intercept"))
+                      ) 
+```
+
+Note:
+
+* I did not have to specify priors for sigma or the random effects (although you can, see below)
+* I did not have to create dummy variables for trt, species, or shelf !!
+* The default number of chains is 4
+```{r examine_brms_example1}
+summary(hyp1)
+plot(hyp1,ask=FALSE)
+launch_shiny(hyp1) #interactive graphical exploration
+```
+
+Note:
+
+* The summary automatically displays effect names 
+
+## Prior specification in brms
+
+brms will automatically set priors for many model parameters, but it uses non-sensical priors (uniform across all real numbers) for main-effect coefficients, so __you must set priors for your main-effect coefficients__
+
+## Stan parameters
+
+
+
