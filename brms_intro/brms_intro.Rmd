@@ -48,11 +48,10 @@ head(tomato)
 ```
 
 ```{r fit_brms_example1, results='hide'}
-mean(tomato$hyp)
 hyp1 <- brm(hyp ~ trt + species + (1|shelf),
             data = tomato,
             prior = set_prior("normal(0,10)",class="b") # I'll explain priors in the next section
-            ) 
+) 
 ```
 
 Note:
@@ -90,13 +89,13 @@ Priors in brms have different classes.
 * The "sigma" class is for the overall standard deviation.  Defaults to `student_t(3, 0, 10)`
 * The "sd" class is for the standard deviation of random effects terms.  Defaults to `student_t(3, 0, 10)`
 
-If you want to give the same prior to all members of a class, then just name the class.  In the example I gave above (repeated below) I am setting the priors for all beta coefficients (trt and species) to be normal(0,10).
+If you want to give the same prior to all members of a class, then just name the class.  In the example I gave above (repeated below) I am setting the priors for all beta coefficients in this case (trtL and the various species) to be normal(0,10).
 
 ```{r, eval=FALSE}
 hyp1 <- brm(hyp ~ trt + species + (1|shelf),
             data = tomato,
             prior = set_prior("normal(0,10)",class="b") # I'll explain priors in the next section
-            ) 
+) 
 ```
 
 Multiple `set_prior` calls can be combined using `c()`.  If you want to specify different priors for specific coefficients, then you can name them in separate `set_prior` calls:
@@ -105,15 +104,15 @@ Multiple `set_prior` calls can be combined using `c()`.  If you want to specify 
 hyp2 <- brm(hyp ~ trt + species + (1|shelf),
             data = tomato,
             prior = c(set_prior("normal(0,10)",class="b"), # sets prior for all b coefficients not otherwise specified
-                      set_prior("normal(0,5)",class="b", coef = "trtL"))
-            ) 
+                      set_prior("normal(0,5)",class="b", coef = "trtL")) #sets a different prior for the "trtL" coefficient
+) 
 ```
 
-To see all priors that you could specify for a given model and what they are called, use `get_prior()`
+To see all priors that you could specify for a given model and how they are specified, use `get_prior()`
 
 ```{r}
 get_prior(hyp ~ trt + species + (1|shelf),
-            data = tomato)
+          data = tomato)
 ```
 
 Or, for a model you have already fit, you can see available priors and how they were set:
@@ -123,11 +122,129 @@ get_prior(hyp2$formula,data=tomato)
 ```
 
 
-More information can be found in section 4 of `vignette("brms_overview") or by `?set_prior`
+Example of setting priors similar to Statistical Rethinking:
 
+```{r, results='hide'}
+hyp3 <- brm(hyp ~ trt + species + (1|shelf),
+            data = tomato,
+            prior = c(
+              set_prior("normal(33,10",class="Intercept"), # prior for the intercept
+              set_prior("normal(0,10)",class="b"), # sets prior for all b coefficients not otherwise specified
+              set_prior("normal(0,5)",class="b", coef = "trtL"), #set prior for "trtL"
+              set_prior("cauchy(0,1)", class = "sigma"), #half cauchy prior for sigma
+              set_prior("normal(0,1)", class = "sd", group = "shelf") #prior for variation due to shelf
+            ) 
+)
+```
 
+More information can be found in section 4 of `vignette("brms_overview")` or by `?set_prior`
 
 ## Stan parameters
 
+You can specify various Stan parameters similar to the way you would in map2stan:
+
+```{r, eval=FALSE}
+hyp4 <- brm(hyp ~ trt + species + (1|shelf),
+            data = tomato,
+            prior = set_prior("normal(0,10)",class="b"), 
+            chains = 4, #the default anyway
+            iter=4000,
+            warmup = 1000,
+            cores = 2
+)
+summary(hyp4)
+plot(hyp4)
+```
+
+## Interactions
+
+To specify interactions between predictors just replace the '+' with a '*':
+
+```{r, results='hide'}
+hyp5 <- brm(hyp ~ trt * species + (1|shelf), #trt by species interaction
+            data = tomato,
+            prior = set_prior("normal(0,10)",class="b"), 
+)
+```
+
+```{r}
+summary(hyp5)
+plot(hyp5, ask=FALSE)
+```
 
 
+## Comparing models
+
+Models can be compared using WAIC or another procedure, leave one out cross validation, using loo:
+
+```{r}
+waic(hyp1,hyp5)
+loo(hyp1,hyp5)
+```
+
+So hyp5 is favored, but not by much.
+
+At this point I am not sure how to do the weighting that can be done in map2stan
+
+## Binomial and other models
+
+To specify a non-Gaussian model use the `family` parameter in your call to brm.  I will illustrate with Liron's germination data.
+
+```{r}
+germination <- read.csv("../Assignment_Chapter_10/LironDataTime1.csv")
+summary(germination)
+head(germination)
+germination$Germination2 <- ifelse(germination$Germination=="Yes",1,0) #need numeric response
+germination$Temperature_b <- germination$Temperature - min(germination$Temperature) #baseline it
+```
+
+The `trials(1)` in the formula below indicates how many trials per row in the data frame.  Instead of a numeric this could also refer to a column in the data frame.
+
+```{r}
+germ1 <- brm(Germination2 | trials(1) ~ Species + Temperature_b,
+             family = "binomial",
+             prior=set_prior("normal(0,10)", class="b"),
+             data = germination
+             )
+```
+
+```{r}
+summary(germ1)
+plot(germ1, ask=FALSE)
+```
+
+Note: I did not have to specify the link function, `logit` is automatically used as a link function.
+
+Available families (and there link functions) are described by typing `?family` and `?brmsfamily`
+
+## Hypothesis testing
+
+brms includes a function for Bayesian hypothesis testing.  For example to test if the effect of "TrtL" is non-zero (two-sided hypothesis test):
+
+```{r}
+summary(hyp1)
+hypothesis(hyp1,"trtL = 0")
+```
+
+To test if the effect of "TrtL" is positive (one-sided hypothesis test):
+
+```{r}
+summary(hyp1)
+hypothesis(hyp1,"trtL > 0")
+```
+
+To test if the coefficients for S.pennellii and S. habrochaites are different:
+
+```{r}
+hypothesis(hyp1, "speciesS.pennellii-speciesS.habrochaites = 0")
+```
+
+# Exercises
+
+To gain familiarity with `brms` I am going to have you refit models from Statistical Rethinking with brms:
+
+## Q1
+
+## Q2
+
+## Q3
