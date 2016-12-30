@@ -184,7 +184,35 @@ loo(hyp1,hyp5)
 
 So hyp5 is favored, but not by much.
 
-At this point I am not sure how to do the weighting that can be done in map2stan
+At this point I am not sure how to do the model weighting that rethinking can report when comparing models.
+
+## Unique intercepts
+
+In map2stan we saw how to fit models where each level of a predictor had its own intercept.  In brms including a "0" tells brms to fit a separate interecept for each level of the following predictor.
+
+For example, if we used the default of `hyp ~ trt + species` then the intercept would correspond to the first level of trt and the first level of species.  That is, the intercept would be for speciesS.chillense in trtH.
+
+If instead we used `hyp ~ 0 + trt + species` then there is a separate intercept for each species in trtH.
+
+```{r}
+hyp6 <- brm(hyp ~ species + trt,
+            prior = set_prior("normal(0,10)",class="b"),
+            data = tomato)
+hyp7 <- brm(hyp ~ 0 + species + trt,
+            prior = c(
+              set_prior("normal(33,10)", class = "b"), #average species height
+              set_prior("normal(0,10)", class = "b", coef = "trtL")
+              ),
+            data=tomato)
+```
+
+```{r}
+summary(hyp6)
+summary(hyp7)
+loo(hyp6,hyp7)
+```
+
+
 
 ## Binomial and other models
 
@@ -217,13 +245,30 @@ Note: I did not have to specify the link function, `logit` is automatically used
 
 Available families (and there link functions) are described by typing `?family` and `?brmsfamily`
 
+You will note that there was a message that "that family 'bernoulli' might be a more efficient choice."  The Bernoulli family is specific for binomial problems where each row of data corresponds to a single trial, so in this case we could have used the code below, which indeed does run faster.
+
+```{r, results='hide'}
+germ2 <- brm(Germination2  ~ Species + Temperature_b,
+             family = "bernoulli",
+             prior=set_prior("normal(0,10)", class="b"),
+             data = germination
+             )
+```
+
+
+```{r}
+summary(germ2)
+plot(germ2,ask=FALSE)
+```
+
 ## Hypothesis testing
 
-brms includes a function for Bayesian hypothesis testing.  For example to test if the effect of "TrtL" is non-zero (two-sided hypothesis test):
+brms includes a function for Bayesian hypothesis testing.  For example to test if the effect of "TrtL" is non-zero (two-sided hypothesis test).  Plotting the hypothesis test shows the relevant posterior distributions.
 
 ```{r}
 summary(hyp1)
 hypothesis(hyp1,"trtL = 0")
+plot(hypothesis(hyp1,"trtL = 0"))
 ```
 
 To test if the effect of "TrtL" is positive (one-sided hypothesis test):
@@ -231,19 +276,23 @@ To test if the effect of "TrtL" is positive (one-sided hypothesis test):
 ```{r}
 summary(hyp1)
 hypothesis(hyp1,"trtL > 0")
+plot(hypothesis(hyp1,"trtL > 0"))
 ```
 
 To test if the coefficients for S.pennellii and S. habrochaites are different:
 
 ```{r}
 hypothesis(hyp1, "speciesS.pennellii-speciesS.habrochaites = 0")
+plot(hypothesis(hyp1, "speciesS.pennellii-speciesS.habrochaites = 0"))
 ```
 
 # Exercises
 
-To gain familiarity with `brms` I am going to have you refit models from Statistical Rethinking with brms:
+To gain familiarity with `brms` I am going to have you refit models from Statistical Rethinking with brms.  In all cases compare the brms and map2stan parameter estimates.
 
 ## Q1
+
+
 
 ## Q2
 
