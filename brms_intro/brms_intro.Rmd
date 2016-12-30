@@ -40,18 +40,19 @@ So to use the familiar `Tomato` dataset
 
 ```{r get_tomato}
 library(brms)
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
 tomato <- read.csv("../Assignment_Chapter_09/TomatoR2CSHL.csv") #adjust path as necesary
 summary(tomato)
 head(tomato)
 ```
 
-```{r fit_brms_example1}
+```{r fit_brms_example1, results='hide'}
 mean(tomato$hyp)
 hyp1 <- brm(hyp ~ trt + species + (1|shelf),
             data = tomato,
-            prior = c(set_prior("normal(0,10)",class="b"), # I'll explain priors in the next section
-                      set_prior("normal(33,5)",class="Intercept"))
-                      ) 
+            prior = set_prior("normal(0,10)",class="b") # I'll explain priors in the next section
+            ) 
 ```
 
 Note:
@@ -62,16 +63,69 @@ Note:
 ```{r examine_brms_example1}
 summary(hyp1)
 plot(hyp1,ask=FALSE)
-launch_shiny(hyp1) #interactive graphical exploration
 ```
 
 Note:
 
-* The summary automatically displays effect names 
+* The summary automatically displays informative coefficient names 
+
+## Interactive model viewer
+
+Run the following for cool interactive exploration of your posteriors
+```{r, eval=FALSE}
+launch_shiny(hyp1) #interactive graphical exploration
+```
+
 
 ## Prior specification in brms
 
-brms will automatically set priors for many model parameters, but it uses non-sensical priors (uniform across all real numbers) for main-effect coefficients, so __you must set priors for your main-effect coefficients__
+brms will automatically set priors for many model parameters, but it uses non-sensical priors (uniform across all real numbers) for main-effect coefficients, so __you must set priors for your main-effect coefficients__.  Most other priors have reasonable defaults.
+
+The function for setting priors is `set_priors()`.  
+
+Priors in brms have different classes.
+
+* The "Intercept" class is for the overall intercept
+* The "b" class is for coefficients on fixed effects (You can think of "b" as standing for "beta" coefficients)
+* The "sigma" class is for the overall standard deviation.  Defaults to `student_t(3, 0, 10)`
+* The "sd" class is for the standard deviation of random effects terms.  Defaults to `student_t(3, 0, 10)`
+
+If you want to give the same prior to all members of a class, then just name the class.  In the example I gave above (repeated below) I am setting the priors for all beta coefficients (trt and species) to be normal(0,10).
+
+```{r, eval=FALSE}
+hyp1 <- brm(hyp ~ trt + species + (1|shelf),
+            data = tomato,
+            prior = set_prior("normal(0,10)",class="b") # I'll explain priors in the next section
+            ) 
+```
+
+Multiple `set_prior` calls can be combined using `c()`.  If you want to specify different priors for specific coefficients, then you can name them in separate `set_prior` calls:
+
+```{r, results='hide'}
+hyp2 <- brm(hyp ~ trt + species + (1|shelf),
+            data = tomato,
+            prior = c(set_prior("normal(0,10)",class="b"), # sets prior for all b coefficients not otherwise specified
+                      set_prior("normal(0,5)",class="b", coef = "trtL"))
+            ) 
+```
+
+To see all priors that you could specify for a given model and what they are called, use `get_prior()`
+
+```{r}
+get_prior(hyp ~ trt + species + (1|shelf),
+            data = tomato)
+```
+
+Or, for a model you have already fit, you can see available priors and how they were set:
+
+```{r}
+get_prior(hyp2$formula,data=tomato)
+```
+
+
+More information can be found in section 4 of `vignette("brms_overview") or by `?set_prior`
+
+
 
 ## Stan parameters
 
