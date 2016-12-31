@@ -70,7 +70,82 @@ No evidence of a gender effect
 
 ## Q2
 
-Refit models 12.1 and 12.2 (Rcode 12.2 and 12.3) with brms
+_Refit models 12.1 and 12.2 (Rcode 12.2 and 12.3) with brms_
+
+Get the data
+
+```{r}
+data(reedfrogs)
+d <- reedfrogs
+# make the tank cluster variable
+d$tank <- 1:nrow(d)
+head(d)
+```
+
+
+m12.1 with map2stan
+```{r, results='hide'}
+m12.1 <- map2stan(
+    alist(
+        surv ~ dbinom( density , p ) ,
+        logit(p) <- a_tank[tank] ,
+        a_tank[tank] ~ dnorm( 0 , 5 )
+), data=d )
+```
+
+model m12.1 with brms
+
+```{r, results='hide'}
+m12.1.brms <- brm(surv | trials(density) ~ 0 + as.factor(tank),
+                  prior = set_prior("normal(0,5)", class = "b"),
+                  family = "binomial",
+                  data=d)
+```
+
+```{r}
+precis(m12.1, depth=2)
+summary(m12.1.brms)
+plot(coef(m12.1),fixef(m12.1.brms), xlab="map2stan", ylab="brms",main= "compare coefficients")
+```
+
+same estimates
+
+```{r}
+m12.2 <- map2stan(
+    alist(
+        surv ~ dbinom( density , p ) ,
+        logit(p) <- a_tank[tank] ,
+        a_tank[tank] ~ dnorm( a , sigma ) ,
+        a ~ dnorm(0,1) ,
+        sigma ~ dcauchy(0,1)
+    ), data=d , iter=4000 , chains=4 )
+```
+
+
+In map2stan you can set a prior on the mean of the random effect.  I am not sure how to do that in brms, so I just include a normal intercept.
+```{r}
+m12.2.brms <- brm( surv | trials(density) ~ (1|tank),
+                   family="binomial",
+                   prior=c(
+                     set_prior("normal(0,1)", class="Intercept"),
+                     set_prior("cauchy(0,1)", class="sd")),
+                   data=d,
+                   iter=4000)
+```
+
+```{r}
+print("map2stan")
+precis(m12.2,depth=2)
+print("----------")
+print("brms")
+summary(m12.2.brms)
+```
+
+To get the coefficients to line up I need to add the fixed effect intercept from brms to the ranef estimates
+```{r}
+plot(coef(m12.2)[1:48],ranef(m12.2.brms)$tank+fixef(m12.2.brms)[,"mean"],xlab="map2stan",ylab="brms")
+```
+
 
 ## Q3
 
