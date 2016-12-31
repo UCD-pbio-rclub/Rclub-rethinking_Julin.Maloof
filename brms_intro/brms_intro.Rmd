@@ -294,7 +294,7 @@ plot(hypothesis(hyp1, "speciesS.pennellii-speciesS.habrochaites = 0"))
 
 # Exercises
 
-To gain familiarity with `brms` I am going to have you refit models from Statistical Rethinking with brms.  In all cases compare the brms and map2stan parameter estimates.
+To gain familiarity with `brms` I am going to have you refit models from Statistical Rethinking with brms.  In all cases compare the brms and map2stan parameter estimates; they should be effectively the same if you have specified them correctly.
 
 ## Q1
 
@@ -302,7 +302,7 @@ Fit model 10.8 (R code 10.28) with brms.  Remember that you should not need to t
 
 ## Q2
 
-Refit models 12.1 and 12.2 with brms(Rcode 12.2 and 12.3)
+Refit models 12.1 and 12.2 (Rcode 12.2 and 12.3) with brms
 
 ## Q3
 
