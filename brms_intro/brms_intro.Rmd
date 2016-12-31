@@ -308,4 +308,4 @@ Refit models 12.1 and 12.2 (Rcode 12.2 and 12.3) with brms
 
 ## Q3
 
-Use both brms and map2stan to fit a model for `intleng` as a function of `species`, `trt` and their interaction, and include `shelf` as a random effect.
+For the tomato data set, use both brms and map2stan to fit a model for `intleng` as a function of `species`, `trt` and their interaction, and include `shelf` as a random effect.
