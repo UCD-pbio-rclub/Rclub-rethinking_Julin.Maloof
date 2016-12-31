@@ -1,0 +1,77 @@
+---
+title: "BRMS homework"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache=TRUE, autodep = TRUE)
+```
+
+To gain familiarity with `brms` I am going to have you refit models from Statistical Rethinking with brms.  In all cases compare the brms and map2stan parameter estimates; they should be effectively the same if you have specified them correctly.
+
+Setup:
+```{r}
+library(rethinking)
+library(brms)
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+```
+
+
+## Q1
+
+_Fit model 10.9 (R code 10.28) with brms.  Remember that you should not need to transform the predictors, create dummy variables, nor coerce indexes to use brms.  Compare to the map2stan fit.  Test whether the coefficient for gender is different from 0 in the brms model._
+
+First using map2stan
+
+```{r, results='hide'}
+data(UCBadmit)
+d <- UCBadmit
+d$male <- ifelse( d$applicant.gender=="male" , 1 , 0 )
+d$dept_id <- coerce_index( d$dept )
+m10.9 <- map2stan(
+  alist(
+    admit ~ dbinom( applications , p ) ,
+    logit(p) <- a[dept_id] + bm*male ,
+    a[dept_id] ~ dnorm(0,10) ,
+    bm ~ dnorm(0,10)
+  ) , data=d, 
+  chains=4,warmup = 1000,iter = 4000 )
+```
+
+
+now brms
+```{r}
+head(d)
+m10.9.brms <- brm(admit | trials(applications) ~ 0 + dept + applicant.gender,
+                  family = "binomial",
+                  prior = set_prior("normal(0,10)", class="b"),
+                  data=d,
+                  warmup = 1000,
+                  iter = 4000
+                  )
+```
+
+```{r}
+precis(m10.9,depth=2)
+summary(m10.9.brms)
+```
+
+The fits are essentially identical.
+
+To test the effect of gender:
+
+```{r}
+(hyp1 <- hypothesis(m10.9.brms, "applicant.gendermale = 0"))
+plot(hyp1)
+```
+
+No evidence of a gender effect
+
+## Q2
+
+Refit models 12.1 and 12.2 (Rcode 12.2 and 12.3) with brms
+
+## Q3
+
+Use both brms and map2stan to fit a model for `intleng` as a function of `species`, `trt` and their interaction, and include `shelf` as a random effect.
