@@ -455,10 +455,8 @@ compare(m.age,m.smoke,m.smoke.age)
 m.smoke.age.int <- map2stan(
   alist(y~dbinom(n,p),
         logit(p) <- alpha_age[age_id] + 
-          beta_smoke*smoke + 
           beta_smoke_age[age_id]*smoke,
         alpha_age[age_id] ~ dnorm(0,5),
-        beta_smoke ~ dnorm(0,5),
         beta_smoke_age[age_id] ~ dnorm(0,5)),
   data=breslow,
   chains = 4,
@@ -466,13 +464,13 @@ m.smoke.age.int <- map2stan(
 save.image("tomato1212.Rdata")
 ```
 
-```{r}
+```{r, cache=FALSE}
 plot(m.smoke.age.int)
 precis(m.smoke.age.int,depth=2)
 compare(m.smoke,m.age,m.smoke.age,m.smoke.age.int)
 ```
 
-```{r}
+```{r, cache=FALSE}
 pred <- ensemble(m.smoke.age,m.smoke.age.int)
 mu <- apply(pred$link,2,mean)
 PI <- apply(pred$link,2,PI)
