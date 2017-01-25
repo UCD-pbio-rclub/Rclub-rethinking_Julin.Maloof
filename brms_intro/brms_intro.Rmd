@@ -41,6 +41,7 @@ repsonse ~ predictor1 + (1|random_predictor2) ...
 So to use the familiar `Tomato` dataset
 
 ```{r get_tomato, results='hide'}
+library(rethinking)
 library(brms)
 library(rstan)
 rstan_options(auto_write = TRUE)
@@ -51,7 +52,6 @@ head(tomato)
 ```
 
 Fit model hypoocytl length as function of treatment and species, and include a "random" effect for shelf.  
-
 
 ```{r fit_hyp1, results='hide'}
 hyp1 <- brm(hyp ~ trt + species + (1|shelf),
@@ -129,6 +129,35 @@ hyp2$prior
 
 
 Example of setting priors similar to Statistical Rethinking:
+
+First using map2stan
+```{r}
+tomato$shade <- ifelse(tomato$trt=="L",1,0)
+tomato$speciesCHM <- ifelse(tomato$species=="S. chmielewskii",1,0)
+tomato$speciesHAB <- ifelse(tomato$species=="S. habrochaites",1,0)
+tomato$speciesPEN <- ifelse(tomato$species=="S. pennellii",1,0)
+tomato$speciesPER <- ifelse(tomato$species=="S. peruvianum",1,0)
+tomato$shelf_id <- coerce_index(tomato$shelf)
+
+system.time(hyp3.ms <- map2stan(alist(
+  hyp ~ dnorm(mu,sigma),
+  mu <- alpha + 
+    shade*b_shade +
+    speciesCHM*b_CHM +
+    speciesHAB*b_HAB +
+    speciesPEN*b_PEN +
+    speciesPER*b_PER + 
+    b_shelf[shelf_id],
+  alpha ~ dnorm(33,10),
+  c(b_CHM,b_HAB,b_PEN,b_PER) ~ dnorm(0,10),
+  b_shade ~ dnorm(0,5),
+  b_shelf ~ dnorm(0,sd),
+  sd ~ dnorm(0,1),
+  sigma ~ dcauchy(0,1),
+  data=tomato,
+  chains=4
+)))
+```
 
 ```{r hyp3, results='hide'}
 hyp3 <- brm(hyp ~ trt + species + (1|shelf),

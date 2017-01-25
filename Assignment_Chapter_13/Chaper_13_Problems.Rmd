@@ -1,0 +1,241 @@
+---
+title: "Chapter 13 Problems"
+output: 
+html_document: 
+keep_md: yes
+---
+
+```{r}
+library(rethinking)
+library(ggplot2)
+library(brms)
+rstan_options(auto_write = TRUE)
+options(mc.cores = parallel::detectCores())
+knitr::opts_chunk$set(cache=TRUE,autodep=TRUE)
+```
+
+## 13E1
+
+_Add to the following model varying slopes on the predictor x_
+
+Too hard to figure out the LaTex code...
+
+Basically we need a multivariate distrubtion on A and X,
+A covariance matrix,
+An adaptive prior on B
+An a prior for the correlation matrix
+
+## 13E2
+
+_Think up a context inwhich varyign intervepts will b positively correlated with varying slopes.  Provide a mechanistic explanation for the correlation_
+
+Automobile gas consumption at idle and at 60mph.  Larger engines consume more at idle and are generally less efficient.
+
+## 13M1
+
+```{r 13.1}
+a <- 3.5 # average morning wait time
+b <- (-1) # average difference afternoon wait time
+sigma_a <- 1 # std dev in intercepts
+sigma_b <- 0.5 # std dev in slopes
+rho <- 0 # correlation between intercepts and slopes
+
+Mu <- c( a , b )
+
+cov_ab <- sigma_a*sigma_b*rho
+Sigma <- matrix( c(sigma_a^2,cov_ab,cov_ab,sigma_b^2) , ncol=2 )
+
+sigmas <- c(sigma_a,sigma_b) # standard deviations
+
+Rho <- matrix( c(1,rho,rho,1) , nrow=2 ) # correlation matrix
+# now matrix multiply to get covariance matrix
+Sigma <- diag(sigmas) %*% Rho %*% diag(sigmas)
+```
+
+```{r}
+N_cafes <- 20
+library(MASS)
+set.seed(5) # used to replicate example
+vary_effects <- mvrnorm( N_cafes , Mu , Sigma )
+```
+
+```{r 13.8_9}
+a_cafe <- vary_effects[,1]
+b_cafe <- vary_effects[,2]
+
+plot( a_cafe , b_cafe , col=rangi2 ,
+      xlab="intercepts (a_cafe)" , ylab="slopes (b_cafe)" )
+# overlay population distribution
+library(ellipse)
+for ( l in c(0.1,0.3,0.5,0.8,0.99) )
+  lines(ellipse(Sigma,centre=Mu,level=l),col=col.alpha("black",0.2))
+
+#not quite the same: contours are based on actual data instead of Sigma matrix
+pl <- qplot(x=a_cafe,y=b_cafe,color=I("skyblue"),geom="point")
+pl + geom_density_2d(bins=5)
+```
+
+```{r 13.10}
+N_visits <- 10
+afternoon <- rep(0:1,N_visits*N_cafes/2)
+cafe_id <- rep( 1:N_cafes , each=N_visits )
+mu <- a_cafe[cafe_id] + b_cafe[cafe_id]*afternoon
+sigma <- 0.5 # std dev within cafes
+wait <- rnorm( N_visits*N_cafes , mu , sigma )
+d <- data.frame( cafe=cafe_id , afternoon=afternoon , wait=wait )
+head(d)
+summary(d)
+```
+
+
+```{r 13.12}
+m13.1.no.cor <- map2stan(
+  alist(
+    wait ~ dnorm( mu , sigma ),
+    mu <- a_cafe[cafe] + b_cafe[cafe]*afternoon,
+    c(a_cafe,b_cafe)[cafe] ~ dmvnorm2(c(a,b),sigma_cafe,Rho),
+    a ~ dnorm(0,10),
+    b ~ dnorm(0,10),
+    sigma_cafe ~ dcauchy(0,2),
+    sigma ~ dcauchy(0,2),
+    Rho ~ dlkjcorr(2)
+  ),
+  data=d ,
+  iter=5000 , warmup=2000 , chains=2 )
+```
+
+```{r}
+precis(m13.1.no.cor,depth = 2)
+```
+
+There is now a positive correlation, for reasons that I don't exactly understand.  I could go back and try to plot some of the posteriors out and see if it makes sense.
+
+## 13M2
+
+Fit a model without the multivariate gaussian prior.  Compare to model from chapter.
+
+First, resimulate the data with rho -0.7 and run model from the chapter:
+
+```{r }
+a <- 3.5 # average morning wait time
+b <- (-1) # average difference afternoon wait time
+sigma_a <- 1 # std dev in intercepts
+sigma_b <- 0.5 # std dev in slopes
+rho <- (-0.7) # correlation between intercepts and slopes
+
+Mu <- c( a , b )
+
+cov_ab <- sigma_a*sigma_b*rho
+Sigma <- matrix( c(sigma_a^2,cov_ab,cov_ab,sigma_b^2) , ncol=2 )
+
+sigmas <- c(sigma_a,sigma_b) # standard deviations
+
+Rho <- matrix( c(1,rho,rho,1) , nrow=2 ) # correlation matrix
+# now matrix multiply to get covariance matrix
+Sigma <- diag(sigmas) %*% Rho %*% diag(sigmas)
+N_cafes <- 20
+library(MASS)
+set.seed(5) # used to replicate example
+vary_effects <- mvrnorm( N_cafes , Mu , Sigma )
+
+a_cafe <- vary_effects[,1]
+b_cafe <- vary_effects[,2]
+
+N_visits <- 10
+afternoon <- rep(0:1,N_visits*N_cafes/2)
+cafe_id <- rep( 1:N_cafes , each=N_visits )
+mu <- a_cafe[cafe_id] + b_cafe[cafe_id]*afternoon
+sigma <- 0.5 # std dev within cafes
+wait <- rnorm( N_visits*N_cafes , mu , sigma )
+d <- data.frame( cafe=cafe_id , afternoon=afternoon , wait=wait )
+head(d)
+summary(d)
+save.image("chap13.Rdata")
+```
+
+
+```{r}
+load("chap13.Rdata")
+m13.1 <- map2stan(
+  alist(
+    wait ~ dnorm( mu , sigma ),
+    mu <- a_cafe[cafe] + b_cafe[cafe]*afternoon,
+    c(a_cafe,b_cafe)[cafe] ~ dmvnorm2(c(a,b),sigma_cafe,Rho),
+    a ~ dnorm(0,10),
+    b ~ dnorm(0,10),
+    sigma_cafe ~ dcauchy(0,2),
+    sigma ~ dcauchy(0,2),
+    Rho ~ dlkjcorr(2)
+  ),
+  data=d ,
+  iter=5000 , warmup=2000 , chains=2 )
+save.image("chap13.Rdata")
+```
+
+```{r}
+m13.1.nomv <- map2stan(
+  alist(
+    wait ~ dnorm( mu , sigma ),
+    mu <- a_cafe[cafe] + b_cafe[cafe]*afternoon,
+    a_cafe[cafe] ~ dnorm(a,sigma_a),
+    b_cafe[cafe] ~ dnorm(b,sigma_b),
+    a ~ dnorm(0,10),
+    b ~ dnorm(0,10),
+    sigma_a ~ dcauchy(0,1),
+    sigma_b ~ dcauchy(0,1),
+    sigma ~ dcauchy(0,1)
+  ),
+  data=d ,
+  iter=5000 , warmup=2000 , chains=2 )
+```
+
+```{r}
+precis(m13.1,depth = 2)
+precis(m13.1.nomv,depth = 2)
+compare(m13.1,m13.1.nomv)
+```
+
+So no real difference...note that the 95%PI for Rho crosses over 0.
+
+## 13M3
+
+Re-estimate varying slopes model for UCBadmit, using non-centered paramterization.
+
+```{r}
+data(UCBadmit)
+d <- UCBadmit
+d$male <- ifelse( d$applicant.gender=="male" , 1 , 0 )
+d$dept_id <- coerce_index( d$dept )
+m13.3 <- map2stan(
+    alist(
+        admit ~ dbinom( applications , p ),
+        logit(p) <- a_dept[dept_id] +
+                    bm_dept[dept_id]*male,
+        c(a_dept,bm_dept)[dept_id] ~ dmvnorm2( c(a,bm) , sigma_dept , Rho ),
+        a ~ dnorm(0,10),
+        bm ~ dnorm(0,1),
+        sigma_dept ~ dcauchy(0,2),
+        Rho ~ dlkjcorr(2)
+),
+data=d , warmup=1000 , iter=5000 , chains=4 , cores=3 )
+```
+
+```{r}
+m13.3.alt <- map2stan(
+    alist(
+        admit ~ dbinom( applications , p ),
+        logit(p) <- a_dept[dept_id] +
+                    bm_dept[dept_id]*male,
+        c(a_dept,bm_dept)[dept_id] ~ dmvnorm2( c(0,0) , sigma_dept , Rho ),
+        sigma_dept ~ dcauchy(0,2),
+        Rho ~ dlkjcorr(2)
+),
+data=d , warmup=1000 , iter=5000 , chains=4 , cores=3 )
+```
+
+```{r}
+precis(m13.3,depth = 2)
+precis(m13.3.alt, depth = 2)
+compare(m13.3, m13.3.alt)
+```
+

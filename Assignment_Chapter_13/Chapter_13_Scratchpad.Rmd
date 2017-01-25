@@ -116,7 +116,7 @@ m13.1.brms <- brm(wait ~ 1 + afternoon + (afternoon|cafe),
 ```
 
 ```{r}
-precis(m13.1)
+precis(m13.1,depth=2)
 print("---------------------")
 summary(m13.1.brms)
 ```
