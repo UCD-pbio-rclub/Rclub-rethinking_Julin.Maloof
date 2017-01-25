@@ -1,8 +1,8 @@
 ---
 title: "Chapter 13 Problems"
 output: 
-html_document: 
-keep_md: yes
+  html_document: 
+    keep_md: yes
 ---
 
 ```{r}
@@ -88,7 +88,7 @@ summary(d)
 ```
 
 
-```{r 13.12}
+```{r 13.12, results='hide'}
 m13.1.no.cor <- map2stan(
   alist(
     wait ~ dnorm( mu , sigma ),
@@ -154,7 +154,7 @@ save.image("chap13.Rdata")
 ```
 
 
-```{r}
+```{r, results='hide'}
 load("chap13.Rdata")
 m13.1 <- map2stan(
   alist(
@@ -172,7 +172,7 @@ m13.1 <- map2stan(
 save.image("chap13.Rdata")
 ```
 
-```{r}
+```{r, results='hide'}
 m13.1.nomv <- map2stan(
   alist(
     wait ~ dnorm( mu , sigma ),
@@ -201,7 +201,9 @@ So no real difference...note that the 95%PI for Rho crosses over 0.
 
 Re-estimate varying slopes model for UCBadmit, using non-centered paramterization.
 
-```{r}
+Wait: it *is* non-centered already.  Does he mean using a centered one?
+
+```{r, results='hide'}
 data(UCBadmit)
 d <- UCBadmit
 d$male <- ifelse( d$applicant.gender=="male" , 1 , 0 )
@@ -220,13 +222,15 @@ m13.3 <- map2stan(
 data=d , warmup=1000 , iter=5000 , chains=4 , cores=3 )
 ```
 
-```{r}
+```{r, results='hide'}
 m13.3.alt <- map2stan(
     alist(
         admit ~ dbinom( applications , p ),
-        logit(p) <- a_dept[dept_id] +
+        logit(p) <- a + bm_male*male + a_dept[dept_id] +
                     bm_dept[dept_id]*male,
         c(a_dept,bm_dept)[dept_id] ~ dmvnorm2( c(0,0) , sigma_dept , Rho ),
+        a ~ dnorm(0,10),
+        bm_male ~ dnorm(0,1),
         sigma_dept ~ dcauchy(0,2),
         Rho ~ dlkjcorr(2)
 ),
@@ -237,5 +241,67 @@ data=d , warmup=1000 , iter=5000 , chains=4 , cores=3 )
 precis(m13.3,depth = 2)
 precis(m13.3.alt, depth = 2)
 compare(m13.3, m13.3.alt)
+```
+
+# 13H1
+
+_Revisit the `bangladesh` data from chatper 12.  Fit a model with both varying intercepts by `district_id` and vary slopes of `urban` by `district_id`.  Inspect the correlation between the slopes and intercepts.  Can you interpret this correlation, in terms of what it tells you about the pattern of contraceptive use in the sampe?  It might help to plot the mean (or median) varying effects estiamte for both the intercepts and slopes, by district.  Plotting predicted proportion of women using contraception, with urban women on one axis and rural on the other, might also help._
+
+```{r}
+data("bangladesh")
+colnames(bangladesh) <- sub(".","_",colnames(bangladesh),fixed=TRUE)
+bangladesh$district_id <- coerce_index(bangladesh$district)
+#bangladesh$district_id <- as.factor(as.numeric(bangladesh$district))
+summary(bangladesh)
+head(bangladesh)
+```
+
+varying intercepts and slope model
+```{r, results='hide'}
+m13h1.1 <- map2stan(alist(
+  use_contraception ~ dbinom(1,p),
+  logit(p) <- a_district[district_id] + b_urban_dept[district_id]*urban,
+  c(a_district,b_urban_dept)[district_id] ~ dmvnorm2(c(a,b), sigma_district, Rho),
+  a ~ dnorm(0,5),
+  b ~ dnorm(0,5),
+  sigma_district ~ dcauchy(0,1),
+  Rho ~ dlkjcorr(2)),
+  data=bangladesh,
+  chains = 4)
+```
+
+```{r}
+plot(m13h1.1, ask=FALSE)
+precis(m13h1.1,depth=2)
+```
+
+The correlation between intercept and slope is negative, and on average the intercept (non-urban) is low and the slope is positive.  So urban areas tend to have more contraceptive use.  However if the district already has high use everywhere it can't get that much higher, so lower slope.
+
+```{r}
+newdata <- data.frame(
+  district_id = rep(1:60,2),
+  urban = rep(c(0,1),each=60)
+)
+post <- link(m13h1.1,newdata)
+dim(post)
+mu <- apply(post,2,mean)
+PI <- apply(post,2,PI)
+newdata$mean <- mu
+newdata$low <- PI[1,]
+newdata$high <- PI[2,]
+```
+
+```{r, fig.width=8}
+pl <- ggplot(newdata,aes(x=as.factor(district_id),y=mean,fill=as.factor(urban)))
+pl <- pl + geom_bar(position="dodge",stat="identity")
+pl 
+
+with(newdata, qplot(x=mean[urban==0],y=mean[urban==1]))
+
+with(newdata, qplot(x=mean[urban==0],y=mean[urban==1]-mean[urban==0]) + 
+       xlab("percent use rural") + 
+       ylab ("percent increase in urban") + 
+       ggtitle("contraceptive use"))
+
 ```
 
