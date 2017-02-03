@@ -31,6 +31,12 @@ _Think up a context inwhich varyign intervepts will b positively correlated with
 
 Automobile gas consumption at idle and at 60mph.  Larger engines consume more at idle and are generally less efficient.
 
+## 13E3
+
+_When is it possible for a varying slopes model to have fewer effective parameters than the corresponding model with fixed (unpooled) slopes?_
+
+When the shared information across groups means that it is possible for the slopes to be shrunk towards the mean.
+
 ## 13M1
 
 ```{r 13.1}
@@ -201,7 +207,7 @@ So no real difference...note that the 95%PI for Rho crosses over 0.
 
 Re-estimate varying slopes model for UCBadmit, using non-centered paramterization.
 
-Wait: it *is* non-centered already.  Does he mean using a centered one?
+Refit the one from the book
 
 ```{r, results='hide'}
 data(UCBadmit)
@@ -223,14 +229,13 @@ data=d , warmup=1000 , iter=5000 , chains=4 , cores=3 )
 ```
 
 ```{r, results='hide'}
-m13.3.alt <- map2stan(
+m13.3.alt <- - map2stan(
     alist(
         admit ~ dbinom( applications , p ),
-        logit(p) <- a + bm_male*male + a_dept[dept_id] +
-                    bm_dept[dept_id]*male,
-        c(a_dept,bm_dept)[dept_id] ~ dmvnorm2( c(0,0) , sigma_dept , Rho ),
+        logit(p) <- a + a_dept[dept_id] + bm + bm_dept[dept_id]*male,
+        c(a_dept,bm_dept)[dept_id] ~ dmvnormNC( sigma_dept , Rho ),
         a ~ dnorm(0,10),
-        bm_male ~ dnorm(0,1),
+        bm ~ dnorm(0,1),
         sigma_dept ~ dcauchy(0,2),
         Rho ~ dlkjcorr(2)
 ),
