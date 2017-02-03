@@ -311,6 +311,23 @@ m13.6NC <- map2stan(
   ) , data=d , iter=5000 , warmup=1000 , chains=3 , cores=3 )
 ```
 
+```{r 13.23.brm}
+m13.6NC.brms <- brm(pulled_left ~ prosoc_left + 
+                       prosoc_left:condition + 
+                       (prosoc_left + prosoc_left:condition | actor) + 
+                       (prosoc_left + prosoc_left:condition | block),
+                     prior = c(set_prior("normal(0,1)", class="Intercept"),
+                               set_prior("normal(0,1)", class="b"),
+                               set_prior("cauchy(0,2)", class="sd"), 
+                               set_prior("lkj(4)", class = "cor")),
+                     data=d,
+                     iter=5000,
+                     warmup=1000,
+                     chains=3,
+                     cores=3)
+
+```
+
 ```{r 13.24}
 # extract n_eff values for each model
 neff_c <- precis(m13.6,2)@output$n_eff
@@ -318,5 +335,9 @@ neff_nc <- precis(m13.6NC,2)@output$n_eff
 # plot distributions
 boxplot( list( 'm13.6'=neff_c , 'm13.6NC'=neff_nc ) ,
          ylab="effective samples" , xlab="model" )
+```
+```{r}
+precis(m13.6NC,depth=2)
+summary(m13.6NC.brms)
 ```
 

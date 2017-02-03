@@ -229,10 +229,10 @@ data=d , warmup=1000 , iter=5000 , chains=4 , cores=3 )
 ```
 
 ```{r, results='hide'}
-m13.3.alt <- - map2stan(
+m13.3.alt <- map2stan(
     alist(
         admit ~ dbinom( applications , p ),
-        logit(p) <- a + a_dept[dept_id] + bm + bm_dept[dept_id]*male,
+        logit(p) <- a + a_dept[dept_id] + bm*male + bm_dept[dept_id]*male,
         c(a_dept,bm_dept)[dept_id] ~ dmvnormNC( sigma_dept , Rho ),
         a ~ dnorm(0,10),
         bm ~ dnorm(0,1),
@@ -242,7 +242,7 @@ m13.3.alt <- - map2stan(
 data=d , warmup=1000 , iter=5000 , chains=4 , cores=3 )
 ```
 
-```{r}
+```{r, cache=FALSE}
 precis(m13.3,depth = 2)
 precis(m13.3.alt, depth = 2)
 compare(m13.3, m13.3.alt)
@@ -250,7 +250,7 @@ compare(m13.3, m13.3.alt)
 
 # 13H1
 
-_Revisit the `bangladesh` data from chatper 12.  Fit a model with both varying intercepts by `district_id` and vary slopes of `urban` by `district_id`.  Inspect the correlation between the slopes and intercepts.  Can you interpret this correlation, in terms of what it tells you about the pattern of contraceptive use in the sampe?  It might help to plot the mean (or median) varying effects estiamte for both the intercepts and slopes, by district.  Plotting predicted proportion of women using contraception, with urban women on one axis and rural on the other, might also help._
+_Revisit the `bangladesh` data from chapter 12.  Fit a model with both varying intercepts by `district_id` and vary slopes of `urban` by `district_id`.  Inspect the correlation between the slopes and intercepts.  Can you interpret this correlation, in terms of what it tells you about the pattern of contraceptive use in the sampe?  It might help to plot the mean (or median) varying effects estiamte for both the intercepts and slopes, by district.  Plotting predicted proportion of women using contraception, with urban women on one axis and rural on the other, might also help._
 
 ```{r}
 data("bangladesh")
