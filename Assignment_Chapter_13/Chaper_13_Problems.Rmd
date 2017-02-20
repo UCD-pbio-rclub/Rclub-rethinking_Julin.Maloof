@@ -248,6 +248,123 @@ precis(m13.3.alt, depth = 2)
 compare(m13.3, m13.3.alt)
 ```
 
+# 13M4
+
+_Use WAIC to compare the Oceanic tool models as oringinaly fit in Chatper 10 to the Gaussian Process model fit in chapter 13.  Pay particular attention to the number of effective parameters_
+
+## original models:
+
+```{r}
+library(rethinking)
+data(Kline)
+d <- Kline
+d
+
+#10.40
+d$log_pop <- log(d$population)
+d$contact_high <- ifelse(d$contact=="high",1,0)
+
+#10.41
+m10.10 <- map(
+  alist(
+    total_tools ~ dpois(lambda),
+    log(lambda) <- a + bp*log_pop + bc*contact_high + bpc*contact_high*log_pop,
+    a ~ dnorm(0,100),
+    c(bp,bc,bpc) ~ dnorm(0,1)
+  ),
+  data=d)
+
+#10.42
+precis(m10.10,corr = TRUE)
+plot(precis(m10.10))
+
+#10.43
+post <- extract.samples(m10.10)
+lambda_high <- exp(post$a + post$bc + (post$bp + post$bpc)*8)
+lambda_low <- exp(post$a + post$bp*8) 
+
+diff <- lambda_high - lambda_low
+sum(diff>0) / length(diff)
+
+#10.45
+#no interaction
+m10.11 <- map(
+  alist(
+    total_tools ~ dpois(lambda),
+    log(lambda) <- a + bp*log_pop + bc*contact_high,
+    a ~ dnorm(0,100),
+    c(bp,bc) ~ dnorm(0,1)),
+  data=d)
+precis(m10.11)
+ 
+#10.46
+# no contact rate
+m10.12 <- map(
+  alist(
+    total_tools ~ dpois( lambda ),
+    log(lambda) <- a + bp*log_pop,
+    a ~ dnorm(0,100),
+    bp ~ dnorm( 0 , 1 )
+  ), data=d )
+
+# no log-population
+m10.13 <- map(
+  alist(
+    total_tools ~ dpois( lambda ),
+    log(lambda) <- a + bc*contact_high,
+    a ~ dnorm(0,100),
+    bc ~ dnorm( 0 , 1 )
+  ), data=d )
+
+# intercept only
+m10.14 <- map(
+  alist(
+    total_tools ~ dpois( lambda ),
+    log(lambda) <- a,
+    a ~ dnorm(0,100)
+  ), data=d )
+```
+
+```{r from_13}
+data(islandsDistMatrix)
+# display short column names, so fits on screen
+Dmat <- islandsDistMatrix
+colnames(Dmat) <- c("Ml","Ti","SC","Ya","Fi","Tr","Ch","Mn","To","Ha")
+round(Dmat,1)
+data(Kline2)
+d <- Kline2
+d$society <- 1:10 # index observations
+m13.7 <- map2stan(
+  alist(
+    total_tools ~ dpois(lambda),
+    log(lambda) <- a + g[society] + bp*logpop,
+    g[society] ~ GPL2( Dmat , etasq , rhosq , 0.01 ),
+    a ~ dnorm(0,10),
+    bp ~ dnorm(0,1),
+    etasq ~ dcauchy(0,1),
+    rhosq ~ dcauchy(0,1)
+  ),
+  data=list(
+    total_tools=d$total_tools,
+    logpop=d$logpop,
+    society=d$society,
+    Dmat=islandsDistMatrix),
+  warmup=2000 , iter=1e4 , chains=4 )
+```
+
+```{r}
+# compare all using WAIC
+# adding n=1e4 for more stable WAIC estimates
+# will also plot the comparison
+( islands.compare <- compare(m10.10,m10.11,m10.12,m10.13,m10.14,m13.7,n=1e4) )
+plot(islands.compare)
+```
+
+Am I supposed to refit these with map2stan?  Not doing so at this time.
+
+m13.7 has the lowest WAIC and among the smallest number of effective parameters.  
+
+
 # 13H1
 
 _Revisit the `bangladesh` data from chapter 12.  Fit a model with both varying intercepts by `district_id` and vary slopes of `urban` by `district_id`.  Inspect the correlation between the slopes and intercepts.  Can you interpret this correlation, in terms of what it tells you about the pattern of contraceptive use in the sampe?  It might help to plot the mean (or median) varying effects estiamte for both the intercepts and slopes, by district.  Plotting predicted proportion of women using contraception, with urban women on one axis and rural on the other, might also help._
@@ -309,4 +426,99 @@ with(newdata, qplot(x=mean[urban==0],y=mean[urban==1]-mean[urban==0]) +
        ggtitle("contraceptive use"))
 
 ```
+
+# 13H2
+_Predict height as a function of age in Oxboys data set.  Cluster by subject (i.e. boy).  Fit a model with varying intercepts and slopes (on age) clustered by subject.  
+```{r get_data_ox}
+data("Oxboys")
+summary(Oxboys)
+Oxboys$subj_id <- coerce_index(Oxboys$Subject)
+```
+
+```{r plot_ox}
+pl <- ggplot(Oxboys,aes(x=age,y=height,group=Subject))
+pl <- pl + geom_line()
+pl
+```
+
+```{r model_ox}
+m.ox1 <- map2stan(alist(
+  height ~ dnorm(mu,sigma),
+  mu <- a + a_subj[subj_id] + b_age*age + b_age_subj[subj_id]*age,
+  a ~ dnorm(140,10),
+  b_age ~ dnorm(0,5),
+  c(a_subj,b_age_subj)[subj_id] ~ dmvnorm2(0,sigma_subj,Rho_subj),
+  sigma_subj ~ dcauchy(0,1),
+  sigma ~ dcauchy(0,1),
+  Rho_subj ~ dlkjcorr(2)),
+  data=Oxboys,
+  chains=4,
+  iter = 5000,
+  warmup = 1500,
+  cores = 2)
+```
+
+```{r}
+precis(m.ox1,depth = 2)
+```
+
+a: this is the overall intercept
+a_subj[]: these are variations around that mean by subject
+b: this is the overall slope of height vs age
+b_subj[]: this is the variation around that slope by subject
+sigma_subj[1]: staandard deviation in intercepts among subjects
+sigma_subj[2]: standard devation in slopes among subjects
+sigma: standard deviation
+Rho_ correlation between slope and intercept.  Indicates that those with higher heights grow faster
+
+We see that there is strong evidence for height increasing with age, for varying intercepts and varying slopes by boy (since there are some boys where the 89% confidence intervals on these coefficients do not cross zero)
+
+Compare to models without varying intercept or without varying slope:
+
+First no varying intercept
+```{r model_ox2}
+m.ox2 <- map2stan(alist(
+  height ~ dnorm(mu,sigma),
+  mu <- a + b_age*age + b_age_subj[subj_id]*age,
+  a ~ dnorm(140,10),
+  b_age ~ dnorm(0,5),
+  b_age_subj[subj_id] ~ dnorm(0,sigma_subj),
+  sigma_subj ~ dexp(1),
+  sigma ~ dcauchy(0,1)),
+  data=Oxboys,
+  chains=4,
+  iter = 6000,
+  warmup = 1500,
+  cores = 2)
+```
+
+```{r}
+precis(m.ox2,depth=2)
+```
+
+
+```{r model_ox3}
+m.ox3 <- map2stan(alist(
+  height ~ dnorm(mu,sigma),
+  mu <- a + a_subj[subj_id] + b_age*age,
+  a ~ dnorm(140,10),
+  b_age ~ dnorm(0,5),
+  a_subj[subj_id] ~ dnorm(0,sigma_subj),
+  sigma_subj ~ dexp(1),
+  sigma ~ dcauchy(0,1)),
+  data=Oxboys,
+  chains=4,
+  iter = 6000,
+  warmup = 1500,
+  cores = 2)
+```
+
+```{r}
+precis(m.ox3,depth=2)
+```
+
+```{r}
+compare(m.ox1,m.ox2,m.ox3)
+```
+the model with varying intercepts and slopes fits the best, followed by varying intervepts only.  varying slopes only fits least well, so the varying intercepts provide more info than the varying slopes.
 
