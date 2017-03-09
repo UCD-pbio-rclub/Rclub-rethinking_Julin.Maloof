@@ -1,0 +1,32 @@
+---
+title: "Chapter 14 Problems"
+author: "Julin N Maloof"
+date: "3/8/2017"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 14E1
+
+Specify a distribition that the observations come from (actually each observation has a separate set of parameters).  Have the linear model use the distribution as predictors rather than the observations themselves
+
+T_i ~ Poission(mu_i)
+log(mu_i) = a + B*logPi_est
+logPi_obs ~ dnorm(logPi_est_i, logPi_sigma_i)
+A ~ dnorm(0,10)
+B ~ dnorm(0,10)
+
+## 14E2
+
+## 14M1
+
+They all come from the same distribution, with mean v and sd sigma_n
+
+
+
+
