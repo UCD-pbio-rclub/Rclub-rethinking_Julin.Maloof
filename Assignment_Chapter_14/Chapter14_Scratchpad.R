@@ -65,3 +65,31 @@ m14.2 <- map2stan(
   WAIC=FALSE , iter=5000 , warmup=1000, chains=3 , cores=3 ,
   control=list(adapt_delta=0.95) )
 precis(m14.2,depth = 2)
+
+## 14.6
+
+library(rethinking) 
+data(milk)
+d <- milk
+d$neocortex.prop <- d$neocortex.perc / 100
+d$logmass <- log(d$mass)
+
+## 14.7
+# prep data 14.7
+data_list <- list(
+  kcal = d$kcal.per.g,
+  neocortex = d$neocortex.prop,
+  logmass = d$logmass )
+# fit model
+m14.3 <- map2stan(
+  alist(
+    kcal ~ dnorm(mu,sigma),
+    mu <- a + bN*neocortex + bM*logmass,
+    neocortex ~ dnorm(nu,sigma_N),
+    a ~ dnorm(0,100),
+    c(bN,bM) ~ dnorm(0,10),
+    nu ~ dnorm(0.5,1),
+    sigma_N ~ dcauchy(0,1),
+    sigma ~ dcauchy(0,1)
+  ) ,
+  data=data_list , iter=1e4 , chains=2 )
