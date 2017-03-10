@@ -292,6 +292,7 @@ PI <- apply(post,2,PI)
 plot(x=25:55,y=mu,type="l")
 points(elephants$AGE,elephants$MATINGS)
 shade(PI,lim=25:55)
+save.image("chapter14.Rdata")
 ```
 
 model with error
@@ -406,7 +407,9 @@ m14h1e <- map2stan(alist(
   AGE ~ dnorm(AGE_est,AGE_SE)
 ), data = elephants,
 start=list(AGE_est=elephants$AGE),
-chains = 4,
+chains = 4, 
+iter = 5000,
+warmup = 1000,
 cores = 2)
 ```
 
@@ -424,4 +427,50 @@ lines(x=25:55,y=mu.error,col="red")
 points(elephants$AGE,elephants$MATINGS)
 shade(PI.error,lim = 25:55)
 shade(PI,lim=25:55)
+```
+
+at SE of 100 we no longer see an AGE effect, although note that the model is not being fit well.
+
+## 14H3
+
+explain why missing data imputation reversed direction of relationship
+
+```{r 14H3 setup}
+set.seed(100)
+x <- c( rnorm(10) , NA )
+y <- c( rnorm(10,x) , 100 )
+d <- list(x=x,y=y)
+summary(as.data.frame(d))
+```
+
+I can already tell what the deal is, the missing X corresponds with an outlier y
+
+```{r}
+summary(lm(y~x))
+```
+
+```{r}
+m14h3 <- map2stan(
+  alist(y ~ dnorm(mu,sigma),
+        mu <- a + b*x,
+        x ~ dnorm(0,1),
+        a ~ dnorm(0,100),
+        b ~ dnorm(0,100),
+        sigma ~ dcauchy(0,1)),
+  data=d,
+  chains = 4,
+  cores=2,
+    control=list(adapt_delta=0.95),
+  iter=10000)
+```
+
+```{r}
+plot(m14h3)
+precis(m14h3)
+```
+
+```{r}
+post <- extract.samples(m14h3)
+dens(post$b)
+pairs(m14h3)
 ```
