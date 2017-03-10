@@ -8,7 +8,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, cache=TRUE, autodep = TRUE)
 ```
 
 ## 14E1
@@ -27,6 +27,401 @@ B ~ dnorm(0,10)
 
 They all come from the same distribution, with mean v and sd sigma_n
 
+## 14M2
+
+_Repeat WAIC comparison on milk primate data models from chapter 6, but include missing data (via imputation).  Does this affect model performance?_
+
+### Without imputation
+
+Updated code to use map2stan 
+
+```{r}
+# Rcode 6.21
+library(rethinking)
+data(milk)
+d <- milk[ complete.cases(milk) , ]
+d$neocortex <- d$neocortex.perc / 100
+d$logmass <- log(d$mass)
+dim(d)
+
+d_list <- list(
+kcal = d$kcal,
+neocortex = d$neocortex,
+logmass = d$logmass )
+
+# Rcode 6.22
+
+m6.11 <- map2stan(
+  alist(
+    kcal ~ dnorm( mu , sigma) ,
+    mu <- a,
+    a ~ dnorm(0,100),
+    sigma ~ dcauchy(0,1)),
+  data=d_list , 
+  chains = 4, cores = 1)
+
+m6.12 <- map2stan(
+  alist(
+    kcal ~ dnorm( mu , sigma ) ,
+    mu <- a + bn*neocortex,
+    a ~ dnorm(0,100),
+    bn ~ dnorm(0,10),
+    sigma ~ dcauchy(0,1)),
+  data=d_list , 
+  chains = 4, cores = 1)
+
+m6.13 <- map2stan(
+  alist(
+    kcal ~ dnorm( mu , sigma ) ,
+    mu <- a + bm*logmass,
+    a ~ dnorm(0,100),
+    bm ~ dnorm(0,10),
+    sigma ~ dcauchy(0,1)),
+  data=d_list , 
+  chains = 4, cores = 1)
+
+m6.14 <- map2stan(
+  alist(
+    kcal ~ dnorm( mu , sigma ) ,
+    mu <- a + bn*neocortex + bm*logmass,
+    a ~ dnorm(0,100),
+    c(bn,bm) ~ dnorm(0,10),
+    sigma ~ dcauchy(0,1)),
+  data=d_list , 
+  chains = 4, cores = 1)
+
+#Rcode 6.24
+( milk.models <- compare( m6.11 , m6.12 , m6.13 , m6.14 ) )
+
+save.image("chapter14.Rdata")
+```
+
+### Now with missing data imputation
+
+```{r}
+library(rethinking)
+load("chapter14.Rdata")
+# Rcode 6.21
+d.all <- milk
+d.all$neocortex <- d.all$neocortex.perc / 100
+d.all$logmass <- log(d.all$mass)
+dim(d.all)
+
+d.all_list <- list(
+kcal = d.all$kcal,
+neocortex = d.all$neocortex,
+logmass = d.all$logmass )
+
+# Rcode 6.22
+
+m6.11.all <- map2stan(
+  alist(
+    kcal ~ dnorm( mu , sigma) ,
+    mu <- a,
+    a ~ dnorm(0,100),
+    sigma ~ dcauchy(0,1)),
+  data=d.all_list , 
+  chains = 4, cores = 1)
+
+m6.12.all <- map2stan(
+  alist(
+    kcal ~ dnorm( mu , sigma ) ,
+    mu <- a + bn*neocortex,
+    a ~ dnorm(0,100),
+    bn ~ dnorm(0,10),
+    neocortex ~ dnorm(nu,sigma_nu),
+    nu ~ dnorm(0.5,1),
+    sigma_nu ~ dcauchy(0,1),
+    sigma ~ dcauchy(0,1)),
+  data=d.all_list , 
+  chains = 4, cores = 1)
+
+save.image("chapter14.Rdata")
+
+m6.13.all <- map2stan(
+  alist(
+    kcal ~ dnorm( mu , sigma ) ,
+    mu <- a + bm*logmass,
+    a ~ dnorm(0,100),
+    bm ~ dnorm(0,10),
+    neocortex ~ dnorm(nu,sigma_nu),
+    nu ~ dnorm(0.5,1),
+    sigma_nu ~ dcauchy(0,1),
+    sigma ~ dcauchy(0,1)),
+  data=d.all_list , 
+  chains = 4, cores = 1)
+
+save.image("chapter14.Rdata")
+
+m6.14.all <- map2stan(
+  alist(
+    kcal ~ dnorm( mu , sigma ) ,
+    mu <- a + bn*neocortex + bm*logmass,
+    a ~ dnorm(0,100),
+    c(bn,bm) ~ dnorm(0,10),
+    neocortex ~ dnorm(nu,sigma_nu),
+    nu ~ dnorm(0.5,1),
+    sigma_nu ~ dcauchy(0,1),
+    sigma ~ dcauchy(0,1)),
+  data=d.all_list , 
+  chains = 4, cores = 1)
+
+save.image("chapter14.Rdata")
+```
+
+```{r}
+
+precis(m6.11.all, depth=2)
+
+precis(m6.12.all,depth=2)
+
+precis(m6.13.all, depth=2)
+
+precis(m6.14.all, depth=2)
 
 
+#Rcode 6.24
+( milk.models <- compare( m6.11 , m6.12 , m6.13 , m6.14 ) )
+( milk.models.all <- compare( m6.11.all, m6.12.all , m6.13.all , m6.14.all ) )
 
+```
+
+This did not substantially change the ranking of the models.
+
+## 14M3
+
+_Repeat the divorce rate error models, but double the standard error.  Can you explain how doubling the errors affects the inference?_
+
+original
+```{r}
+library(rethinking)
+data("WaffleDivorce")
+d <- WaffleDivorce
+dlist <- list(
+  div_obs=d$Divorce,
+  div_sd=d$Divorce.SE,
+  mar_obs=d$Marriage,
+  mar_sd=d$Marriage.SE,
+  A=d$MedianAgeMarriage )
+
+m14.2 <- map2stan(
+  alist(
+    div_est ~ dnorm(mu,sigma),
+    mu <- a + bA*A + bR*mar_est[i],
+    div_obs ~ dnorm(div_est,div_sd),
+    mar_obs ~ dnorm(mar_est,mar_sd),
+    a ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bR ~ dnorm(0,10),
+    sigma ~ dcauchy(0,2.5)
+  ) ,
+  data=dlist ,
+  start=list(div_est=dlist$div_obs,mar_est=dlist$mar_obs) ,
+  WAIC=FALSE , iter=5000 , warmup=1000, chains=3 , cores=3 ,
+  control=list(adapt_delta=0.95) )
+save.image("chapter14.Rdata")
+```
+
+double error
+```{r}
+library(rethinking)
+load("chapter14.Rdata")
+dlist <- list(
+  div_obs=d$Divorce,
+  div_sd=2*d$Divorce.SE,
+  mar_obs=d$Marriage,
+  mar_sd=d$Marriage.SE,
+  A=d$MedianAgeMarriage )
+
+m14.2.double <- map2stan(
+  alist(
+    div_est ~ dnorm(mu,sigma),
+    mu <- a + bA*A + bR*mar_est[i],
+    div_obs ~ dnorm(div_est,div_sd),
+    mar_obs ~ dnorm(mar_est,mar_sd),
+    a ~ dnorm(0,10),
+    bA ~ dnorm(0,10),
+    bR ~ dnorm(0,10),
+    sigma ~ dcauchy(0,2.5)
+  ) ,
+  data=dlist ,
+  start=list(div_est=dlist$div_obs,mar_est=dlist$mar_obs) ,
+  WAIC=FALSE , iter=10000 , warmup=1000, chains=3 , cores=3 ,
+  control=list(adapt_delta=0.95) )
+```
+
+```{r}
+compare(m14.2,m14.2.double)
+precis(m14.2,depth=2)
+precis(m14.2.double,depth = 2)
+```
+
+## 14H1
+
+_Fit a Poisson model predicting matings as a function of age in the elephants data set.  Age may not be measured acurately, so fit another model, including a standard error of +/-5 years.  Compare the models._
+
+```{r 14H1_data}
+library(rethinking)
+data(elephants)
+summary(elephants)
+plot(elephants$AGE, elephants$MATINGS)
+```
+```{r 14H1_model1, results='hide'}
+mean(elephants$MATINGS)
+m14h1a <- map2stan(alist(
+  MATINGS ~ dpois(lambda),
+  log(lambda) <- a + b_age*AGE,
+  a ~ dnorm(2.5,5),
+  b_age ~ dnorm(0,1)
+), data = elephants,
+chains = 4,
+cores = 2)
+```
+
+```{r 14h1a_plots}
+plot(m14h1a)
+precis(m14h1a)
+exp(0.07)
+exp(-1.54)
+
+post <- link(m14h1a,data=data.frame(AGE=25:55))
+head(post)
+mu <- apply(post,2,mean)
+PI <- apply(post,2,PI)
+
+plot(x=25:55,y=mu,type="l")
+points(elephants$AGE,elephants$MATINGS)
+shade(PI,lim=25:55)
+```
+
+model with error
+```{r 14H1_model2, results='hide'}
+elephants$AGE_SE <- 5
+m14h1b <- map2stan(alist(
+  MATINGS ~ dpois(lambda),
+  log(lambda) <- a + b_age*AGE_est[i],
+  a ~ dnorm(2.5,5),
+  b_age ~ dnorm(0,1),
+  AGE ~ dnorm(AGE_est,AGE_SE)
+), data = elephants,
+start=list(AGE_est=elephants$AGE),
+chains = 4,
+cores = 2)
+```
+
+```{r 14h1b_plots}
+plot(m14h1b,ask=FALSE)
+par(mfrow=c(1,1))
+precis(m14h1b,depth = 2)
+exp(0.07)
+exp(-1.57)
+
+post <- link(m14h1b,data=data.frame(AGE_est=25:55))
+head(post)
+mu.error <- apply(post,2,mean)
+PI.error <- apply(post,2,PI)
+
+plot(x=25:55,y=mu,type="l")
+lines(x=25:55,y=mu.error,col="red")
+points(elephants$AGE,elephants$MATINGS)
+shade(PI.error,lim = 25:55)
+shade(PI,lim=25:55)
+```
+
+Essentially no difference in the models
+
+## 14H2
+
+_expand error_
+
+```{r 14H1_model3, results='hide'}
+elephants$AGE_SE <- 20
+m14h1c <- map2stan(alist(
+  MATINGS ~ dpois(lambda),
+  log(lambda) <- a + b_age*AGE_est[i],
+  a ~ dnorm(2.5,5),
+  b_age ~ dnorm(0,1),
+  AGE ~ dnorm(AGE_est,AGE_SE)
+), data = elephants,
+start=list(AGE_est=elephants$AGE),
+chains = 4,
+cores = 2)
+```
+
+```{r 14h1c_plots}
+plot(m14h1c,ask=FALSE)
+par(mfrow=c(1,1))
+precis(m14h1c)
+
+post <- link(m14h1c,data=data.frame(AGE_est=25:55))
+mu.error <- apply(post,2,mean)
+PI.error <- apply(post,2,PI)
+
+plot(x=25:55,y=mu,type="l")
+lines(x=25:55,y=mu.error,col="red")
+points(elephants$AGE,elephants$MATINGS)
+shade(PI.error,lim = 25:55)
+shade(PI,lim=25:55)
+```
+
+still a positive relationship with error of 20
+
+```{r 14H1_model4, results='hide'}
+elephants$AGE_SE <- 40
+m14h1d <- map2stan(alist(
+  MATINGS ~ dpois(lambda),
+  log(lambda) <- a + b_age*AGE_est[i],
+  a ~ dnorm(2.5,5),
+  b_age ~ dnorm(0,1),
+  AGE ~ dnorm(AGE_est,AGE_SE)
+), data = elephants,
+start=list(AGE_est=elephants$AGE),
+chains = 4,
+cores = 2)
+```
+
+```{r 14h1d_plots}
+plot(m14h1d,ask=FALSE)
+par(mfrow=c(1,1))
+precis(m14h1d)
+
+post <- link(m14h1d,data=data.frame(AGE_est=25:55))
+mu.error <- apply(post,2,mean)
+PI.error <- apply(post,2,PI)
+
+plot(x=25:55,y=mu,type="l")
+lines(x=25:55,y=mu.error,col="red")
+points(elephants$AGE,elephants$MATINGS)
+shade(PI.error,lim = 25:55)
+shade(PI,lim=25:55)
+```
+
+```{r 14H1_model5, results='hide'}
+elephants$AGE_SE <- 100
+m14h1e <- map2stan(alist(
+  MATINGS ~ dpois(lambda),
+  log(lambda) <- a + b_age*AGE_est[i],
+  a ~ dnorm(2.5,5),
+  b_age ~ dnorm(0,1),
+  AGE ~ dnorm(AGE_est,AGE_SE)
+), data = elephants,
+start=list(AGE_est=elephants$AGE),
+chains = 4,
+cores = 2)
+```
+
+```{r 14h1e_plots}
+plot(m14h1e,ask=FALSE)
+par(mfrow=c(1,1))
+precis(m14h1e)
+
+post <- link(m14h1e,data=data.frame(AGE_est=25:55))
+mu.error <- apply(post,2,mean)
+PI.error <- apply(post,2,PI)
+
+plot(x=25:55,y=mu,type="l")
+lines(x=25:55,y=mu.error,col="red")
+points(elephants$AGE,elephants$MATINGS)
+shade(PI.error,lim = 25:55)
+shade(PI,lim=25:55)
+```
