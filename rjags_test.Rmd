@@ -1,0 +1,97 @@
+---
+title: "trying jags"
+output: html_notebook
+---
+
+```{r}
+library(rjags)
+library(runjags)
+library(brms)
+library(reshape2)
+data <- read.csv("Assignment_Chapter_09/TomatoR2CSHL.csv")
+names(data)
+```
+
+```{r}
+lm1 <- lm(hyp ~ trt, data=data)
+summary(lm1)
+```
+
+```{r}
+brm1 <- brm(hyp~trt,
+            prior=c(
+              set_prior("normal(0,10)",class="b"),
+              set_prior("normal(0,100)",class="Intercept")),
+            data=data)
+```
+```{r}
+brm1$prior
+summary(brm1)
+```
+
+
+```{r}
+
+my.trt <- ifelse(data$trt=="H",0,1)
+
+jagmodel <- "
+model {
+for(i in 1:length(hyp)) {
+hyp[i] ~ dnorm(mu[i], tau)
+mu[i] <- a + b_trt*trt[i]
+}
+a ~ dnorm(0,1e-04)
+b_trt ~ dnorm(0,.01)
+tau <- pow(sigma,-2)
+sigma ~ dunif(0,15)
+}
+
+"
+results <- run.jags(jagmodel,monitor=c("a","b_trt","sigma"),method="parallel",data=list(hyp=data$hyp,trt=my.trt))
+summary(results)
+plot(results)
+```
+```{r}
+lm2 <- lm(hyp~trt+species,data=data)
+summary(lm2)
+```
+
+
+```{r}
+brm2 <- brm(hyp ~ trt + species,             
+            prior=c(set_prior("normal(0,10)",class="b"),
+              set_prior("normal(0,100)",class="Intercept")),
+            data=data)
+```
+```{r}
+summary(brm2)
+```
+
+```{r}
+
+my.trt <- ifelse(data$trt=="H",0,1)
+data$index <- 1: nrow(data)
+my.species <- as.matrix(dcast(data, index ~ species, value.var="species", fun.aggregate=length)[,-1:-2])
+
+jagmodel <- "
+model {
+ for(i in 1:length(hyp)) {
+   hyp[i] ~ dnorm(mu[i], tau)
+   mu[i] <- a + b_trt*trt[i] + inprod(species[i,],b_species)
+ }
+  for(j in 1:4) {
+     b_species[j] ~ dnorm(0,0.01)
+  }
+ a ~ dnorm(0,1e-04)
+ b_trt ~ dnorm(0,.01)
+ tau <- pow(sigma,-2)
+ sigma ~ dunif(0,15)
+}
+
+"
+results <- run.jags(jagmodel,monitor=c("a","b_trt","b_species","sigma"),method="parallel",data=list(hyp=data$hyp,trt=my.trt,species=my.species))
+summary(results)
+summary(results)[,"Median"]
+plot(results)
+```
+
